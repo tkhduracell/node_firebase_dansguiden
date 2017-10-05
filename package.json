@@ -1,0 +1,22 @@
+{
+  "name": "node_firebase_dansguiden",
+  "version": "1.0.0",
+  "description": "The webpage for dansguiden",
+  "main": "dansguiden",
+  "scripts": {
+    "start": "firebase serve --only hosting,function"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tkhduracell/node_firebase_dansguiden.git"
+  },
+  "author": "Filip Lindqvist",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tkhduracell/node_firebase_dansguiden/issues"
+  },
+  "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
+  "dependencies": {
+    "firebase-admin": "^5.4.1"
+  }
+}

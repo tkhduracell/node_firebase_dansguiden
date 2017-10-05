@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /404/
+Disallow: /ajax/
+Disallow: /css/
+Disallow: /img/
+Disallow: /js/

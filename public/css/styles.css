@@ -1,0 +1,32 @@
+
+.modal-body{
+	padding: 0px;
+}
+.version{
+    margin-top: 20px;
+}
+.details{
+    margin-left: 30px;
+}
+.header{
+
+}
+.jumbotron-header h1{
+	margin-top: 50px;
+    margin-bottom: 20px;
+}
+.jumbotron-header p.sub{
+    margin-bottom: 50px;
+}
+.thumb{}
+.ekko-lightbox-container img {
+	max-height: 800px;
+	margin-right: auto;
+	margin-left: auto;
+}
+.icon img {
+	width: 250px;
+	height: 250px;
+	margin-top: 70px;
+	margin-right: 40px;
+}

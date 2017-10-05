@@ -1,0 +1,119 @@
+doctype html
+html
+	head
+		title Dansguiden
+
+		meta(name='viewport', content='width=device-width, initial-scale=1.0')
+		meta(http-equiv='Content-Type', content='text/html; charset=utf-8')
+		meta(property='og:url', content='http://www.dansguiden.com/')
+		meta(property='og:type', content='website')
+		meta(property='og:image', content='http://www.dansguiden.com/img/high-res-icon-v2.png')
+		meta(property='og:title', content='Dansguiden')
+		meta(property='og:description', content='Nu är den här – din nya evenemangsguide till Sveriges dansbanor. Upptäck, sök och dela evenemang snabbt och supersmidigt')
+		meta(name='google-site-verification' content='AmDdRsmWubcWqvFtCkzSwLvnZD2Y1QFd_V1MjZ7ugTo')
+
+		link(rel='shortcut icon', href='/favicon.ico')
+		link(rel='stylesheet', href='css/bootstrap.min.css', media='screen')
+		link(rel='stylesheet', href='css/ekko-lightbox.min.css', media='screen')
+		link(rel='stylesheet', href='css/styles.css')
+
+	body
+		.navbar.navbar-default.navbar-fixed-top
+			.container
+				.navbar-header
+					button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					a.navbar-brand(href='#') Dansguiden
+
+
+		.jumbotron
+			.container.jumbotron-header
+				div.icon.pull-right.hidden-xs
+					a(href='https://play.google.com/store/apps/details?id=feality.dans')
+						img(src='img/high-res-icon-v2.png')
+				h1 Dansguiden
+				p.sub.
+					Nu är den här – din nya evenemangsguide till Sveriges dansbanor. <br />
+					Upptäck, sök och dela evenemang snabbt och supersmidigt.
+				h3 Installera
+				p.play
+					a(href='https://play.google.com/store/apps/details?id=feality.dans')
+						img(alt='Get it on Google Play', src='https://developer.android.com/images/brand/sv_generic_rgb_wo_60.png')
+
+		.container
+			.row
+				h1 Vill du också vara med i svängen?
+				p Installera Dansguiden nu!
+				ul
+					li Vilka danser är det idag?
+					li Vilka danser inträffar i den kommande veckan?
+					li Vilka danser inträffar på viss plats den kommande månaden
+					li Vad händer ett visst datum?
+					li Vad händer på en visst plats?
+					li Var spelar ett dansband?
+			hr
+
+		.container.hidden-xs
+			.row
+				h1 Bilder
+			.row
+				for img in images
+					.col-sm-3
+						a(href=img.src, data-type="image", data-toggle="lightbox", data-title=img.text, data-width="40")
+							img.img-responsive.thumb(src=img.src)
+
+			hr
+
+		.container
+			.row
+				h1 Nyheter
+			.row
+				for v in versions
+					.col-sm-4.version
+						h2="v. "+ v.name
+						ul
+							for l in v.lines
+								li=l
+						p
+							a.details(href='https://play.google.com/store/apps/details?id=feality.dans', role='button') Läs mer »
+
+			hr
+
+		.container
+			.row
+				.col-sm-12
+					h1 Om Dansguiden
+					p
+						| Nu är den här – din nya evenemangs-guide till Sveriges dansbanor.
+					p
+						| Upptäck, sök och dela evenemang supersmidigt och snabbt.
+						| Med Dansguiden har du tillgång till dansprogram vart du än befinner dig.
+						| Direkt ifrån fickan; få reda på datum, plats, tid och vilket band som spelar.
+						| Du finner även bilder ifrån evenemangs-platsen.
+					small
+						| Applikationen är ett hobbyprojekt så tveka inte att kontakta oss om du stöter på problem
+
+			hr
+
+		.container.hidden-sm.hidden-md.hidden-lg
+			.row
+				h1 Bilder
+			.row
+				for img in images
+					.col-sm-3
+						a(href=img.src, data-type="image", data-toggle="lightbox", data-title=img.text, data-width="40")
+							img.img-responsive.thumb(src=img.src)
+
+			hr
+
+		.container
+			footer
+				p="© Dansguiden " + new Date().getFullYear()
+
+script(src = 'js/jquery.v1.10.2.min.js')
+script(src = 'js/analytics.js')
+script(src = 'js/bootstrap.min.js')
+script(src = 'js/ekko-lightbox.min.js')
+script(src='js/main.js?v=1')
