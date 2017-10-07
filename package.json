@@ -18,5 +18,8 @@
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "dependencies": {
     "firebase-admin": "^5.4.1"
+  },
+  "devDependencies": {
+    "firebase-tools": "^3.13.1"
   }
 }
