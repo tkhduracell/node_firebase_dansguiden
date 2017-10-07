@@ -22,7 +22,7 @@ exports.index = functions.https.onRequest((request, response) => {
 				versions: data(versions)
 			};
 			
-			const html = pug.renderFile('../views/index.pug', opts);
+			const html = pug.renderFile('views/index.pug', opts);
 			
 			response.status(200).send(html);		
 		})
