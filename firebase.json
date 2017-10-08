@@ -8,7 +8,11 @@
       },
       {
         "source": "/api/update_versions",
-        "function": "update_versions"
+        "function": "updateVersions"
+      },
+      {
+        "source": "/api/update_events",
+        "function": "updateEvents"
       }
     ]
   }

@@ -1,10 +1,11 @@
+const _ = require('lodash');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const pug = require('pug');
 const jf = require('jsonfile');
-const scraperjs = require('scraperjs');
-const debug = require('debug')
-const _ = require('lodash/string');
+const debug = require('debug');
+const events = require('./lib/events.js');
+const versions = require('./lib/versions.js');
 
 admin.initializeApp(functions.config().firebase);
 
@@ -35,37 +36,36 @@ exports.index = functions.https.onRequest((request, response) => {
 	
 });
 
+exports.updateEvents = functions.https.onRequest((req, res) => {
+	const log = debug('app:events');
+
+	const updater = events.update(log);
+	
+	const batch = db.batch();
+
+	updater((event) => {
+		const date = event.date.format('YYYY-MM-DD');
+		const key = _([date, event.band]).map(_.snakeCase).join('_');
+		const eventDoc = _.merge(event, {date});
+		
+		log("Updating " + key);
+		const doc = db.collection('events').doc(key);
+		batch.set(doc, eventDoc, { merge: true });
+	});
+
+	return batch.commit()
+		.then(function () {
+			log("Batch write done!");
+			res.status(200).send("OK");	
+		});
+});
+
 exports.updateVersions = functions.https.onRequest((req, res) => {
 	const log = debug('app:versions');
-	
-	const url = 'https://play.google.com/store/apps/details?id=feality.dans';
-	
-	const extractContent = ($) => {
-		return {
-			lines: $(".whatsnew .recent-change")
-				.map(function () {
-					return $(this).text()
-						.replace(/^\W*\*\W*/, '');
-				})
-				.get(),
-			name: $("div[itemProp='softwareVersion']")
-				.map(function () {
-					return $(this).text()
-						.trim();
-				})
-				.get()
-				.join(", "),
-			date: $("div[itemProp='datePublished']")
-				.map(function () {
-					return $(this).text()
-						.trim();
-				})
-				.get()
-				.join(", ")
-		}
-	}	
 
-	const saveToDb = (data) => {
+	const updater = versions.update(log);
+	
+	updater((data) => {
 		const key = _.snakeCase("v " + data.name);
 		
 		log('Updating ' + key);
@@ -73,12 +73,7 @@ exports.updateVersions = functions.https.onRequest((req, res) => {
 			name: data.name,
 			lines: data.lines
 		}, { merge: true });
-	}
-
-	log('Running Google Play parse');
-	scraperjs.StaticScraper
-		.create(url)
-		.scrape(extractContent, saveToDb);
+	});
 
 	res.status(200).send('OK');
 });
