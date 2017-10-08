@@ -20,16 +20,6 @@ const months = {
 	"december": 12
 };
 
-const cols = [
-    'weekday', 
-    'date', 
-    'time', 
-    'band', 
-    'place', 
-    'city', 
-    'region', 
-    'country'
-];
 const NOT_SET_BAND = 'Ej fastställt';
 
 module.exports.update = (debug) => (onEvent) => {

@@ -33,7 +33,7 @@ exports.index = functions.https.onRequest((request, response) => {
 			console.error(err);
 			response.status(500).send(err.message);
 		});
-	
+
 });
 
 exports.updateEvents = functions.https.onRequest((req, res) => {
@@ -57,6 +57,42 @@ exports.updateEvents = functions.https.onRequest((req, res) => {
 		.then(function () {
 			log("Batch write done!");
 			res.status(200).send("OK");	
+		});
+});
+
+exports.getEvents = functions.https.onRequest((req, res) => {
+	const log = debug('app:events:get');
+	var query = db.collection('events');
+	const params = req.query;
+	log(JSON.stringify(params));
+
+	if (params.from && params.to) {
+		query = query.where('date', '>=', params.from)
+			.where('date', '<=', params.to);
+	}
+	
+	[
+		'weekday', 
+		'date', 
+		'time', 
+		'band', 
+		'place', 
+		'city', 
+		'region', 
+		'country'
+	]
+	.filter(col => params[col])
+	.forEach(col => {
+		query = query.where(col, '==', params[col]);
+	});
+
+	query.get()
+		.then(events => {
+			res.status(200).send(data(events));
+		})
+		.catch(err => {
+			log('Error getting documents', err);
+			res.status(500).send("Error occured, check logs...");
 		});
 });
 

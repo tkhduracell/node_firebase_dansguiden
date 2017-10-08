@@ -13,6 +13,10 @@
       {
         "source": "/api/update_events",
         "function": "updateEvents"
+      },
+      {
+        "source": "/api/events",
+        "function": "getEvents"
       }
     ]
   }
