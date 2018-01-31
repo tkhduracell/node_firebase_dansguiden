@@ -7,16 +7,20 @@
         "function": "index"
       },
       {
-        "source": "/api/update_versions",
-        "function": "updateVersions"
-      },
-      {
-        "source": "/api/update_events",
-        "function": "updateEvents"
-      },
-      {
         "source": "/api/events",
         "function": "getEvents"
+	  },
+	  {
+        "source": "/api/versions",
+        "function": "getVersions"
+	  },
+	  {
+        "source": "/api/update/events",
+        "function": "updateEvents"
+	  },
+	  {
+        "source": "/api/update/versions",
+        "function": "updateVersions"
       }
     ]
   }

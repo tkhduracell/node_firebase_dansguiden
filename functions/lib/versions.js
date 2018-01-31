@@ -1,8 +1,8 @@
 const scraperjs = require('scraperjs');
 
-module.exports.update = (log) => (onVersion) => {
+module.exports.update = (log) => {
     const url = 'https://play.google.com/store/apps/details?id=feality.dans';
-	
+
 	const extractContent = ($) => {
 		return {
 			lines: $(".whatsnew .recent-change")
@@ -26,11 +26,10 @@ module.exports.update = (log) => (onVersion) => {
 				.get()
 				.join(", ")
 		}
-	}	
+	}
 
 	log('Running Google Play parser...');
-	scraperjs.StaticScraper
+	return scraperjs.StaticScraper
 		.create(url)
-		.scrape(extractContent, onVersion);
-
+		.scrape(extractContent);
 }

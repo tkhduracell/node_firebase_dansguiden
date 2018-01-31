@@ -1,9 +1,8 @@
-const cheerio = require('cheerio');
-const request = require('request');
 const moment = require('moment');
 const _ = require('lodash');
+const scraperjs = require('scraperjs');
 
-const url = 'http://www.danslogen.se/dansprogram';
+const url = 'http://www.danslogen.se';
 
 const months = {
 	"januari": 1,
@@ -19,58 +18,54 @@ const months = {
 	"november": 11,
 	"december": 12
 };
+const columns = ['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country'];
 
 const NOT_SET_BAND = 'Ej fastställt';
 
-module.exports.update = (debug) => (onEvent) => {
+module.exports.update = (debug) => {
+	debug('Running Dansguiden parser... ' + now() );
 
-	debug('Running Dansguiden load... ' + now() );
-	request(url, function (err, resp, body) {
-		if (err) {
-			return debug(err); // Print the error if one occurred
-		}
-		const baseUrl = resp.request.href.replace(resp.request.path, "");
-		read(body, baseUrl);
-	});
+	const result = new Promise((resolve, reject) => {
+		const output = scraperjs.StaticScraper
+			.create(url + '/dansprogram')
+			.scrape(getLinks, data => resolve(data))
+			.catch((err) => reject(err))
+	})
 
+	const updates = result.then(res => {
+			return res.filter(function (obj) {
+					return obj.title.startsWith("Visa danser i ");
+				})
+				.map(function (obj) {
+					return {link: obj.link, date: obj.title.replace(/Visa danser i /i, '')};
+				})
+				.map(function (obj) {
+					const split = obj.date.split(/\W+/i);
+					return {link: obj.link, month: split[0], year: split[1]};
+				})
+				.map(function (obj) {
+					return {link: obj.link, month: months[obj.month], year: parseInt(obj.year)};
+				})
+		})
+		.then(res => {
+			return Promise.all(res.map(loadLink))
+		})
 
-	function read(body, baseUrl) {
-		debug('Running Dansguiden parse... ' + now() );
-		const $ = cheerio.load(body);
+	return updates.then(_.flatten)
 
-		return list($, baseUrl)
-			.forEach(function (obj) {
-				loadPage(obj, function (events, date) {
-					events
-						.filter(function (event) {
-							return event.type === 'event';
-						})
-						.filter(function (event) {
-							return event.data
-								&& event.data.band !== NOT_SET_BAND;
-						})
-						.forEach((evt) => onEvent(evt.data));
-					debug("Done processing page " + obj.year + "-" + obj.month);
-				});
-			});
-	}
-
-	function loadPage(obj, callback) {
-		const url = obj.link;
+	function loadLink(obj) {
 
 		debug('Running Dansguiden parse on page ' + obj.year + "-" + obj.month );
-		request(url, function (err, resp, body) {
-			if (err) {
-				return debug(err); // Print the error if one occurred
-			}
 
-			callback(readPage(body, obj.month, obj.year), _.pick(obj, ['year', 'month']));
+		return new Promise((resolve, reject) => {
+			const re = scraperjs.StaticScraper
+			.create(url + obj.link)
+			.scrape($ => readPage($, obj.month, obj.year), data => resolve(data))
+			.catch(err => reject(err))
 		});
 	}
 
-	function readPage(body, month, year) {
-		const $ = cheerio.load(body);
-
+	function readPage($, month, year) {
 		return $("tr")
 			.get()
 			.filter(function (itm) {
@@ -100,7 +95,7 @@ module.exports.update = (debug) => (onEvent) => {
 			})
 			.map(function (itm) {
 				if (itm.type === 'event') {
-					const kv = zip(cols, itm.data).reduce(function (prev, itm) {
+					const kv = zip(columns, itm.data).reduce(function (prev, itm) {
 						prev[itm[0]] = itm[1];
 						return prev;
 					}, {});
@@ -120,25 +115,12 @@ module.exports.update = (debug) => (onEvent) => {
 			});
 	}
 
-	function list($, baseUrl) {
+	function getLinks($) {
 		return $("a[title]")
-		.map(function (idx, itm) {
-			return {link: $(itm).attr("href"), title: $(itm).attr('title')};
-		})
-		.get()
-		.filter(function (obj) {
-			return obj.title.startsWith("Visa danser i ");
-		})
-		.map(function (obj) {
-			return {link: obj.link, date: obj.title.replace(/Visa danser i /i, '')};
-		})
-		.map(function (obj) {
-			const split = obj.date.split(/\W+/i);
-			return {link: obj.link, month: split[0], year: split[1]};
-		})
-		.map(function (obj) {
-			return {link: baseUrl + obj.link, month: months[obj.month], year: parseInt(obj.year)};
-		})
+			.map(function (idx, itm) {
+				return {link: $(itm).attr("href"), title: $(itm).attr('title')};
+			})
+			.get()
 	}
 
 }
