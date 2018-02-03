@@ -3,7 +3,6 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const pug = require('pug');
 const jf = require('jsonfile');
-const debug = require('debug');
 const events = require('./lib/events.js');
 const versions = require('./lib/versions.js');
 
@@ -11,7 +10,49 @@ admin.initializeApp(functions.config().firebase);
 
 const db = admin.firestore();
 
-const fetchIndex = (req, res) => {
+
+/**
+ * Helper functions
+ */
+const json = (elms, with_key) => {
+	var arr = [];
+	elms.forEach(function(element) {
+		const obj = with_key ? {_id: element.id} : {}
+		arr.push(_.merge(element.data(), obj))
+	});
+	return arr;
+}
+
+const debug = (name) => {
+	return console.log.bind(null, name);
+}
+
+const report = (res) => {
+	return (err) => {
+		if (res && !res.headersSent) {
+			res.status(500).send(err.toString());
+		} else {
+			console.error(err);
+		}
+	}
+}
+
+const success = (log, res) => {
+	return (output) => {
+		if (res && !res.headersSent) {
+			res.status(200).send(output);
+		} else {
+			log("Success! => " + output);
+		}
+	}
+}
+
+/**
+ * Cloud functions
+ */
+
+const fetchIndex = (log, done, error) => {
+
 	const getVersions = db.collection('versions').get();
 	const getImages = db.collection('images').get();
 
@@ -25,30 +66,26 @@ const fetchIndex = (req, res) => {
 				versions: json(versions)
 			};
 
-			const html = pug.renderFile('views/index.pug', opts);
-			res.status(200).send(html);
+			done(pug.renderFile('views/index.pug', opts));
 		})
-		.catch((err) => {
-			console.error(err);
-			res.status(500).send(err.messsage);
-		});
+		.catch(err => error(err));
 
 };
 
 const fetchEvents = (params) => {
-	const log = debug('app:events:get');
+	const log = debug('fetchEvents(): ');
 	var query = db.collection('events');
-	log(JSON.stringify(params));
 
-	if (params.from && params.to) {
-		query = query.where('date', '>=', params.from)
-			.where('date', '<=', params.to);
+	if (params.from) {
+		query = query.where('date', '>=', params.from);
 	}
 
-	const columns = ['weekday', 'date', 'time', 'band', 'place', 'city',
-	'region', 'country'];
+	if (params.to) {
+		query = query.where('date', '<=', params.to);
+	}
 
-	columns.filter(col => params[col])
+	['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country']
+		.filter(col => params[col])
 		.forEach(col => {
 			query = query.where(col, '==', params[col]);
 		});
@@ -56,87 +93,98 @@ const fetchEvents = (params) => {
 	return query.get()
 };
 
-const updateEvents = () => {
-	const log = debug('app:events');
+const updateEvents = (log, done, error) => {
+	return events.update(log).then((output) => {
 
-	const updater = events.update(log);
+		const writes = _.chunk(output, 500).map((chunk, idx) => {
 
-	const batch = db.batch();
+			log("Batch#" + idx + " creating...");
+			const batch = db.batch();
 
-	updater.then((output) => {
-		output.filter(event => event.type === 'event')
-			.map(event => event.data)
-			.forEach(event => {
-				const date = event.date.format('YYYY-MM-DD');
-				const key = _([date, event.band]).map(_.snakeCase).join('_');
-				const eventDoc = _.merge(event, {date, _id: key});
+			chunk.filter(event => event.type === 'event')
+				.map(event => event.data)
+				.forEach(event => {
+					const date = event.date.format('YYYY-MM-DD');
+					const key = _([date, event.band]).map(_.snakeCase).join('_');
+					const eventDoc = _.merge(event, {date, _id: key});
 
-				log("Updating " + key);
-				const doc = db.collection('events').doc(key);
-				batch.set(doc, eventDoc, { merge: true });
-			})
-	}).catch(err => console.error(err));
+					log("Adding event " + key);
+					const doc = db.collection('events').doc(key);
+					batch.set(doc, eventDoc, { merge: true });
+				})
 
-	return batch.commit()
-		.then(() => {
-			log("Batch write done!");
-		})
-		.catch((err) => {
-			console.error(err);
+			return batch.commit()
+				.then((result) => log("Batch#" + idx + " write done!"));
 		});
-}
+
+		return Promise.all(writes)
+			.then(() => done("Wrote " + _.size(output) + " events"));
+
+	}).catch(err => error(err));
+};
 
 const fetchVersions = (params) => {
-	const log = debug('app:versions:get');
+	const log = debug('fetchVersions(): ');
 	var query = db.collection('versions');
 	return query.get()
 };
 
-const updateVersions = () => {
-	const log = debug('app:versions');
+const updateVersions = (log, done, error) => {
 
-	const updater = versions.update(log);
-	const batch = db.batch();
+	return versions.update(log).then((data) => {
 
-	updater((data) => {
+		const batch = db.batch();
 		const key = _.snakeCase("v " + data.name);
 
-		log('Updating ' + key);
+		log('Updating version' + key);
 		const doc = db.collection('versions').doc(key)
 		batch.set(doc, {
 			name: data.name,
 			lines: data.lines
 		}, { merge: true });
-	});
 
-	return batch.commit()
-		.then(() => {
-			log("Batch write done!");
-		})
-		.catch((err) => {
-			console.error(err);
-		});
-}
+		return batch.commit()
+			.then(() => done("Batch write done!"))
+			.catch(err => error(err));
 
-function json(elms, with_key) {
-	var arr = [];
-	elms.forEach(function(element) {
-		const obj = with_key ? {_id: element.id} : {}
-		arr.push(_.merge(element.data(), obj))
-	});
-	return arr;
-}
+	}).catch(err => error(err));
+};
 
 const hourlyTopic = functions.pubsub.topic('hourly-tick')
 
-exports.updateVersionData = hourlyTopic.onPublish(updateVersions)
-exports.updateVersions = functions.https.onRequest(updateVersions)
+exports.updateVersionData = hourlyTopic.onPublish((event, callback) => {
+	const log = debug('hourlyTopic => updateVersionData(): ');
+	const error = report();
+	const done = success(log);
 
-exports.updateEventData = hourlyTopic.onPublish(updateEvents)
-exports.updateEvents = functions.https.onRequest(updateEvents)
+	return updateVersions(log, done, error);
+})
+exports.updateEventData = hourlyTopic.onPublish((event, callback) => {
+	const log = debug('hourlyTopic => updateEventData(): ');
+	const error = report();
+	const done = success(log);
+
+	return updateEvents(log, done, error);
+})
+
+exports.updateVersions = functions.https.onRequest((req, res) => {
+	const log = debug('updateVersions(): ');
+	const error = report(res);
+	const done = success(log, res);
+
+	updateVersions(log, done, error);
+})
+
+exports.updateEvents = functions.https.onRequest((req, res) => {
+	const log = debug('updateEvents(): ');
+	const error = report(res);
+	const done = success(log, res);
+
+	updateEvents(log, done, error);
+})
 
 exports.getVersions  = functions.https.onRequest((req, res) => {
-	fetchVersion(req.query)
+	fetchVersions(req.query)
 		.then(versions => res.status(200).send(json(versions)))
 		.catch(err => res.status(500).send("Error occurred: " + err))
 })
@@ -146,5 +194,10 @@ exports.getEvents = functions.https.onRequest((req, res) => {
 		.catch(err => res.status(500).send("Error occurred: " + err))
 })
 
-exports.index = functions.https.onRequest(fetchIndex)
+exports.index = functions.https.onRequest((req, res) => {
+	const log = debug('fetchIndex(): ');
+	const error = report(res);
+	const done = success(log, res);
+	fetchIndex(log, done, error);
+})
 

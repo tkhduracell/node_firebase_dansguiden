@@ -20,7 +20,7 @@ const months = {
 };
 const columns = ['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country'];
 
-const NOT_SET_BAND = 'Ej fastställt';
+const NOT_SET = 'Ej fastställt';
 
 module.exports.update = (debug) => {
 	debug('Running Dansguiden parser... ' + now() );
@@ -32,7 +32,7 @@ module.exports.update = (debug) => {
 			.catch((err) => reject(err))
 	})
 
-	const updates = result.then(res => {
+	return result.then(res => {
 			return res.filter(function (obj) {
 					return obj.title.startsWith("Visa danser i ");
 				})
@@ -50,8 +50,7 @@ module.exports.update = (debug) => {
 		.then(res => {
 			return Promise.all(res.map(loadLink))
 		})
-
-	return updates.then(_.flatten)
+		.then(_.flatten)
 
 	function loadLink(obj) {
 
@@ -66,8 +65,7 @@ module.exports.update = (debug) => {
 	}
 
 	function readPage($, month, year) {
-		return $("tr")
-			.get()
+		return $("tr").get()
 			.filter(function (itm) {
 				return $(itm).children("td").length === 9 ||
 					$(itm).children("td[colspan=9]").first()
@@ -79,16 +77,22 @@ module.exports.update = (debug) => {
 				});
 			})
 			.map(function (itm) {
-				if ($(itm).children("td").first().attr("colspan") === "9") {
-					const arr = $(itm).text().split(/\W+/i).filter(function (s) {
+				function createHeader(itm) {
+					return $(itm).text().split(/\W+/i).filter(function (s) {
 						return s.trim().length > 0;
 					});
-					return {type: 'header', date: arr};
-				} else if ($(itm).children("td").length === 9) {
-					const arr = $(itm).children("td").get().map(function (td) {
-						return $(td).text();
+				}
+
+				function createEvent(itm) {
+					return $(itm).children("td").get().map(function (td) {
+						return _.trim($(td).text());
 					});
-					return {type: 'event', data: arr};
+				}
+
+				if ($(itm).children("td").first().attr("colspan") === "9") {
+					return {type: 'header', date: createHeader(itm)};
+				} else if ($(itm).children("td").length === 9) {
+					return {type: 'event', data: createEvent(itm)};
 				} else {
 					return {type: 'unknown', data: $(itm).html()};
 				}

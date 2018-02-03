@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:6.11.1
+      - image: circleci/node:6.12.3
 
     working_directory: ~/repo
 
@@ -24,7 +24,7 @@ jobs:
             - node_modules
             - functions/node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-        
+
       - deploy:
           name: Deploy Master to Firebase
           command: |

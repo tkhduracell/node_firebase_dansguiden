@@ -29,7 +29,10 @@ module.exports.update = (log) => {
 	}
 
 	log('Running Google Play parser...');
-	return scraperjs.StaticScraper
-		.create(url)
-		.scrape(extractContent);
+	return new Promise((resolve, reject) => {
+		scraperjs.StaticScraper
+			.create(url)
+			.scrape(extractContent, data => resolve(data))
+			.catch(err => reject(err));
+	})
 }
