@@ -1,5 +1,11 @@
 # node_firebase_dansguiden
-The webpage for dansguiden using firebase.
+The backend of dansguiden using firebase cloud functions.
+
+## Run locally
+```
+firebase experimental:functions:shell
+```
+Run the functions like normal javascript functions. E.g. `getVersions()`. Read more at https://firebase.google.com/docs/functions/local-emulator#install_and_configure_the_cloud_functions_shell
 
 ## Deploy cron
 ```
