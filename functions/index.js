@@ -5,6 +5,7 @@ const pug = require('pug');
 const jf = require('jsonfile');
 const events = require('./lib/events.js');
 const versions = require('./lib/versions.js');
+const moment = require('moment');
 
 admin.initializeApp(functions.config().firebase);
 
@@ -76,19 +77,22 @@ const fetchEvents = (params) => {
 	const log = debug('fetchEvents(): ');
 	var query = db.collection('events');
 
-	if (params.from) {
-		query = query.where('date', '>=', params.from);
-	}
+	// default to today
+	query = query
+		.where('date', '>=', params.from || moment().format('YYYY-MM-DD'))
+		.where('date', '<=', params.to || moment().add(7, 'days').format('YYYY-MM-DD'));
 
-	if (params.to) {
-		query = query.where('date', '<=', params.to);
-	}
-
+	// apply filters
 	['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country']
 		.filter(col => params[col])
 		.forEach(col => {
 			query = query.where(col, '==', params[col]);
 		});
+
+		// order by date_band
+		query = query.orderBy("date", "asc");
+		// apply limit
+		query = query.limit(_.toSafeInteger(params.limit || '100'));
 
 	return query.get()
 };
@@ -106,7 +110,8 @@ const updateEvents = (log, done, error) => {
 				.forEach(event => {
 					const date = event.date.format('YYYY-MM-DD');
 					const key = _([date, event.band]).map(_.snakeCase).join('_');
-					const eventDoc = _.merge(event, {date, _id: key});
+					const updateAt = new Date().getTime();
+					const eventDoc = _.merge(event, {_id: key, date, updated_at: updateAt});
 
 					log("Adding event " + key);
 					const doc = db.collection('events').doc(key);
