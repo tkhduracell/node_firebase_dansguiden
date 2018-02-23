@@ -18,7 +18,7 @@ const months = {
 	"november": 11,
 	"december": 12
 };
-const columns = ['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country'];
+const columns = ['weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region'];
 
 const NOT_SET = 'Ej fastställt';
 

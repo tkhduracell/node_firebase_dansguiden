@@ -83,7 +83,7 @@ const fetchEvents = (params) => {
 		.where('date', '<=', params.to || moment().add(7, 'days').format('YYYY-MM-DD'));
 
 	// apply filters
-	['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'country']
+	['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'county']
 		.filter(col => params[col])
 		.forEach(col => {
 			query = query.where(col, '==', params[col]);
@@ -206,3 +206,22 @@ exports.index = functions.https.onRequest((req, res) => {
 	fetchIndex(log, done, error);
 })
 
+exports.migrate = functions.https.onRequest((req, res) => {
+
+	var query = db.collection('events')
+		.orderBy('_id', 'asc')
+		.limit(5)
+		.startAt(4)
+		.get();
+
+	query
+		.then(r => r.docs)
+		.then(e => e.map(itm => {
+			return itm.data()._id
+		}))
+		.then(s => {
+			console.log(s)
+			res.status(200).send(s)
+		})
+		.catch(err => res.status(500).send(err.toString()));
+})
