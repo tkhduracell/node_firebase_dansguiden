@@ -83,7 +83,7 @@ const fetchEvents = (params) => {
 		.where('date', '<=', params.to || moment().add(7, 'days').format('YYYY-MM-DD'));
 
 	// apply filters
-	['weekday', 'date', 'time', 'band', 'place', 'city', 'region', 'county']
+	events.COLUMNS
 		.filter(col => params[col])
 		.forEach(col => {
 			query = query.where(col, '==', params[col]);

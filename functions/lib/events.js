@@ -18,7 +18,10 @@ const months = {
 	"november": 11,
 	"december": 12
 };
-const columns = ['weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region'];
+const COLUMNS = module.exports.COLUMNS = [
+	'weekday', 'date', 'time', 'band',
+	'place', 'city', 'county', 'region'
+];
 
 const NOT_SET = 'Ej fastställt';
 
@@ -99,7 +102,7 @@ module.exports.update = (debug) => {
 			})
 			.map(function (itm) {
 				if (itm.type === 'event') {
-					const kv = zip(columns, itm.data).reduce(function (prev, itm) {
+					const kv = zip(COLUMNS, itm.data).reduce(function (prev, itm) {
 						prev[itm[0]] = itm[1];
 						return prev;
 					}, {});
