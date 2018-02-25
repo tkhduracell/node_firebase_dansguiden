@@ -1,3 +1,4 @@
+const fs = require('fs');
 
 const dump = module.exports.dump = (db, dir) => (collectionName) => {
 	var data = {};

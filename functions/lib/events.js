@@ -18,6 +18,7 @@ const months = {
 	"november": 11,
 	"december": 12
 };
+
 const COLUMNS = module.exports.COLUMNS = [
 	'weekday', 'date', 'time', 'band',
 	'place', 'city', 'county', 'region'
