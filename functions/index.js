@@ -1,52 +1,20 @@
+// Libraries
 const _ = require('lodash');
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const pug = require('pug');
 const jf = require('jsonfile');
-const events = require('./lib/events.js');
-const versions = require('./lib/versions.js');
 const moment = require('moment');
 
+// Dependencies
+const events = require('./lib/events.js');
+const versions = require('./lib/versions.js');
+const {success, report, debug, json} = require('./lib/fn_helpers');
+const artistUpdater = require('./lib/artist_updater');
+
+// App setup
 admin.initializeApp(functions.config().firebase);
-
 const db = admin.firestore();
-
-
-/**
- * Helper functions
- */
-const json = (elms, with_key) => {
-	var arr = [];
-	elms.forEach(function(element) {
-		const obj = with_key ? {_id: element.id} : {}
-		arr.push(_.merge(element.data(), obj))
-	});
-	return arr;
-}
-
-const debug = (name) => {
-	return console.log.bind(null, name);
-}
-
-const report = (res) => {
-	return (err) => {
-		if (res && !res.headersSent) {
-			res.status(500).send(err.toString());
-		} else {
-			console.error(err);
-		}
-	}
-}
-
-const success = (log, res) => {
-	return (output) => {
-		if (res && !res.headersSent) {
-			res.status(200).send(output);
-		} else {
-			log("Success! => " + output);
-		}
-	}
-}
 
 /**
  * Cloud functions
@@ -69,7 +37,7 @@ const fetchIndex = (log, done, error) => {
 
 			done(pug.renderFile('views/index.pug', opts));
 		})
-		.catch(err => error(err));
+		.catch(error);
 
 };
 
@@ -125,7 +93,7 @@ const updateEvents = (log, done, error) => {
 		return Promise.all(writes)
 			.then(() => done("Wrote " + _.size(output) + " events"));
 
-	}).catch(err => error(err));
+	}).catch(error);
 };
 
 const fetchVersions = (params) => {
@@ -152,19 +120,30 @@ const updateVersions = (log, done, error) => {
 			.then(() => done("Batch write done!"))
 			.catch(err => error(err));
 
-	}).catch(err => error(err));
+	}).catch(error);
 };
+
+const updateBandMetadata = (log, done, error) => {
+	return artistUpdater.update(db)
+		.then(done)
+		.catch(error)
+}
+
+/**
+ * Topic function
+ */
 
 const hourlyTopic = functions.pubsub.topic('hourly-tick')
 
-exports.updateVersionData = hourlyTopic.onPublish((event, callback) => {
+exports.updateVersionTopic = hourlyTopic.onPublish((event, callback) => {
 	const log = debug('hourlyTopic => updateVersionData(): ');
 	const error = report();
 	const done = success(log);
 
 	return updateVersions(log, done, error);
 })
-exports.updateEventData = hourlyTopic.onPublish((event, callback) => {
+
+exports.updateEventTopic = hourlyTopic.onPublish((event, callback) => {
 	const log = debug('hourlyTopic => updateEventData(): ');
 	const error = report();
 	const done = success(log);
@@ -172,8 +151,20 @@ exports.updateEventData = hourlyTopic.onPublish((event, callback) => {
 	return updateEvents(log, done, error);
 })
 
+exports.updateBandMetadataTopic = hourlyTopic.onPublish((event, callback) => {
+	const log = debug('hourlyTopic => updateBandMetadata(): ');
+	const error = report();
+	const done = success(log);
+
+	return updateBandMetadata(log, done, error);
+})
+
+/**
+ * Web functions
+ */
+
 exports.updateVersions = functions.https.onRequest((req, res) => {
-	const log = debug('updateVersions(): ');
+	const log = debug('onRequest => updateVersions(): ');
 	const error = report(res);
 	const done = success(log, res);
 
@@ -181,11 +172,19 @@ exports.updateVersions = functions.https.onRequest((req, res) => {
 })
 
 exports.updateEvents = functions.https.onRequest((req, res) => {
-	const log = debug('updateEvents(): ');
+	const log = debug('onRequest => updateEvents(): ');
 	const error = report(res);
 	const done = success(log, res);
 
 	updateEvents(log, done, error);
+})
+
+exports.updateBandMetadata = functions.https.onRequest((req, res) => {
+	const log = debug('onRequest => updateBandMetadata(): ');
+	const error = report(res);
+	const done = success(log, res);
+
+	updateBandMetadata(log, done, error);
 })
 
 exports.getVersions  = functions.https.onRequest((req, res) => {
@@ -193,6 +192,7 @@ exports.getVersions  = functions.https.onRequest((req, res) => {
 		.then(versions => res.status(200).send(json(versions)))
 		.catch(err => res.status(500).send("Error occurred: " + err))
 })
+
 exports.getEvents = functions.https.onRequest((req, res) => {
 	fetchEvents(req.query)
 		.then(events => res.status(200).send(json(events, true)))
@@ -204,24 +204,4 @@ exports.index = functions.https.onRequest((req, res) => {
 	const error = report(res);
 	const done = success(log, res);
 	fetchIndex(log, done, error);
-})
-
-exports.migrate = functions.https.onRequest((req, res) => {
-
-	var query = db.collection('events')
-		.orderBy('_id', 'asc')
-		.limit(5)
-		.startAt(4)
-		.get();
-
-	query
-		.then(r => r.docs)
-		.then(e => e.map(itm => {
-			return itm.data()._id
-		}))
-		.then(s => {
-			console.log(s)
-			res.status(200).send(s)
-		})
-		.catch(err => res.status(500).send(err.toString()));
 })

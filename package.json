@@ -4,7 +4,8 @@
   "description": "The webpage for dansguiden",
   "main": "dansguiden",
   "scripts": {
-    "start": "firebase serve --only hosting,function"
+	"start": "firebase serve --only hosting,function",
+	"deploy": "firebase deploy --only functions"
   },
   "repository": {
     "type": "git",

@@ -25,6 +25,7 @@ module.exports.update = (db) => {
 				return batch.commit();
 			}))
 		})
+		.then(writes => eventsKeys)
 }
 
 function get(snapshot, fn) {

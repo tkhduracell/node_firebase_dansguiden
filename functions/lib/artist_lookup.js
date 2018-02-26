@@ -1,6 +1,10 @@
 const _ = require('lodash')
 const SpotifyWebApi = require('spotify-web-api-node')
 const secrets = require('../../.secrets.json');
+const {
+	delayed,
+	serial
+} = require('./promises');
 const client = {
 	id: secret.spotifyClientId,
 	secret: secrets.spotifyClientSecret
@@ -13,20 +17,6 @@ const oauth2 = require('simple-oauth2').create({
 	}
 })
 
-const delayed = (value, duration) => {
-	return function() {
-		return new Promise(function(resolve, reject) {
-			setTimeout(() => resolve(value), duration)
-		});
-	};
-}
-
-const serial = (funcs) => {
-	return funcs.reduce((promise, func) => {
-		return promise.then(result => func().then(Array.prototype.concat.bind(result)))
-	}, Promise.resolve([]))
-}
-
 function createSpotifyApi(auth) {
 	const spotifyApi = new SpotifyWebApi({
 		clientId: client.id,
@@ -36,7 +26,7 @@ function createSpotifyApi(auth) {
 	return spotifyApi
 }
 
-const common_genres = [
+const commonGenres = [
 	'dansband',
 	'danspunk',
 	'danseband',
@@ -48,7 +38,17 @@ const common_genres = [
 	'rock-and-roll'
 ]
 
+const randomInt = max => Math.round(Math.random() * max)
+const getFirst = x => _.first(x) || {};
+
 function getArtistForBand(searchFn, store, band) {
+
+	function getBandsFromArtists(artists) {
+		return artists.filter(a => a.name.toLowerCase() === band.toLowerCase())
+			.filter(a => _.intersection(a.genres, commonGenres).length > 0)
+			.map(a => _.pick(a, ['id', 'name', 'genres', 'images']));
+	}
+
 	return () => {
 		return store.get(band).then(a => {
 			if (a) {
@@ -56,17 +56,12 @@ function getArtistForBand(searchFn, store, band) {
 				return Promise.resolve(a);
 			} else {
 				console.log("Searching for artist", band)
-				return Promise.resolve()
-					.then(delayed(band, 500))
+				return delayed(band, randomInt(5000))
 					.then(b => b.replace(/\W+\([[:upper:]]+\)/g), '')
 					.then(b => searchFn(b, {limit: 10, market: "SE"}))
 					.then(res => res.body.artists.items)
-					.then(artists => {
-						return artists.filter(a => a.name.toLowerCase() === band.toLowerCase() )
-							.filter(a => _.intersection(a.genres, common_genres).length > 0)
-							.map(a => _.pick(a, ['id', 'name', 'genres', 'images']))
-					})
-					.then(x => _.first(x) || {})
+					.then(getBandsFromArtists)
+					.then(getFirst)
 					.then(found => store.set(band, found))
 			}
 		})
