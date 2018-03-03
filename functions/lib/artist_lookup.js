@@ -43,8 +43,17 @@ const getFirst = x => _.first(x) || {};
 
 function getArtistForBand(searchFn, store, band) {
 
+	function isSimilar(lhs, rhs) {
+		const normalize = str => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
+		return normalize(lhs) === normalize(rhs);
+	}
+
+	function removeSuffix(band) {
+		return band.replace(/\W+\([[:upper:]]+\)/gi, '')
+	}
+
 	function getBandsFromArtists(artists) {
-		return artists.filter(a => a.name.toLowerCase() === band.toLowerCase())
+		return artists.filter(a => isSimilar(a.name, band))
 			.filter(a => _.intersection(a.genres, commonGenres).length > 0)
 			.map(a => _.pick(a, ['id', 'name', 'genres', 'images']));
 	}
@@ -57,12 +66,12 @@ function getArtistForBand(searchFn, store, band) {
 			} else {
 				console.log("Searching for artist", band)
 				return delayed(band, randomInt(5000))
-					.then(b => b.replace(/\W+\([[:upper:]]+\)/g), '')
+					.then(removeSuffix)
 					.then(b => searchFn(b, {limit: 10, market: "SE"}))
 					.then(res => res.body.artists.items)
 					.then(getBandsFromArtists)
 					.then(getFirst)
-					.then(found => store.set(band, found))
+					.then(store.set.bind(store, band))
 			}
 		})
 	}
