@@ -133,26 +133,26 @@ const updateBandMetadata = (log, done, error) => {
  * Topic function
  */
 
-const hourlyTopic = functions.pubsub.topic('hourly-tick')
+const dailyTopic = functions.pubsub.topic('daily-tick')
 
-exports.updateVersionTopic = hourlyTopic.onPublish((event, callback) => {
-	const log = debug('hourlyTopic => updateVersionData(): ');
+exports.updateVersionTopic = dailyTopic.onPublish((event, callback) => {
+	const log = debug('dailyTopic => updateVersionData(): ');
 	const error = report();
 	const done = success(log);
 
 	return updateVersions(log, done, error);
 })
 
-exports.updateEventTopic = hourlyTopic.onPublish((event, callback) => {
-	const log = debug('hourlyTopic => updateEventData(): ');
+exports.updateEventTopic = dailyTopic.onPublish((event, callback) => {
+	const log = debug('dailyTopic => updateEventData(): ');
 	const error = report();
 	const done = success(log);
 
 	return updateEvents(log, done, error);
 })
 
-exports.updateBandMetadataTopic = hourlyTopic.onPublish((event, callback) => {
-	const log = debug('hourlyTopic => updateBandMetadata(): ');
+exports.updateBandMetadataTopic = dailyTopic.onPublish((event, callback) => {
+	const log = debug('dailyTopic => updateBandMetadata(): ');
 	const error = report();
 	const done = success(log);
 
