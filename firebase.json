@@ -21,7 +21,11 @@
 	  {
         "source": "/api/update/versions",
         "function": "updateVersions"
-      }
+	  },
+	  {
+		"source": "/api/update/metadata",
+		"function": "updateBandMetadata"
+	  }
     ]
   }
 }
