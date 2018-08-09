@@ -28,7 +28,6 @@ jobs:
       - deploy:
           name: Deploy Master to Firebase
           command: |
-            ./node_modules/.bin/firebase use dansguiden  --token=$FIREBASE_DEPLOY_TOKEN
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./node_modules/.bin/firebase deploy --token=$FIREBASE_DEPLOY_TOKEN
+              ./node_modules/.bin/firebase deploy -P dansguiden-b3a7d --token=$FIREBASE_DEPLOY_TOKEN
             fi

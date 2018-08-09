@@ -1,6 +1,6 @@
 // Libraries
 const _ = require('lodash')
-const functions = require('firebase-functions')
+const functions = require('firebase-functions').region('europe-west1')
 const admin = require('firebase-admin')
 const pug = require('pug')
 const moment = require('moment')

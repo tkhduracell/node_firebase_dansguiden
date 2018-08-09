@@ -21,7 +21,6 @@
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "devDependencies": {
     "chai-as-promised": "^7.1.1",
-    "firebase-tools": "^3.13.1",
     "mocha": "^5.2.0"
   },
   "dependencies": {
