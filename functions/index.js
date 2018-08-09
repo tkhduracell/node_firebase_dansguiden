@@ -12,7 +12,8 @@ const {
   success,
   report,
   debug,
-  json
+  json,
+  mapArray
 } = require('./lib/fn_helpers')
 const artistUpdater = require('./lib/artist_updater')
 
@@ -20,13 +21,18 @@ const artistUpdater = require('./lib/artist_updater')
 admin.initializeApp(functions.config().firebase)
 const db = admin.firestore()
 
+function database (collection) {
+  const prefix = functions.config().collection_prefix || ''
+  return db.collection(prefix + collection)
+}
+
 /**
  * Cloud functions
  */
 
 const fetchIndex = (log, done, error) => {
-  const getVersions = db.collection('versions').get()
-  const getImages = db.collection('images').get()
+  const getVersions = database('versions').get()
+  const getImages = database('images').get()
 
   Promise.all([getVersions, getImages])
     .then((resolved) => {
@@ -45,7 +51,7 @@ const fetchIndex = (log, done, error) => {
 
 const fetchEvents = (params) => {
   const log = debug('fetchEvents(): ')
-  var query = db.collection('events')
+  var query = database('events')
 
   // default to today
   query = query
@@ -62,48 +68,84 @@ const fetchEvents = (params) => {
   // order by date_band
   query = query.orderBy('date', 'asc')
   // apply limit
-  query = query.limit(_.toSafeInteger(params.limit ||  '100'))
+  query = query.limit(_.toSafeInteger(params.limit || '100'))
 
   return query.get()
 }
 
-const updateEvents = (log, done, error) => {
-  return events.update(log).then((output) => {
-    const writes = _.chunk(output, 500).map((chunk, idx) => {
-      log('Batch#' + idx + ' creating...')
-      const batch = db.batch()
+const deleteOverlappingEvents = (output, log) => {
+  const dates = output.filter(event => event.type === 'event')
+    .map(e => e.data.date.format('YYYY-MM-DD'))
 
-      chunk.filter(event => event.type === 'event')
-        .map(event => event.data)
-        .forEach(event => {
-          const date = event.date.format('YYYY-MM-DD')
-          const key = _([date, event.band]).map(_.snakeCase).join('_')
-          const updateAt = new Date().getTime()
-          const eventDoc = _.merge(event, {
-            _id: key,
-            date,
-            updated_at: updateAt
-          })
+  return database('events')
+    .where('date', '>=', _.min(dates))
+    .where('date', '<=', _.max(dates))
+    .get()
+    .then(result => mapArray(result, e => e.id))
+    .then(output => {
+      const commits = _.chunk(output, 500).map((chunk, idx) => {
+        const deleteBatch = db.batch()
+        chunk.forEach(id => {
+          log('Deleting event ' + id)
+          const ref = database('events').doc(id)
+          deleteBatch.delete(ref)
+        })
+        return deleteBatch.commit()
+          .then((result) => log('Batch#' + idx + ' deletion done!'))
+      })
+      return Promise.all(commits)
+    })
+}
 
-          log('Adding event ' + key)
-          const doc = db.collection('events').doc(key)
-          batch.set(doc, eventDoc, {
-            merge: true
-          })
+const batchWriteEvents = (output, log) => {
+  const writes = _.chunk(output, 500).map((chunk, idx) => {
+    log('Batch#' + idx + ' creating...')
+    const batch = db.batch()
+
+    chunk.filter(event => event.type === 'event')
+      .forEach(source => {
+        if (!source.data.date.isValid()) {
+          return console.log('Invalid date: ' + JSON.stringify(source))
+        }
+
+        const event = _.pick(source.data, events.COLUMNS)
+        const date = event.date.format('YYYY-MM-DD')
+        const key = _([date, event.band]).map(_.snakeCase).join('_')
+        const updateAt = new Date().getTime()
+        const eventDoc = _.merge(event, {
+          _id: key,
+          date,
+          updated_at: updateAt
         })
 
-      return batch.commit()
-        .then((result) => log('Batch#' + idx + ' write done!'))
-    })
+        log('Adding event ' + key)
+        const doc = database('events').doc(key)
+        batch.set(doc, eventDoc, {
+          merge: true
+        })
+      })
 
-    return Promise.all(writes)
-      .then(() => done('Wrote ' + _.size(output) + ' events'))
+    return batch.commit()
+      .then((result) => log('Batch#' + idx + ' write done!'))
+  })
+
+  return Promise.all(writes)
+}
+
+const updateEvents = (log, done, error) => {
+  return events.update(log).then((output) => {
+    return deleteOverlappingEvents(output, log)
+      .then(() => {
+        log('Done deleting overlapps!')
+        return batchWriteEvents(output, log)
+          .then(() => done('Wrote ' + _.size(output) + ' events'))
+      })
   }).catch(error)
 }
 
 const fetchVersions = (params) => {
-  const log = debug('fetchVersions(): ')
-  var query = db.collection('versions')
+  debug('fetchVersions(): ')
+  var query = database('versions')
   return query.get()
 }
 
@@ -113,7 +155,7 @@ const updateVersions = (log, done, error) => {
     const key = _.snakeCase('v ' + data.name)
 
     log('Updating version' + key)
-    const doc = db.collection('versions').doc(key)
+    const doc = database('versions').doc(key)
     batch.set(doc, {
       name: data.name,
       lines: data.lines
