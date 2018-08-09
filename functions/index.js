@@ -18,11 +18,12 @@ const {
 const artistUpdater = require('./lib/artist_updater')
 
 // App setup
-admin.initializeApp(functions.config().firebase)
+admin.initializeApp()
 const db = admin.firestore()
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG)
 
 function database (collection) {
-  const prefix = functions.config().collection_prefix || ''
+  const prefix = firebaseConfig.collection_prefix || ''
   return db.collection(prefix + collection)
 }
 
