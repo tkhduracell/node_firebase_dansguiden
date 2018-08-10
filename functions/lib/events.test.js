@@ -6,6 +6,8 @@ chai.use(chaiAsPromised)
 
 chai.should()
 
+// node_modules/.bin/mocha --reporter spec functions/lib/events.test.js
+
 describe('events', () => {
   const input = events.update(() => {})
 

@@ -151,22 +151,20 @@ const fetchVersions = (params) => {
 }
 
 const updateVersions = (log, done, error) => {
-  return versions.update(log).then((data) => {
-    const batch = db.batch()
+  return versions.getLatest(log).then((data) => {
+    if (_.isEmpty(data.name) || _.isEmpty(data.lines)) {
+      log('No updated version, result was empty: ' + JSON.stringify(data))
+    }
+
     const key = _.snakeCase('v ' + data.name)
 
     log('Updating version' + key)
-    const doc = database('versions').doc(key)
-    batch.set(doc, {
+    return database('versions').doc(key).set({
       name: data.name,
       lines: data.lines
     }, {
       merge: true
-    })
-
-    return batch.commit()
-      .then(() => done('Batch write done!'))
-      .catch(err => error(err))
+    }).then(() => done('Batch write done!'))
   }).catch(error)
 }
 

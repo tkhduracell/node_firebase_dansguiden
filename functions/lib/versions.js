@@ -1,24 +1,27 @@
 const scraperjs = require('scraperjs')
 
-module.exports.update = (log) => {
+module.exports.getLatest = (log) => {
   const url = 'https://play.google.com/store/apps/details?id=feality.dans'
 
   const extractContent = ($) => {
     return {
-      lines: $('.whatsnew .recent-change')
+      lines: $("div:contains('What's New') > h2").parent()
+        .parent()
+        .find('content')
         .map(function () {
           return $(this).text()
             .replace(/^\W*\*\W*/, '')
         })
-        .get(),
-      name: $("div[itemProp='softwareVersion']")
+        .get()
+        .filter(s => s !== 'Read more'),
+      name: $("div:contains('Current Version') + span")
         .map(function () {
           return $(this).text()
             .trim()
         })
         .get()
         .join(', '),
-      date: $("div[itemProp='datePublished']")
+      date: $("div:contains('Updated') + span")
         .map(function () {
           return $(this).text()
             .trim()
@@ -32,7 +35,10 @@ module.exports.update = (log) => {
   return new Promise((resolve, reject) => {
     scraperjs.StaticScraper
       .create(url)
-      .scrape(extractContent, data => resolve(data))
+      .scrape(extractContent, data => {
+        debugger
+        return resolve(data)
+      })
       .catch(err => reject(err))
   })
 }
