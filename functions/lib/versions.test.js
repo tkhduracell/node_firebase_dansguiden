@@ -11,19 +11,19 @@ chai.should()
 describe('versions', () => {
   const input = events.getLatest(() => {})
 
-  it('should return none empty version', () => {
-    return input.then(data => data.name)
-      .should.eventually.not.be.empty
+  it('should return none empty version', async () => {
+    const x = await input
+    return x.name.should.not.be.empty
   })
 
-  it('should return none empty lines', () => {
-    return input.then(data => data.lines)
-      .should.eventually.not.be.empty
+  it('should return none empty lines', async () => {
+    const x = await input
+    return x.lines.should.not.be.empty
   })
 
-  it('should return none empty date', () => {
-    return input.then(data => data.date)
-      .should.eventually.not.be.empty
+  it('should return none empty date', async () => {
+    const x = await input
+    return x.date.should.not.be.empty
   })
 
 })

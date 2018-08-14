@@ -10,13 +10,13 @@ describe('events', () => {
 
   it('should return none empty array', async () => {
     const subject = await input
-    subject.should.have.length.greaterThan(1)
+    return subject.should.have.length.greaterThan(1)
   })
 
   it('should return have no unknowns', async () => {
     const subject = await input
     const output = subject.filter(e => e.type === 'unknown')
 
-    output.should.have.length(0)
+    return output.should.have.length(0)
   })
 })
