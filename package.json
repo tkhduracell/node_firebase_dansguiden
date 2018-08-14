@@ -7,7 +7,8 @@
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
     "deploy": "firebase -P dansguiden-b3a7d deploy --only functions",
     "shell": "firebase -P dansguiden-b3a7d functions:shell",
-    "test": "mocha --reporter spec --harmony --inspect functions/**/*.test.js "
+    "test": "mocha --reporter spec --harmony functions/**/*.test.js",
+    "test-inspect": "mocha --reporter spec --harmony --inspect functions/**/*.test.js"
   },
   "repository": {
     "type": "git",
