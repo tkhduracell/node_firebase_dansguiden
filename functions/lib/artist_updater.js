@@ -5,7 +5,7 @@ module.exports.update = (batch, table, log) => {
     .get()
     .then(snapshot => {
       log('Fetched band_metadata table!')
-      get(snapshot, m => getImageAndId(m))
+      return get(snapshot, m => getImageAndId(m))
     })
 
   const eventsKeys = table('events')
