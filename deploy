@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+echo "-------------------------------------------------------------"
+echo ""
+echo "You do not need to deploy:"
+echo "This is done by CircleCI at https://circleci.com/gh/tkhduracell/node_firebase_dansguiden/tree/master"
+echo ""
+echo "-------------------------------------------------------------"

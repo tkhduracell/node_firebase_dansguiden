@@ -5,7 +5,7 @@
   "main": "dansguiden",
   "scripts": {
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
-    "deploy": "firebase -P dansguiden-b3a7d deploy --only functions",
+    "deploy": "./deploy",
     "shell": "firebase -P dansguiden-b3a7d functions:shell",
     "test": "mocha --reporter spec --harmony **/*.test.js functions/**/*.test.js",
     "test-inspect": "mocha --reporter spec --harmony --inspect **/*.test.js functions/**/*.test.js",
