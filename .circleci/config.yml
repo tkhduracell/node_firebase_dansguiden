@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:6.12.3
+      - image: circleci/node:8.14
 
     working_directory: ~/repo
 
@@ -29,5 +29,5 @@ jobs:
           name: Deploy Master to Firebase
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./node_modules/.bin/firebase deploy -P dansguiden-b3a7d --token=$FIREBASE_DEPLOY_TOKEN
+              node node_modules/firebase-tools/lib/bin/firebase.js deploy -P dansguiden-b3a7d --token=$FIREBASE_DEPLOY_TOKEN
             fi

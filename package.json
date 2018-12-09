@@ -27,10 +27,11 @@
     "eslint": "^5.8.0",
     "eslint-config-google": "^0.11.0",
     "eslint-plugin-chai-expect": "^2.0.1",
+    "firebase-tools": "^6.1.2",
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "firebase-admin": "^6.0.0",
-    "firebase-functions": "^2.0.3"
+    "firebase-admin": "^6.3.0",
+    "firebase-functions": "^2.1.0"
   }
 }
