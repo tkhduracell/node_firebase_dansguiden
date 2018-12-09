@@ -154,7 +154,9 @@ module.exports.updateVersions = (table) => (log, done, error) => {
 }
 
 module.exports.updateBandMetadata = (batch, table) => (log, done, error) => {
-  return artistUpdater.update(batch, table)
+  log('Start event metadata update')
+  return artistUpdater.update(batch, table, log)
     .then(done)
+    .then(() => log('Completed event metadata update!'))
     .catch(error)
 }

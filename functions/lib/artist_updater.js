@@ -1,26 +1,36 @@
 const _ = require('lodash')
 
-module.exports.update = (batch, table) => {
+module.exports.update = (batch, table, log) => {
   const metadata = table('band_metadata')
     .get()
-    .then(snapshot => get(snapshot, m => getImageAndId(m)))
+    .then(snapshot => {
+      log('Fetched band_metadata table!')
+      get(snapshot, m => getImageAndId(m))
+    })
 
   const eventsKeys = table('events')
     .get()
-    .then(snapshot => get(snapshot, e => e.band))
+    .then(snapshot => {
+      log('Fetched events table!')
+      return get(snapshot, e => e.band)
+    })
 
   return Promise.all([eventsKeys, metadata])
     .then(arr => {
+      log('Starting events batch updates')
       const [events, meta] = arr
-      return Promise.all(_.flatMap(_.chunk(_.toPairs(events), 500), chunk => {
+      return Promise.all(_.flatMap(_.chunk(_.toPairs(events), 500), (chunk, idx) => {
+        log('Building batch#' + idx)
         const batcher = batch()
         _.forEach(chunk, (pair) => {
           const [id, band] = pair
           const doc = table('events').doc(id)
           if (meta[band]) {
             batcher.update(doc, _.omitBy(meta[band], _.isUndefined))
+            log(`Updating event ${id} with data for ${band}`)
           }
         })
+        log('Executing batch#' + idx)
         return batcher.commit()
       }))
     })
