@@ -1,3 +1,4 @@
 {
-    "mocha.enabled": false
+  "mocha.files.glob": "**/*.test.js",
+  "mocha.path": "${workspaceFolder}/node_firebase_dansguiden/node_modules/mocha/bin/mocha"
 }

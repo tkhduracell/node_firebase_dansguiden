@@ -31,3 +31,4 @@ cron/lib
 
 .secrets.json
 backups/
+.firebase/
