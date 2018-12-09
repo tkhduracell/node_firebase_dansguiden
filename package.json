@@ -7,8 +7,9 @@
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
     "deploy": "firebase -P dansguiden-b3a7d deploy --only functions",
     "shell": "firebase -P dansguiden-b3a7d functions:shell",
-    "test": "mocha --reporter spec --harmony functions/**/*.test.js",
-    "test-inspect": "mocha --reporter spec --harmony --inspect functions/**/*.test.js"
+    "test": "mocha --reporter spec --harmony **/*.test.js functions/**/*.test.js",
+    "test-inspect": "mocha --reporter spec --harmony --inspect **/*.test.js functions/**/*.test.js",
+    "lint": "eslint functions"
   },
   "repository": {
     "type": "git",
@@ -21,7 +22,11 @@
   },
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "devDependencies": {
+    "chai": "~4.2.0",
     "chai-as-promised": "^7.1.1",
+    "eslint": "^5.8.0",
+    "eslint-config-google": "^0.11.0",
+    "eslint-plugin-chai-expect": "^2.0.1",
     "mocha": "^5.2.0"
   },
   "dependencies": {

@@ -1,8 +1,8 @@
 const fs = require('fs')
-const out = require('./events').update(console.log)
+const out = require('../lib/events').update(console.log)
 
-console.log("out", out)
-out.then(res => {
-	console.log("then:", res)
-	fs.writeFileSync('output.json', JSON.stringify(res, undefined, 2))
+out.then((res) => {
+  console.log('result')
+  console.log(JSON.stringify(res, undefined, 2))
+  fs.writeFileSync('output.json', JSON.stringify(res, undefined, 2))
 })

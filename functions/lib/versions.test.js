@@ -1,7 +1,7 @@
+/* eslint-env mocha */
 const events = require('./versions')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
-const _ = require('lodash')
 chai.use(chaiAsPromised)
 
 chai.should()

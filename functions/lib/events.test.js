@@ -1,6 +1,6 @@
+/* eslint-env mocha */
 const events = require('./events')
 const chai = require('chai')
-const _ = require('lodash')
 
 chai.should()
 // node_modules/.bin/mocha --reporter spec functions/lib/events.test.js
