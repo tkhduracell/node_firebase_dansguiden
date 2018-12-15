@@ -23,18 +23,20 @@ module.exports.update = (batch, table, log) => {
       return Promise.all(_.flatMap(_.chunk(_.toPairs(events), 500), (chunk, idx) => {
         log('Building batch#' + idx)
         const batcher = batch()
+        const counters = { updated: 0, noops: 0 }
         _.forEach(chunk, (pair) => {
           const [id, band] = pair
           const doc = table('events').doc(id)
           if (meta[band]) {
             const changeset = _.omitBy(meta[band], _.isUndefined)
             batcher.update(doc, changeset)
+            counters.updated++
             log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
           } else {
-            log(`No data update for event ${id} with artist ${band}, meta[band] was ${JSON.stringify(band[meta])}`)
+            counters.noops++
           }
         })
-        log('Executing batch#' + idx)
+        log(`Executing batch#${idx}, ${JSON.stringify(counters)}`)
         return batcher.commit()
       }))
     })
