@@ -19,6 +19,7 @@ module.exports.update = (batch, table, log) => {
     .then(arr => {
       log('Starting events batch updates')
       const [events, meta] = arr
+      log(`input events: ${events.lenght} bands: ${meta.lenght}`)
       return Promise.all(_.flatMap(_.chunk(_.toPairs(events), 500), (chunk, idx) => {
         log('Building batch#' + idx)
         const batcher = batch()
@@ -29,6 +30,8 @@ module.exports.update = (batch, table, log) => {
             const changeset = _.omitBy(meta[band], _.isUndefined)
             batcher.update(doc, changeset)
             log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
+          } else {
+            log(`No data update for event ${id} with artist ${band}, meta[band] was ${JSON.stringify(band[meta])}`)
           }
         })
         log('Executing batch#' + idx)
