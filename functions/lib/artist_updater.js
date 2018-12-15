@@ -26,15 +26,19 @@ module.exports.update = (batch, table, log) => {
           const [id, band] = pair
           const doc = table('events').doc(id)
           if (meta[band]) {
-            batcher.update(doc, _.omitBy(meta[band], _.isUndefined))
-            log(`Updating event ${id} with data for ${band}`)
+            const changeset = _.omitBy(meta[band], _.isUndefined)
+            batcher.update(doc, changeset)
+            log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
           }
         })
         log('Executing batch#' + idx)
         return batcher.commit()
       }))
     })
-    .then(writes => eventsKeys)
+    .then(writes => {
+      log('Batches committed succesfully! writes: ' + JSON.stringify(writes, null, 2))
+      return eventsKeys
+    })
 }
 
 function get (snapshot, fn) {
