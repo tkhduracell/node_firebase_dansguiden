@@ -41,7 +41,7 @@ module.exports.update = (batch, table, log) => {
       }))
     })
     .then(writes => {
-      log('Batches committed succesfully! writes: ' + JSON.stringify(writes, null, 2))
+      log(`${_.size(writes)} batches committed succesfully!`)
       return eventsKeys
     })
 }
