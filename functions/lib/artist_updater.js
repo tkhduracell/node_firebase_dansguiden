@@ -5,22 +5,23 @@ module.exports.update = (batch, table, log) => {
     .get()
     .then(snapshot => {
       log('Fetched band_metadata table!')
-      return get(snapshot, m => getImageAndId(m))
+      return asMap(snapshot, m => getImageAndId(m))
     })
 
   const eventsKeys = table('events')
     .get()
     .then(snapshot => {
       log('Fetched events table!')
-      return get(snapshot, e => e.band)
+      return asMap(snapshot, e => e.band)
     })
 
   return Promise.all([eventsKeys, metadata])
     .then(arr => {
       log('Starting events batch updates')
       const [events, meta] = arr
-      log(`input events: ${events.lenght} bands: ${meta.lenght}`)
-      return Promise.all(_.flatMap(_.chunk(_.toPairs(events), 500), (chunk, idx) => {
+      log(`Joining ${_.size(events)} events with ${_.size(meta)} bands`)
+      const pairChunks = _.chunk(_.toPairs(events), 500)
+      return Promise.all(pairChunks.map((chunk, idx) => {
         log('Building batch#' + idx)
         const batcher = batch()
         const counters = { updated: 0, noops: 0 }
@@ -31,7 +32,7 @@ module.exports.update = (batch, table, log) => {
             const changeset = _.omitBy(meta[band], _.isUndefined)
             batcher.update(doc, changeset)
             counters.updated++
-            log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
+            // log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
           } else {
             counters.noops++
           }
@@ -46,8 +47,8 @@ module.exports.update = (batch, table, log) => {
     })
 }
 
-function get (snapshot, fn) {
-  fn = fn || _.identity
+function asMap (snapshot, valueFunction) {
+  const fn = valueFunction || _.identity
   var output = {}
   snapshot.forEach(doc => {
     output[doc.id] = fn(doc.data())

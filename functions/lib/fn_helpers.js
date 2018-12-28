@@ -39,7 +39,7 @@ const success = (log, res) => {
     if (res && !res.headersSent) {
       res.status(200).send(output)
     } else {
-      log('Success! => ' + output)
+      log('Success! => ' + JSON.stringify(output))
     }
   }
 }

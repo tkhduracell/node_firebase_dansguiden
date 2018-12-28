@@ -7,9 +7,8 @@ const {
   success,
   report,
   debug,
-  json,
+  json
 } = require('./lib/fn_helpers')
-const artistUpdater = require('./lib/artist_updater')
 
 // App setup
 admin.initializeApp()
@@ -39,7 +38,7 @@ const updateBandMetadata = core.updateBandMetadata(batch, table)
 
 const dailyTopic = functions.pubsub.topic('daily-tick')
 
-exports.updateVersionTopic = dailyTopic.onPublish((event, callback) => {
+exports.updateVersionTopic = dailyTopic.onPublish((event, context) => {
   const log = debug('dailyTopic => updateVersionData(): ')
   const error = report()
   const done = success(log)
@@ -47,7 +46,7 @@ exports.updateVersionTopic = dailyTopic.onPublish((event, callback) => {
   return updateVersions(log, done, error)
 })
 
-exports.updateEventTopic = dailyTopic.onPublish((event, callback) => {
+exports.updateEventTopic = dailyTopic.onPublish((event, context) => {
   const log = debug('dailyTopic => updateEventData(): ')
   const error = report()
   const done = success(log)
@@ -55,7 +54,7 @@ exports.updateEventTopic = dailyTopic.onPublish((event, callback) => {
   return updateEvents(log, done, error)
 })
 
-exports.updateBandMetadataTopic = dailyTopic.onPublish((event, callback) => {
+exports.updateBandMetadataTopic = dailyTopic.onPublish((event, context) => {
   const log = debug('dailyTopic => updateBandMetadata(): ')
   const error = report()
   const done = success(log)
