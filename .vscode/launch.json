@@ -17,7 +17,7 @@
           "--timeout",
           "999999",
           "--colors",
-          "${workspaceFolder}/functions/lib/date.test.js"
+          "${workspaceFolder}/functions/lib/*.test.js"
         ],
         "internalConsoleOptions": "openOnSessionStart"
       },

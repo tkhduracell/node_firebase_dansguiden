@@ -36,7 +36,6 @@ module.exports.getLatest = (log) => {
     scraperjs.StaticScraper
       .create(url)
       .scrape(extractContent, data => {
-        debugger
         return resolve(data)
       })
       .catch(err => reject(err))
