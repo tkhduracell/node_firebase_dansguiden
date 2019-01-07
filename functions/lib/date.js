@@ -28,7 +28,7 @@ const weekdays = {
 const isMonthYear = /(\w+)\s+(20\d\d)/gi
 const isMonth = /(\w+)/gi
 
-module.exports.parseYearDate = function parseYearDate (monthYearStringDirty, dateString) {
+module.exports.parseYearDate = function parseYearDate (monthYearStringDirty, dateString, log) {
   const date = parseInt(dateString.trim())
   const monthYear = monthYearStringDirty.trim().toLowerCase()
   if (monthYear.match(isMonthYear) !== null) {
@@ -54,5 +54,11 @@ module.exports.validateWeekDay = function validateWeekDay (momentDate, weekday, 
   if (dateWeekdayNbr !== tableWeekday) {
     log(`Weekday check failed, ${weekday} (dateNo ${tableWeekday}) is not correct on ${dateStr} which is dayNo ${dateWeekdayNbr}`)
     log(data)
+  }
+}
+
+module.exports.validateDate = (date, log) => {
+  if (!date.isValid()) {
+    log(`Invalid date: ${date}`)
   }
 }

@@ -30,7 +30,6 @@ const fetchEvents = core.fetchEvents(table)
 const fetchVersions = core.fetchVersions(table)
 const updateVersions = core.updateVersions(table)
 const updateEvents = core.updateEvents(batch, table)
-const updateBandMetadata = core.updateBandMetadata(batch, table)
 
 /**
  * Topic function
@@ -52,14 +51,6 @@ exports.updateEventTopic = dailyTopic.onPublish((event, context) => {
   const done = success(log)
 
   return updateEvents(log, done, error)
-})
-
-exports.updateBandMetadataTopic = dailyTopic.onPublish((event, context) => {
-  const log = debug('dailyTopic => updateBandMetadata(): ')
-  const error = report()
-  const done = success(log)
-
-  return updateBandMetadata(log, done, error)
 })
 
 /**
@@ -86,14 +77,6 @@ exports.updateEvents = httpsUS.onRequest((req, res) => {
   const done = success(log, res)
 
   updateEvents(log, done, error)
-})
-
-exports.updateBandMetadata = httpsUS.onRequest((req, res) => {
-  const log = debug('onRequest => updateBandMetadata(): ')
-  const error = report(res)
-  const done = success(log, res)
-
-  updateBandMetadata(log, done, error)
 })
 
 exports.getVersions = httpsUS.onRequest((req, res) => {

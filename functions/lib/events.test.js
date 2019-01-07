@@ -6,7 +6,7 @@ chai.should()
 // node_modules/.bin/mocha --reporter spec functions/lib/events.test.js
 
 describe('events', () => {
-  const input = events.update(() => {})
+  const input = events.parse(() => {})
 
   it('should return none empty array', async () => {
     const subject = await input

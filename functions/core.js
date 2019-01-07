@@ -4,14 +4,14 @@ const moment = require('moment')
 const path = require('path')
 
 // Dependencies
-const events = require('./lib/events.js')
-const versions = require('./lib/versions.js')
+const events = require('./lib/events')
+const eventsDecorator = require('./lib/events_decorator')
+const versions = require('./lib/versions')
 const {
   debug,
   json,
   mapArray
 } = require('./lib/fn_helpers')
-const artistUpdater = require('./lib/artist_updater')
 
 module.exports.fetchIndex = (table) => (log, done, error) => {
   const getVersions = table('versions').get()
@@ -56,15 +56,19 @@ module.exports.fetchEvents = (table) => (params) => {
   return query.get()
 }
 
-const deleteOverlappingEventsFn = (batch, table) => (output, log) => {
+const batchDeleteOverlappingEventsFn = (batch, table) => (output, log) => {
   const dates = output.filter(event => event.type === 'event')
     .map(e => e.data.date.format('YYYY-MM-DD'))
 
+  log(`Starting batch delete between ${_.min(dates)} <-> ${_.max(dates)}`)
   return table('events')
-    .where('date', '>=', _.min(dates))
-    .where('date', '<=', _.max(dates))
+    .where('date', '>=', _.max(dates))
+    .where('date', '<=', _.min(dates))
     .get()
-    .then(result => mapArray(result, e => e.id))
+    .then(result => {
+      log(`Found ${result.size} overlapping events`)
+      return mapArray(result, e => e.id)
+    })
     .then(output => {
       const commits = _.chunk(output, 500).map((chunk, idx) => {
         const deleteBatch = batch()
@@ -85,28 +89,30 @@ const batchWriteEventsFn = (batch, table) => (output, log) => {
     log('Batch#' + idx + ' creating...')
     const batcher = batch()
 
-    chunk.filter(event => event.type === 'event')
-      .forEach(source => {
-        if (!source.data.date.isValid()) {
-          return console.log('Invalid date: ' + JSON.stringify(source))
-        }
+    chunk.forEach(source => {
+      if (source.type !== 'event') {
+        return log(`Ignoring non-event ${source.type} item...`)
+      }
+      if (!source.data.date.isValid()) {
+        return log('Invalid date: ' + JSON.stringify(source))
+      }
 
-        const event = _.pick(source.data, events.COLUMNS)
-        const date = event.date.format('YYYY-MM-DD')
-        const key = _([date, event.band]).map(_.snakeCase).join('_')
-        const updateAt = new Date().getTime()
-        const eventDoc = _.merge(event, {
-          _id: key,
-          date,
-          updated_at: updateAt
-        })
-
-        log('Adding event ' + key)
-        const doc = table('events').doc(key)
-        batcher.set(doc, eventDoc, {
-          merge: true
-        })
+      const event = _.pick(source.data, events.COLUMNS)
+      const date = event.date.format('YYYY-MM-DD')
+      const key = _([date, event.band]).map(_.snakeCase).join('_')
+      const updateAt = new Date().getTime()
+      const eventDoc = _.merge(event, {
+        _id: key,
+        date,
+        updated_at: updateAt
       })
+
+      log('Adding event ' + key)
+      const doc = table('events').doc(key)
+      batcher.set(doc, eventDoc, {
+        merge: true
+      })
+    })
 
     return batcher.commit()
       .then((result) => log('Batch#' + idx + ' write done!'))
@@ -116,43 +122,52 @@ const batchWriteEventsFn = (batch, table) => (output, log) => {
 }
 
 module.exports.updateEvents = (batch, table) => (log, done, error) => {
-  const deleteOverlappingEvents = deleteOverlappingEventsFn(batch, table)
-  const batchWriteEvents = batchWriteEventsFn(batch, table)
+  const batchDeleteOverlappingEvents = (data) => batchDeleteOverlappingEventsFn(batch, table)(data, log)
+  const batchWriteEvents = (data) => batchWriteEventsFn(batch, table)(data, log)
+  const updateEventMetadata = () => eventsDecorator.update(batch, table, log)
 
-  return events.update(log).then((output) => {
-    return deleteOverlappingEvents(output, log)
-      .then(() => {
-        log('Done deleting overlapps!')
-        return batchWriteEvents(output, log)
-          .then(() => done('Wrote ' + _.size(output) + ' events'))
-      })
-  }).catch(error)
-}
-
-module.exports.updateBandMetadata = (batch, table) => (log, done, error) => {
-  log('Start event metadata update')
-  return artistUpdater.update(batch, table, log)
-    .then(done)
+  log('Starting event update')
+  return events.parse(log)
+    .then(output => {
+      batchDeleteOverlappingEvents(output)
+      return output
+    })
+    .then(output => {
+      log('Deleted overlapps')
+      return output
+    })
+    .then(output => batchWriteEvents(output))
+    .then(output => {
+      log('Wrote ' + _.size(output) + ' events')
+      return output
+    })
+    .then(() => {
+      log('Starting event metadata updates')
+      return updateEventMetadata()
+    })
     .then(() => log('Completed event metadata update!'))
+    .then(done)
     .catch(error)
 }
 
 module.exports.updateVersions = (table) => (log, done, error) => {
-  return versions.getLatest(log).then((data) => {
-    if (_.isEmpty(data.name) || _.isEmpty(data.lines)) {
-      log('No updated version, result was empty: ' + JSON.stringify(data))
-    }
+  return versions.getLatest(log)
+    .then((data) => {
+      if (_.isEmpty(data.name) || _.isEmpty(data.lines)) {
+        log('No updated version, result was empty: ' + JSON.stringify(data))
+      }
 
-    const key = _.snakeCase('v ' + data.name)
+      const key = _.snakeCase('v ' + data.name)
 
-    log('Updating version' + key)
-    return table('versions').doc(key).set({
-      name: data.name,
-      lines: data.lines
-    }, {
-      merge: true
-    }).then(() => done('Batch write done!'))
-  }).catch(error)
+      log('Updating version' + key)
+      return table('versions').doc(key).set({
+        name: data.name,
+        lines: data.lines
+      }, {
+        merge: true
+      }).then(() => done('Batch write done!'))
+    })
+    .catch(error)
 }
 
 module.exports.fetchVersions = (table) => (params) => {

@@ -2,7 +2,7 @@ const moment = require('moment')
 const _ = require('lodash')
 const scraperjs = require('scraperjs')
 
-const { parseYearDate, validateWeekDay } = require('./date')
+const { parseYearDate, validateWeekDay, validateDate } = require('./date')
 
 const url = 'http://www.danslogen.se'
 
@@ -30,7 +30,7 @@ function scrape (url, extract) {
   })
 }
 
-module.exports.update = (debug) => {
+module.exports.parse = (debug) => {
   debug('Running Dansguiden parser... ' + now())
 
   const result = scrape(url + '/dansprogram', getLinks)
@@ -43,11 +43,11 @@ module.exports.update = (debug) => {
     debug('Running Dansguiden parse on page ' + JSON.stringify(obj))
 
     return scrape(url + obj.link, scpr => {
-      return readPage(scpr, obj.month, obj.year, url + obj.link)
+      return readPage(scpr, url + obj.link)
     })
   }
 
-  function readPage ($, month, year, url) {
+  function readPage ($, url) {
     const tableHeader = $('tr.headline').first()
     const columnsElm = tableHeader.children('th').get()
 
@@ -77,28 +77,31 @@ module.exports.update = (debug) => {
       return _.omitBy(obj, _.isEmpty)
     }
 
-    return $('tr.odd, tr.event').get()
-      .map(function (itm) {
-        return {
-          type: 'event',
-          debug: {
-            raw: $(itm).html(),
-            pretty: $(itm).html()
-              .replace(/\n/g, '')
-              .replace(/\s+/g, ' ')
-              .trim(),
-            url
-          },
-          data: data(itm),
-          header
-        }
-      })
+    const rows = $('tr.odd, tr.event').get()
+    debug(`Processing ${rows.length} rows... (page: ${header})`)
+
+    return rows.map(itm => {
+      return {
+        type: 'event',
+        debug: {
+          raw: $(itm).html(),
+          pretty: $(itm).html()
+            .replace(/\n/g, '')
+            .replace(/\s+/g, ' ')
+            .trim(),
+          url
+        },
+        data: data(itm),
+        header
+      }
+    })
       .map(onEvent(itm => Object.assign({}, itm, {
         data: Object.assign({}, itm.data, {
           date: parseYearDate(itm.header, itm.data.date)
         })
       })))
       .map(onEvent(itm => {
+        validateDate(itm.data.date, debug)
         validateWeekDay(itm.data.date, itm.data.weekday, itm, debug)
         return itm
       }))
