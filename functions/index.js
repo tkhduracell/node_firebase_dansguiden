@@ -5,7 +5,7 @@ const functions = require('firebase-functions')
 const { table, batch } = require('./lib/database')()
 const { success, report, debug, snapshotAsArray } = require('./lib/fn_helpers')
 
-const secrets = require('../.secrets')
+const secrets = functions.config()
 const core = require('./core')
 
 const fetchIndex = core.fetchIndex(table)
