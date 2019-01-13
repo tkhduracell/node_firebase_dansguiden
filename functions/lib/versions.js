@@ -4,25 +4,23 @@ module.exports.getLatest = (log) => {
   const url = 'https://play.google.com/store/apps/details?id=feality.dans'
 
   const extractContent = ($) => {
-    log('PLAYSTORE VERSION', $("div:contains('What's New') > h2").parent().text())
-
     return {
-      lines: $("div:contains('What's New') > h2").parent()
+      lines: $("div:contains('What's New') > h2")
+        .parent()
         .parent()
         .find('content')
-        .map(() => {
-          log('PLAYSTORE VERSION', $(this).text())
-          return $(this).text().replace(/^\W*\*\W*/, '')
-        })
         .get()
+        .map(itm => $(itm).text()
+          .replace(/^\W*\*\W*/, '')
+        )
         .filter(s => s !== 'Read more'),
       name: $("div:contains('Current Version') + span")
-        .map(() => $(this).text().trim())
         .get()
+        .map(itm => $(itm).text().trim())
         .join(', '),
       date: $("div:contains('Updated') + span")
-        .map(() => $(this).text().trim())
         .get()
+        .map(itm => $(itm).text().trim())
         .join(', ')
     }
   }

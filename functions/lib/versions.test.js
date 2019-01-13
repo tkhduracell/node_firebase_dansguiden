@@ -9,20 +9,17 @@ chai.should()
 // node_modules/.bin/mocha --reporter spec functions/lib/versions.test.js
 
 describe('versions', () => {
-  const input = versions.getLatest(console.log)
+  const version = versions.getLatest(() => {})
 
   it('should return none empty version', async () => {
-    const x = await input
-    return x.name.should.not.be.empty
+    return (await version).name.should.not.be.empty
   })
 
   it('should return none empty lines', async () => {
-    const x = await input
-    return x.lines.should.not.be.empty
+    return (await version).lines.should.not.be.empty
   })
 
   it('should return none empty date', async () => {
-    const x = await input
-    return x.date.should.not.be.empty
+    return (await version).date.should.not.be.empty
   })
 })

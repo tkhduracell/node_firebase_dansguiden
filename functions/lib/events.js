@@ -31,7 +31,7 @@ function scrape (url, extract) {
 }
 
 module.exports.parse = (debug) => {
-  debug('Running Dansguiden parser... ' + now())
+  debug('Running Dansguiden parser...')
 
   const result = scrape(url + '/dansprogram', getLinks)
 
@@ -149,8 +149,4 @@ function zipAsObj (keys, values) {
     prev[itm[0]] = itm[1]
     return prev
   }, {})
-}
-
-function now () {
-  return moment().toString()
 }
