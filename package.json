@@ -7,7 +7,7 @@
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
     "deploy": "./deploy",
     "shell": "firebase -P dansguiden-b3a7d functions:shell",
-    "test": "mocha --reporter spec --harmony  --timeout 30000  **/*.test.js functions/**/*.test.js",
+    "test": "mocha --reporter spec --harmony  --timeout 120000  **/*.test.js functions/**/*.test.js",
     "test-inspect": "mocha --reporter spec --harmony --inspect  --timeout 999999 **/*.test.js functions/**/*.test.js",
     "lint": "eslint functions"
   },
