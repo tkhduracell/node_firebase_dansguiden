@@ -3,7 +3,7 @@ const functions = require('firebase-functions')
 
 // Dependencies
 const { table, batch } = require('./lib/database')()
-const { success, report, debug, json } = require('./lib/fn_helpers')
+const { success, report, debug, snapshotAsArray } = require('./lib/fn_helpers')
 
 const secrets = require('../.secrets')
 const core = require('./core')
@@ -14,86 +14,52 @@ const fetchVersions = core.fetchVersions(table)
 const updateVersions = core.updateVersions(table)
 const updateEvents = core.updateEvents(batch, table)
 const updateBands = core.updateBands(batch, table, secrets)
+const updateMetadata = core.updateMetadata(table)
 
-/**
- * Topic function
- */
-
-const dailyTopic = functions.pubsub.topic('daily-tick')
-
-exports.updateVersionTopic = dailyTopic.onPublish((event, context) => {
-  const log = debug('dailyTopic => updateVersionData(): ')
-  const error = report()
-  const done = success(log)
-
-  return updateVersions(log, done, error)
-})
-
-exports.updateEventTopic = dailyTopic.onPublish((event, context) => {
-  const log = debug('dailyTopic => updateEventData(): ')
-  const error = report()
-  const done = success(log)
-
-  return updateEvents(log, done, error)
-})
-
-exports.updateBandsTopic = dailyTopic.onPublish((event, context) => {
-  const log = debug('dailyTopic => updateBandsData(): ')
-  const error = report()
-  const done = success(log)
-
-  return updateBands(log, done, error)
-})
-
-/**
- * Web functions
- */
-
+// HTTP functions
 // Must be us-central1 due to limitation in hosting. Hosting will redirect to wrong domain!
 // https://firebase.google.com/docs/functions/locations under "* Important: "
 // functions.region("europe-west-1").https
+function onHttp (name, fn) {
+  return functions.https.onRequest((req, res) => {
+    const log = debug('onRequest => ' + name + '(): ')
+    const error = report(res)
+    const done = success(log, res)
+    return fn(log, done, error)
+  })
+}
 
-const httpsUS = functions.https
+function onTopic (topic, name, fn) {
+  return topic.onPublish((event, context) => {
+    const log = debug('onPublish => ' + name + '(): ')
+    const error = report()
+    const done = success(log)
+    return fn(log, done, error)
+  })
+}
 
-exports.updateVersions = httpsUS.onRequest((req, res) => {
-  const log = debug('onRequest => updateVersions(): ')
-  const error = report(res)
-  const done = success(log, res)
+const dailyTopic = functions.pubsub.topic('daily-tick')
+const hourlyTopic = functions.pubsub.topic('hourly-tick')
 
-  updateVersions(log, done, error)
-})
+exports.updateEventsTopic = onTopic(dailyTopic, 'updateEvents', updateEvents)
+exports.updateBandsTopic = onTopic(dailyTopic, 'updateBands', updateBands)
+exports.updateVersionTopic = onTopic(hourlyTopic, 'updateVersion', updateVersions)
+exports.updateMetadataTopic = onTopic(hourlyTopic, 'updateMetadata', updateMetadata)
 
-exports.updateEvents = httpsUS.onRequest((req, res) => {
-  const log = debug('onRequest => updateEvents(): ')
-  const error = report(res)
-  const done = success(log, res)
+exports.index = onHttp('fetchIndex', fetchIndex)
+exports.updateVersions = onHttp('updateVersions', updateVersions)
+exports.updateEvents = onHttp('updateEvents', updateEvents)
+exports.updateBands = onHttp('updateBands', updateBands)
+exports.updateMetadata = onHttp('updateMetadata', updateMetadata)
 
-  updateEvents(log, done, error)
-})
-
-exports.updateBands = httpsUS.onRequest((req, res) => {
-  const log = debug('onRequest => updateBands(): ')
-  const error = report(res)
-  const done = success(log, res)
-
-  updateBands(log, done, error)
-})
-
-exports.getVersions = httpsUS.onRequest((req, res) => {
+exports.getVersions = functions.https.onRequest((req, res) => {
   fetchVersions(req.query)
-    .then(versions => res.status(200).send(json(versions)))
-    .catch(err => res.status(500).send('Error occurred: ' + err))
+    .then(versions => res.status(200).send(snapshotAsArray(versions)))
+    .catch(err => res.status(500).send('Internal error: ' + err))
 })
 
-exports.getEvents = httpsUS.onRequest((req, res) => {
+exports.getEvents = functions.https.onRequest((req, res) => {
   fetchEvents(req.query)
-    .then(events => res.status(200).send(json(events, true)))
-    .catch(err => res.status(500).send('Error occurred: ' + err))
-})
-
-exports.index = httpsUS.onRequest((req, res) => {
-  const log = debug('fetchIndex(): ')
-  const error = report(res)
-  const done = success(log, res)
-  fetchIndex(log, done, error)
+    .then(events => res.status(200).send(snapshotAsArray(events, v => v, true)))
+    .catch(err => res.status(500).send('Internal error: ' + err))
 })

@@ -205,8 +205,26 @@ module.exports.updateVersions = (table) => (log, done, error) => {
     .catch(error)
 }
 
-module.exports.fetchVersions = (table) => (params) => {
-  debug('fetchVersions(): ')
-  var query = table('versions')
-  return query.get()
+module.exports.updateMetadata = (table) => (log, done, error) => {
+  const db = simpleKeyValue(table, 'metadata')
+
+  log('Updating metadata table...')
+  const bands = getValues(table, 'events', e => e.band)
+    .then(values => {
+      return db.set('bands', values)
+    })
+    .catch(error)
+
+  const places = getValues(table, 'events', e => e.place)
+    .then(values => {
+      return db.set('places', values)
+    })
+    .catch(error)
+
+  return Promise.all([bands, places])
+    .then(done)
+}
+
+module.exports.fetchVersions = (table) => () => {
+  return table('versions').get()
 }

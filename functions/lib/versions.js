@@ -4,28 +4,24 @@ module.exports.getLatest = (log) => {
   const url = 'https://play.google.com/store/apps/details?id=feality.dans'
 
   const extractContent = ($) => {
+    log('PLAYSTORE VERSION', $("div:contains('What's New') > h2").parent().text())
+
     return {
       lines: $("div:contains('What's New') > h2").parent()
         .parent()
         .find('content')
-        .map(function () {
-          return $(this).text()
-            .replace(/^\W*\*\W*/, '')
+        .map(() => {
+          log('PLAYSTORE VERSION', $(this).text())
+          return $(this).text().replace(/^\W*\*\W*/, '')
         })
         .get()
         .filter(s => s !== 'Read more'),
       name: $("div:contains('Current Version') + span")
-        .map(function () {
-          return $(this).text()
-            .trim()
-        })
+        .map(() => $(this).text().trim())
         .get()
         .join(', '),
       date: $("div:contains('Updated') + span")
-        .map(function () {
-          return $(this).text()
-            .trim()
-        })
+        .map(() => $(this).text().trim())
         .get()
         .join(', ')
     }
@@ -35,9 +31,7 @@ module.exports.getLatest = (log) => {
   return new Promise((resolve, reject) => {
     scraperjs.StaticScraper
       .create(url)
-      .scrape(extractContent, data => {
-        return resolve(data)
-      })
+      .scrape(extractContent, data => resolve(data))
       .catch(err => reject(err))
   })
 }

@@ -25,5 +25,4 @@ describe('versions', () => {
     const x = await input
     return x.date.should.not.be.empty
   })
-
 })
