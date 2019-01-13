@@ -1,28 +1,11 @@
 // Libraries
 const functions = require('firebase-functions')
-const admin = require('firebase-admin')
 
 // Dependencies
-const {
-  success,
-  report,
-  debug,
-  json
-} = require('./lib/fn_helpers')
+const { table, batch } = require('./lib/database')()
+const { success, report, debug, json } = require('./lib/fn_helpers')
 
-// App setup
-admin.initializeApp()
-const db = admin.firestore()
-db.settings({timestampsInSnapshots: true})
-const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG)
-
-const table = (name) => {
-  return db.collection((firebaseConfig.collection_prefix || '') + name)
-}
-const batch = () => {
-  return db.batch()
-}
-
+const secrets = require('../.secrets')
 const core = require('./core')
 
 const fetchIndex = core.fetchIndex(table)
@@ -30,6 +13,7 @@ const fetchEvents = core.fetchEvents(table)
 const fetchVersions = core.fetchVersions(table)
 const updateVersions = core.updateVersions(table)
 const updateEvents = core.updateEvents(batch, table)
+const updateBands = core.updateBands(batch, table, secrets)
 
 /**
  * Topic function
@@ -51,6 +35,14 @@ exports.updateEventTopic = dailyTopic.onPublish((event, context) => {
   const done = success(log)
 
   return updateEvents(log, done, error)
+})
+
+exports.updateBandsTopic = dailyTopic.onPublish((event, context) => {
+  const log = debug('dailyTopic => updateBandsData(): ')
+  const error = report()
+  const done = success(log)
+
+  return updateBands(log, done, error)
 })
 
 /**
@@ -77,6 +69,14 @@ exports.updateEvents = httpsUS.onRequest((req, res) => {
   const done = success(log, res)
 
   updateEvents(log, done, error)
+})
+
+exports.updateBands = httpsUS.onRequest((req, res) => {
+  const log = debug('onRequest => updateBands(): ')
+  const error = report(res)
+  const done = success(log, res)
+
+  updateBands(log, done, error)
 })
 
 exports.getVersions = httpsUS.onRequest((req, res) => {

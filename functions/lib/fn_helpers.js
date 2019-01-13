@@ -3,28 +3,36 @@ const _ = require('lodash')
 /**
  * Helper functions
  */
-const json = (elms, withKey) => {
-  var arr = []
-  elms.forEach(function (element) {
-    const obj = withKey ? {_id: element.id} : {}
-    arr.push(_.merge(element.data(), obj))
-  })
-  return arr
-}
 
-function mapArray (snapshot, fn) {
+module.exports.snapshotAsArray = (snapshot, optFn, includeKey) => {
   var output = []
+  const fn = optFn || _.identity
   snapshot.forEach(doc => {
-    output.push(fn ? fn(doc) : doc.data())
+    const data = fn(doc.data())
+    if (_.isObject(data)) {
+      const extension = includeKey ? {_id: doc.id} : {}
+      output.push(_.merge(data, extension))
+    } else {
+      output.push(data)
+    }
   })
   return output
 }
 
-const debug = (name) => {
+module.exports.snapshotAsObj = (snapshot, optFn) => {
+  var output = {}
+  const fn = optFn || _.identity
+  snapshot.forEach(doc => {
+    output[doc.id] = fn(doc)
+  })
+  return output
+}
+
+module.exports.debug = (name) => {
   return console.log.bind(console.log, name)
 }
 
-const report = (res) => {
+module.exports.report = (res) => {
   return (err) => {
     if (res && !res.headersSent) {
       res.status(500).send(err.toString())
@@ -34,7 +42,7 @@ const report = (res) => {
   }
 }
 
-const success = (log, res) => {
+module.exports.success = (log, res) => {
   return (output) => {
     if (res && !res.headersSent) {
       res.status(200).send(output)
@@ -43,5 +51,3 @@ const success = (log, res) => {
     }
   }
 }
-
-module.exports = {success, report, debug, json, mapArray}

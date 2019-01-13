@@ -1,15 +1,9 @@
-const secrets = require('../../.secrets.json')
-const dumper = require('../lib/dumper')
-const admin = require('firebase-admin')
 const path = require('path')
 
-admin.initializeApp({
-  credential: admin.credential.cert(require(secrets.defaultCredentials)),
-  databaseURL: secrets.databaseURL
-})
+const dumper = require('../lib/dumper')
+const {table} = require('../lib/database')()
 
-const database = admin.firestore()
-const save = dumper.dump(database, path.join(__dirname, '../../backups'))
+const save = dumper.dump(table, path.join(__dirname, '../../backups'))
 
 save('events')
 save('versions')

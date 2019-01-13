@@ -1,3 +1,4 @@
+/* eslint-env mocha */
 const core = require('./core')
 
 const chai = require('chai')

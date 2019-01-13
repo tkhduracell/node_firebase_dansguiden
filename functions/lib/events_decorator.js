@@ -1,18 +1,19 @@
 const _ = require('lodash')
+const {snapshotAsObj} = require('../lib//fn_helpers')
 
 module.exports.update = (batch, table, log) => {
   const metadata = table('band_metadata')
     .get()
     .then(snapshot => {
       log('Fetched band_metadata table!')
-      return asMap(snapshot, m => getImageAndId(m))
+      return snapshotAsObj(snapshot, m => getImageAndId(m))
     })
 
   const eventsKeys = table('events')
     .get()
     .then(snapshot => {
       log('Fetched events table!')
-      return asMap(snapshot, e => e.band)
+      return snapshotAsObj(snapshot, e => e.band)
     })
 
   return Promise.all([eventsKeys, metadata])
@@ -27,9 +28,11 @@ module.exports.update = (batch, table, log) => {
         const counters = { touched: 0, unknowns: 0 }
         _.forEach(chunk, (pair) => {
           const [id, band] = pair
+          const bandRemaped = remap(band)
           const doc = table('events').doc(id)
-          if (meta[band]) {
-            const changeset = _.omitBy(meta[band], _.isUndefined)
+          if (meta[band] || meta[bandRemaped]) {
+            const metadata = meta[band] || meta[bandRemaped]
+            const changeset = _.omitBy(metadata, _.isUndefined)
             batcher.update(doc, changeset)
             counters.touched++
             // log(`Updating event ${id} with data for ${band} => ${JSON.stringify(changeset)}`)
@@ -47,13 +50,8 @@ module.exports.update = (batch, table, log) => {
     })
 }
 
-function asMap (snapshot, valueFunction) {
-  const fn = valueFunction || _.identity
-  var output = {}
-  snapshot.forEach(doc => {
-    output[doc.id] = fn(doc.data())
-  })
-  return output
+function remap (band) {
+  return band.replace(/-/gi, '')
 }
 
 function getImageAndId (metadata) {

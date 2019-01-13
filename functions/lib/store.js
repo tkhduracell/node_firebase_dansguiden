@@ -1,30 +1,25 @@
+const _ = require('lodash')
+const { snapshotAsArray } = require('./fn_helpers')
 
-module.exports.getBandRefs = (db) => {
-  return db.collection('events')
+module.exports.getValues = (table, tableName, optPicker, optQuery) => {
+  const query = optQuery || _.identity
+  return query(table(tableName))
     .get()
     .then(snapshot => {
-      var artists = {}
-      snapshot.forEach(doc => {
-        const band = doc.data().band
-        artists[band] = (artists[band] || []).concat(doc.id)
-      })
-      return artists
+      return snapshotAsArray(snapshot, optPicker)
     })
 }
 
-// var FileStoreSync = require('file-store-sync')
-// var store = new FileStoreSync('./store-test')
-
-module.exports.saveBandMetadata = (db, band, metadata) => {
-  return db.collection('band_metadata')
-    .doc(band)
-    .set(metadata)
-    .then(res => metadata)
-}
-
-module.exports.loadBandMetadata = (db, band) => {
-  return db.collection('band_metadata')
-    .doc(band)
-    .get()
-    .then(doc => doc.exists ? doc.data() : undefined)
+module.exports.simpleKeyValue = (table, tableName, merge) => {
+  const metadata = table(tableName)
+  return {
+    get: (band) => metadata.doc(band)
+      .get()
+      .then(doc => doc.exists ? doc.data() : undefined),
+    set: (band, meta) => {
+      return metadata.doc(band)
+        .set(meta, { merge: merge || true })
+        .then(ignored => band)
+    }
+  }
 }

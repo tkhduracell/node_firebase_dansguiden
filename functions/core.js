@@ -4,14 +4,12 @@ const moment = require('moment')
 const path = require('path')
 
 // Dependencies
+const bands = require('./lib/bands')
 const events = require('./lib/events')
 const eventsDecorator = require('./lib/events_decorator')
 const versions = require('./lib/versions')
-const {
-  debug,
-  json,
-  mapArray
-} = require('./lib/fn_helpers')
+const { simpleKeyValue, getValues } = require('./lib/store')
+const { debug, snapshotAsObj, snapshotAsArray } = require('./lib/fn_helpers')
 
 module.exports.fetchIndex = (table) => (log, done, error) => {
   const getVersions = table('versions').get()
@@ -23,8 +21,8 @@ module.exports.fetchIndex = (table) => (log, done, error) => {
 
       const opts = {
         compileDebug: false,
-        images: json(images),
-        versions: json(versions)
+        images: snapshotAsObj(images),
+        versions: snapshotAsObj(versions)
       }
 
       done(require('pug').renderFile(path.join(__dirname, 'views/index.pug'), opts))
@@ -50,6 +48,7 @@ module.exports.fetchEvents = (table) => (params) => {
 
   // order by date_band
   query = query.orderBy('date', 'asc')
+
   // apply limit
   query = query.limit(_.toSafeInteger(params.limit || '100'))
 
@@ -67,7 +66,7 @@ const batchDeleteOverlappingEventsFn = (batch, table) => (output, log) => {
     .get()
     .then(result => {
       log(`Found ${result.size} overlapping events`)
-      return mapArray(result, e => e.id)
+      return snapshotAsArray(result, e => e.id)
     })
     .then(output => {
       const commits = _.chunk(output, 500).map((chunk, idx) => {
@@ -85,40 +84,76 @@ const batchDeleteOverlappingEventsFn = (batch, table) => (output, log) => {
 }
 
 const batchWriteEventsFn = (batch, table) => (output, log) => {
-  const writes = _.chunk(output, 500).map((chunk, idx) => {
+  const batchWrite = batchWriteFn(batch, table, 'events', log)
+  return batchWrite(output, source => {
+    if (source.type !== 'event') {
+      return log(`Ignoring non-event ${source.type} item...`)
+    }
+
+    if (!source.data.date.isValid()) {
+      return log('Invalid date: ' + JSON.stringify(source))
+    }
+
+    const event = _.pick(source.data, events.COLUMNS)
+    const date = event.date.format('YYYY-MM-DD')
+    const key = _([date, event.band]).map(_.snakeCase).join('_')
+    const updateAt = new Date().getTime()
+    const value = _.merge(event, {
+      _id: key,
+      date,
+      updated_at: updateAt
+    })
+    return {key, value}
+  })
+}
+
+const batchWriteFn = (batch, table, tableName, log) => (output, kvFn) => {
+  const chunks = _.chunk(output, 500)
+  const writes = chunks.map((chunk, idx) => {
     log('Batch#' + idx + ' creating...')
     const batcher = batch()
-
     chunk.forEach(source => {
-      if (source.type !== 'event') {
-        return log(`Ignoring non-event ${source.type} item...`)
-      }
-      if (!source.data.date.isValid()) {
-        return log('Invalid date: ' + JSON.stringify(source))
-      }
-
-      const event = _.pick(source.data, events.COLUMNS)
-      const date = event.date.format('YYYY-MM-DD')
-      const key = _([date, event.band]).map(_.snakeCase).join('_')
       const updateAt = new Date().getTime()
-      const eventDoc = _.merge(event, {
-        _id: key,
-        date,
-        updated_at: updateAt
-      })
 
-      log('Adding event ' + key)
-      const doc = table('events').doc(key)
-      batcher.set(doc, eventDoc, {
-        merge: true
-      })
+      const result = kvFn(source)
+      if (result) {
+        const {key, value} = result
+        const document = _.merge(value, {
+          _id: key,
+          updated_at: updateAt
+        })
+        log('Adding change to ' + key)
+        const ref = table(tableName).doc(key)
+        batcher.set(ref, document, {merge: true})
+      }
     })
 
     return batcher.commit()
       .then((result) => log('Batch#' + idx + ' write done!'))
   })
-
   return Promise.all(writes)
+}
+
+module.exports.updateBands = (batch, table, secrets) => (log, done, error) => {
+  const bandsKeyValueStore = simpleKeyValue(table, 'band_metadata')
+
+  // Older events are broken
+  const query = tbl => tbl.where('date', '>=', '2019-01-01')
+
+  log('Getting current bands in events')
+  const allBands = getValues(table, 'events', doc => doc.band, query)
+    .then(_.uniq)
+    .then(Array.sort)
+
+  log('Starting band update')
+  return bands.fetch(bandsKeyValueStore, secrets)(allBands)
+    .then(output => {
+      log('Wrote ' + _.size(output) + ' bands')
+      return output
+    })
+    .then(() => log('Completed band metadata update!'))
+    .then(done)
+    .catch(error)
 }
 
 module.exports.updateEvents = (batch, table) => (log, done, error) => {
