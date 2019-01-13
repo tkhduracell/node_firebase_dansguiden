@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const events = require('./versions')
+const versions = require('./versions')
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
@@ -9,7 +9,7 @@ chai.should()
 // node_modules/.bin/mocha --reporter spec functions/lib/versions.test.js
 
 describe('versions', () => {
-  const input = events.getLatest(() => {})
+  const input = versions.getLatest(console.log)
 
   it('should return none empty version', async () => {
     const x = await input
