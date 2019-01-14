@@ -18,7 +18,6 @@ module.exports.fetchIndex = (table) => (log, done, error) => {
   Promise.all([getVersions, getImages])
     .then((resolved) => {
       const [versions, images] = resolved
-
       const opts = {
         compileDebug: false,
         images: snapshotAsObj(images),

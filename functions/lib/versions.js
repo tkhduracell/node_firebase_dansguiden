@@ -7,10 +7,15 @@ const extractContent = module.exports.extractContent = $ => {
       .parent()
       .find('content')
       .get()
-      .map(itm => $(itm).text()
-        .replace(/^\W*\*\W*/, '')
-      )
-      .filter(s => s !== 'Read more'),
+      .map(block => block.children.map(node => {
+        return $(node).text()
+          .replace(/^\W*\*\W*/, '')
+          .trim()
+      }))
+      .map(items => items.filter(s => s !== ''))
+      .filter(s => s.indexOf('Read more') === -1)
+      .filter(s => s.indexOf('Collapse') === -1)
+      .pop(),
     name: $("div:contains('Current Version') + span")
       .get()
       .map(itm => $(itm).text().trim())

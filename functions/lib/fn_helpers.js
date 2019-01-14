@@ -23,7 +23,7 @@ module.exports.snapshotAsObj = (snapshot, optFn) => {
   var output = {}
   const fn = optFn || _.identity
   snapshot.forEach(doc => {
-    output[doc.id] = fn(doc)
+    output[doc.id] = fn(doc.data())
   })
   return output
 }
