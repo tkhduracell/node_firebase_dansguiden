@@ -8,7 +8,7 @@
       {
         "type": "node",
         "request": "launch",
-        "name": "Mocha Tests",
+        "name": "Mocha Test",
         "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
         "args": [
           "-u",
@@ -17,7 +17,7 @@
           "--timeout",
           "999999",
           "--colors",
-          "${workspaceFolder}/functions/lib/*.test.js"
+          "${file}"
         ],
         "internalConsoleOptions": "openOnSessionStart"
       },
@@ -25,7 +25,7 @@
         "type": "node",
         "request": "launch",
         "name": "Launch #",
-        "program": "${workspaceFolder}/functions/debug/debug_events.js",
+        "program": "${file}",
         "cwd": "${workspaceFolder}/functions"
       }
     ]
