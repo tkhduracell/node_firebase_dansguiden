@@ -1,5 +1,11 @@
 const scraperjs = require('scraperjs')
 
+module.exports.versionSort = (v) => {
+  return v.name.split('.', 3)
+    .map(s => s.padStart(4, '0'))
+    .join('')
+}
+
 const extractContent = module.exports.extractContent = $ => {
   return {
     lines: $("div:contains('What's New') > h2")
@@ -27,7 +33,7 @@ const extractContent = module.exports.extractContent = $ => {
   }
 }
 
-module.exports.getLatest = (log) => {
+module.exports.fetchLatestVersion = (log) => {
   const url = 'https://play.google.com/store/apps/details?id=feality.dans'
 
   log('Running Google Play parser...')

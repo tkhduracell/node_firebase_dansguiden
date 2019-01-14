@@ -7,7 +7,7 @@ const path = require('path')
 const bands = require('./lib/bands')
 const events = require('./lib/events')
 const eventsDecorator = require('./lib/events_decorator')
-const versions = require('./lib/versions')
+const { fetchLatestVersion, versionSort } = require('./lib/versions')
 const { simpleKeyValue, getValues } = require('./lib/store')
 const { debug, snapshotAsObj, snapshotAsArray } = require('./lib/fn_helpers')
 
@@ -21,9 +21,8 @@ module.exports.fetchIndex = (table) => (log, done, error) => {
       const opts = {
         compileDebug: false,
         images: snapshotAsObj(images),
-        versions: snapshotAsObj(versions)
+        versions: _.orderBy(snapshotAsObj(versions), versionSort, 'desc')
       }
-
       done(require('pug').renderFile(path.join(__dirname, 'views/index.pug'), opts))
     })
     .catch(error)
@@ -185,7 +184,7 @@ module.exports.updateEvents = (batch, table) => (log, done, error) => {
 }
 
 module.exports.updateVersions = (table) => (log, done, error) => {
-  return versions.getLatest(log)
+  return fetchLatestVersion(log)
     .then((data) => {
       if (_.isEmpty(data.name) || _.isEmpty(data.lines)) {
         log('No updated version, result was empty: ' + JSON.stringify(data))
