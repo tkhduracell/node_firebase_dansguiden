@@ -14,6 +14,11 @@ const commonGenres = [
   'rock-and-roll'
 ]
 
+const remapping = {
+  'PerHåkans': 'Per-Håkans',
+  'Larz Kristers': 'Larz-Kristers'
+}
+
 const randomInt = max => Math.round(Math.random() * max)
 const normalize = str => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
 
@@ -24,6 +29,10 @@ function getArtistForBand (searchFn, store, band) {
 
   function removeSuffix (band) {
     return band.replace(/\W+\([[:upper:]]+\)/gi, '')
+  }
+
+  function remap (band) {
+    return remapping[band] || band
   }
 
   function findArtistInfo (artists) {
@@ -42,12 +51,13 @@ function getArtistForBand (searchFn, store, band) {
         console.log('Searching for artist', band)
         return delayed(band, randomInt(5000))
           .then(removeSuffix)
+          .then(remap)
           .then(b => searchFn(b, {limit: 10, market: 'SE'}))
           .then(findArtistInfo)
           .then(data => {
             return store.set(band, data)
           })
-          .catch(console.debug)
+          .catch(console.error)
       }
     })
   }

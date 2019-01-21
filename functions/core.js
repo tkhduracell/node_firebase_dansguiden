@@ -204,23 +204,22 @@ module.exports.updateVersions = (table) => (log, done, error) => {
 }
 
 module.exports.updateMetadata = (table) => (log, done, error) => {
-  const db = simpleKeyValue(table, 'metadata')
+
+  const today = new Date().toISOString().slice(0, 10)
+  const future = col => col.where('date', '>=', today)
+    .where('date', '<', '2019-02-01')
 
   log('Updating metadata table...')
-  const bands = getValues(table, 'events', e => e.band)
-    .then(values => {
-      return db.set('bands', values)
-    })
+
+  const updater = (fn, db) => getValues(table, 'events', fn, future)
+    .then(values => _.each(_.countBy(values), (v, k) => db.set(k, {_id: k, count: v})))
     .catch(error)
 
-  const places = getValues(table, 'events', e => e.place)
-    .then(values => {
-      return db.set('places', values)
-    })
-    .catch(error)
-
-  return Promise.all([bands, places])
-    .then(done)
+  return Promise.all([
+    updater(e => e.band, simpleKeyValue(table, 'metadata_bands')),
+    updater(e => e.place, simpleKeyValue(table, 'metadata_places')),
+    updater(e => e.date, simpleKeyValue(table, 'metadata_dates'))
+  ]).then(done)
 }
 
 module.exports.fetchVersions = (table) => () => {

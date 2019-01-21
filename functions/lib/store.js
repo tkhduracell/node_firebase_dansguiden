@@ -13,13 +13,14 @@ module.exports.getValues = (table, tableName, optPicker, optQuery) => {
 module.exports.simpleKeyValue = (table, tableName, merge) => {
   const metadata = table(tableName)
   return {
-    get: (band) => metadata.doc(band)
+    get: (key) => metadata.doc(key)
       .get()
       .then(doc => doc.exists ? doc.data() : undefined),
-    set: (band, meta) => {
-      return metadata.doc(band)
-        .set(meta, { merge: merge || true })
-        .then(ignored => band)
+    set: (key, value) => {
+      console.log(`Updating ${key} => ${value}`)
+      return metadata.doc(key)
+        .set(value, { merge: merge || true })
+        .then(ignored => value)
     }
   }
 }
