@@ -49,7 +49,7 @@ function getArtistForBand (searchFn, store, band) {
 
   return () => {
     return store.get(band).then(a => {
-      if (a) {
+      if (a && _.size(a) > 0) {
         console.log('Found artist', band)
         return band
       } else {

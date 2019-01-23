@@ -7,14 +7,16 @@ const store = require('../lib/store')
 const bandMetadataStore = store.simpleKeyValue(table, 'band_metadata')
 
 // Older events are broken
-const query = tbl => tbl.where('date', '>=', '2019-01-01')
 console.log('-------------------------------------------------')
 
+/*
+const query = tbl => tbl.where('date', '>=', '2019-01-01')
 const allBands = store.getValues(table, 'events', doc => doc.band, query)
   .then(_.uniq)
   .then(Array.sort)
+*/
 
-bands.fetch(bandMetadataStore, secrets)(allBands)
+bands.fetch(bandMetadataStore, secrets)(['Lövgrens'])
   .then(output => {
     console.log(JSON.stringify(output, null, 2))
   })

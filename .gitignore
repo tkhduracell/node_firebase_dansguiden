@@ -29,6 +29,8 @@ node_modules
 
 cron/lib
 
-.secrets.json
 backups/
 .firebase/
+
+.secrets.json
+.runtimeconfig.json
