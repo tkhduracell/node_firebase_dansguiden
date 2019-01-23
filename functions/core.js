@@ -204,7 +204,6 @@ module.exports.updateVersions = (table) => (log, done, error) => {
 }
 
 module.exports.updateMetadata = (table) => (log, done, error) => {
-
   const today = new Date().toISOString().slice(0, 10)
   const future = col => col.where('date', '>=', today)
     .where('date', '<', '2019-02-01')

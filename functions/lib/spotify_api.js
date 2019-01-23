@@ -7,11 +7,11 @@ const auth = {
   tokenPath: '/api/token'
 }
 
-function getAccessToken (spotify) {
+function getAccessToken (secrets) {
   const oauth2 = SimpleOAuth2.create({
     client: {
-      id: spotify.client_id,
-      secret: spotify.client_secret
+      id: secrets.client_id,
+      secret: secrets.client_secret
     },
     auth
   })
@@ -19,9 +19,9 @@ function getAccessToken (spotify) {
     .then(oauth2.accessToken.create)
 }
 
-module.exports.create = (spotify) => getAccessToken(spotify)
+module.exports.create = (secrets) => getAccessToken(secrets)
   .then(resp => new SpotifyWebApi({
-    clientId: spotify.client_id,
-    clientSecret: spotify.client_secret,
+    clientId: secrets.client_id,
+    clientSecret: secrets.client_secret,
     accessToken: resp.token.access_token
   }))
