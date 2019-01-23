@@ -35,9 +35,14 @@ function getArtistForBand (searchFn, store, band) {
     return remapping[band] || band
   }
 
+  function isDansbandish (a) {
+    return _.isEmpty(a.genres) ||
+      _.size(_.intersection(a.genres, commonGenres)) > 0
+  }
+
   function findArtistInfo (artists) {
     const results = artists.filter(a => isSimilar(a.name, band))
-      .filter(a => _.intersection(a.genres, commonGenres).length > 0)
+      .filter(isDansbandish)
       .map(a => _.pick(a, ['id', 'name', 'genres', 'images']))
     return _.first(results) || {}
   }
