@@ -59,12 +59,12 @@ const batchDeleteOverlappingEventsFn = (batch, table) => (output, log) => {
 
   log(`Starting batch delete between ${_.min(dates)} <-> ${_.max(dates)}`)
   return table('events')
-    .where('date', '>=', _.max(dates))
-    .where('date', '<=', _.min(dates))
+    .where('date', '>=', _.min(dates))
+    .where('date', '<=', _.max(dates))
     .get()
     .then(result => {
       log(`Found ${result.size} overlapping events`)
-      return snapshotAsArray(result, e => e.id)
+      return snapshotAsArray(result, e => e._id)
     })
     .then(output => {
       const commits = _.chunk(output, 500).map((chunk, idx) => {
@@ -162,8 +162,8 @@ module.exports.updateEvents = (batch, table) => (log, done, error) => {
   log('Starting event update')
   return events.parse(log)
     .then(output => {
-      batchDeleteOverlappingEvents(output)
-      return output
+      return batchDeleteOverlappingEvents(output)
+        .then(ignored => output)
     })
     .then(output => {
       log('Deleted overlapps')

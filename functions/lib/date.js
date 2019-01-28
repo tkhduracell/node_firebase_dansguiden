@@ -52,8 +52,7 @@ module.exports.validateWeekDay = function validateWeekDay (momentDate, weekday, 
   const dateWeekdayNbr = momentDate.isoWeekday()
 
   if (dateWeekdayNbr !== tableWeekday) {
-    log(`Weekday check failed, ${weekday} (dateNo ${tableWeekday}) is not correct on ${dateStr} which is dayNo ${dateWeekdayNbr}`)
-    log(data)
+    log(`Warning: Weekday check failed, ${weekday} (dateNo ${tableWeekday}) is not correct on ${dateStr} which is dayNo ${dateWeekdayNbr}`)
   }
 }
 
