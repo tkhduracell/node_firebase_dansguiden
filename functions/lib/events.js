@@ -1,6 +1,6 @@
-const moment = require('moment')
 const _ = require('lodash')
 const scraperjs = require('scraperjs')
+const {promiseSerial} = require('./promises')
 
 const { parseYearDate, validateWeekDay, validateDate } = require('./date')
 
@@ -36,12 +36,12 @@ module.exports.parse = (debug) => {
   const result = scrape(url + '/dansprogram', getLinks)
 
   return result.then(parseAndFilterLinks)
-    .then(res => Promise.all(res.map(loadLink)))
+    .then(res => res.map(loadLink))
+    .then(res => promiseSerial(res))
     .then(_.flatten)
 
   function loadLink (obj) {
     debug('Running Dansguiden parse on page ' + JSON.stringify(obj))
-
     return scrape(url + obj.link, scpr => {
       return readPage(scpr, url + obj.link)
     })
@@ -77,7 +77,8 @@ module.exports.parse = (debug) => {
       return _.omitBy(obj, _.isEmpty)
     }
 
-    const rows = $('tr.odd, tr.event').get()
+    const rows = $('tr.even').get()
+      .concat($('tr.odd').get())
     debug(`Processing ${rows.length} rows... (page: ${header})`)
 
     return rows.map(itm => {

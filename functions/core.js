@@ -75,7 +75,10 @@ const batchDeleteOverlappingEventsFn = (batch, table) => (output, log) => {
           deleteBatch.delete(ref)
         })
         return deleteBatch.commit()
-          .then((result) => log('Batch#' + idx + ' deletion done!'))
+          .then(result => {
+            log('Batch#' + idx + ' deletion done!')
+            return result
+          })
       })
       return Promise.all(commits)
     })
@@ -85,21 +88,23 @@ const batchWriteEventsFn = (batch, table) => (output, log) => {
   const batchWrite = batchWriteFn(batch, table, 'events', log)
   return batchWrite(output, source => {
     if (source.type !== 'event') {
-      return log(`Ignoring non-event ${source.type} item...`)
+      log(`Ignoring non-event ${source.type} item...`)
+      return false
     }
 
     if (!source.data.date.isValid()) {
-      return log('Invalid date: ' + JSON.stringify(source))
+      log('Invalid date: ' + JSON.stringify(source))
+      return false
     }
 
     const event = _.pick(source.data, events.COLUMNS)
     const date = event.date.format('YYYY-MM-DD')
     const key = _([date, event.band]).map(_.snakeCase).join('_')
-    const updateAt = new Date().getTime()
     const value = _.merge(event, {
       _id: key,
       date,
-      updated_at: updateAt
+      updated_at: new Date().getTime(),
+      updated_at_pretty: moment().format()
     })
     return {key, value}
   })
@@ -111,14 +116,11 @@ const batchWriteFn = (batch, table, tableName, log) => (output, kvFn) => {
     log('Batch#' + idx + ' creating...')
     const batcher = batch()
     chunk.forEach(source => {
-      const updateAt = new Date().getTime()
-
       const result = kvFn(source)
       if (result) {
         const {key, value} = result
         const document = _.merge(value, {
-          _id: key,
-          updated_at: updateAt
+          _id: key
         })
         log('Adding change to ' + key)
         const ref = table(tableName).doc(key)
@@ -127,7 +129,10 @@ const batchWriteFn = (batch, table, tableName, log) => (output, kvFn) => {
     })
 
     return batcher.commit()
-      .then((result) => log('Batch#' + idx + ' write done!'))
+      .then(result => {
+        log('Batch#' + idx + ' write done!')
+        return result
+      })
   })
   return Promise.all(writes)
 }
@@ -146,10 +151,10 @@ module.exports.updateBands = (batch, table, secrets) => (log, done, error) => {
   log('Starting band update')
   return bands.fetch(bandsKeyValueStore, secrets)(allBands)
     .then(output => {
+      log('Completed band metadata update!')
       log('Wrote ' + _.size(output) + ' bands')
       return output
     })
-    .then(() => log('Completed band metadata update!'))
     .then(done)
     .catch(error)
 }

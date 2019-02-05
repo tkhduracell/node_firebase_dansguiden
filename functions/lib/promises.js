@@ -13,4 +13,13 @@ const serial = (funcs) => {
   }, Promise.resolve([]))
 }
 
-module.exports = {delayed, serial}
+const promiseSerial = funcs => {
+  return funcs.reduce((promise, func) => {
+    return promise.then(result => func
+      .then(Array.prototype.concat.bind(result))
+      .catch(console.debug)
+    ).catch(console.debug)
+  }, Promise.resolve([]))
+}
+
+module.exports = {delayed, serial, promiseSerial}
