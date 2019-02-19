@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+node functions/debug/export.js
+
+jq -c '.events|to_entries|.[].value' ./backups/events-export.json > ./backups/events-export-flat.json
+
+bq load --project_id dansguiden-b3a7d --source_format NEWLINE_DELIMITED_JSON \
+        --schema _id:string,spotify_image:string,spotify_id:string,county:string,band:string,place:string,city:string,time:string,date:string,weekday:string,region:string,updated_at:integer,extra:string,updated_at_pretty:string \
+        --replace events.events_latest ./backups/events-export-flat.json
+
