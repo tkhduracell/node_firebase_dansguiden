@@ -188,22 +188,20 @@ module.exports.updateEvents = (batch, table) => (log, done, error) => {
     .catch(error)
 }
 
-module.exports.updateVersions = (table) => (log, done, error) => {
+module.exports.updateVersions = (table) => (log, done, error, debugTopic) => {
   return fetchLatestVersion(log)
     .then((data) => {
-      if (_.isEmpty(data.name) || _.isEmpty(data.lines)) {
-        log('No updated version, result was empty: ' + JSON.stringify(data))
+      const invalid = _.isEmpty(data.name) || _.isEmpty(data.lines)
+      if (invalid) {
+        log('No updated version, result was empty: ' + JSON.stringify(data, null, 2))
       }
 
       const key = _.snakeCase('v ' + data.name)
 
       log('Updating version' + key)
-      return table('versions').doc(key).set({
-        name: data.name,
-        lines: data.lines
-      }, {
-        merge: true
-      }).then(() => done('Batch write done!'))
+      return table('versions').doc(key)
+        .set(_.pickBy(data, (k, v) => v != null), { merge: true })
+        .then(() => done(data))
     })
     .catch(error)
 }

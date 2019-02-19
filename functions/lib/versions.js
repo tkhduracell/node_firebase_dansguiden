@@ -29,7 +29,8 @@ const extractContent = module.exports.extractContent = $ => {
     date: $("div:contains('Updated') + span")
       .get()
       .map(itm => $(itm).text().trim())
-      .join(', ')
+      .join(', '),
+    html: $('html').html()
   }
 }
 
