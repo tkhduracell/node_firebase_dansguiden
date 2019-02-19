@@ -27,6 +27,13 @@
         "name": "Launch #",
         "program": "${file}",
         "cwd": "${workspaceFolder}/functions"
+      },
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "debug_events.js",
+        "program": "${workspaceFolder}/functions/debug/debug_events.js",
+        "cwd": "${workspaceFolder}/functions/"
       }
     ]
 }
