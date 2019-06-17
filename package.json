@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "devDependencies": {
+    "acorn": "^6.1.1",
     "chai": "~4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-match": "^1.1.1",
