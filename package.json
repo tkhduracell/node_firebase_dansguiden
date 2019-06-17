@@ -6,6 +6,7 @@
   "scripts": {
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
     "deploy": "./deploy",
+    "deploy-ci": "firebase -P dansguiden-b3a7d deploy --token=$FIREBASE_DEPLOY_TOKEN",
     "shell": "firebase -P dansguiden-b3a7d functions:shell",
     "serve": "firebase -P dansguiden-b3a7d serve",
     "test": "mocha --opts mocha.opts",

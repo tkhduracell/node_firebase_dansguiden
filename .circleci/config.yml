@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8.12
+      - image: circleci/node:8.16.0
 
     working_directory: ~/repo
 
@@ -25,9 +25,11 @@ jobs:
             - functions/node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
+      - run: npm test
+
       - deploy:
           name: Deploy Master to Firebase
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              node node_modules/firebase-tools/lib/bin/firebase.js deploy -P dansguiden-b3a7d --token=$FIREBASE_DEPLOY_TOKEN
+              npm run deploy-ci
             fi
