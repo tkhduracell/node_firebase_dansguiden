@@ -1,4 +1,5 @@
 {
-  "mocha.files.glob": "**/*.test.js",
-  "mocha.path": "${workspaceFolder}/node_firebase_dansguiden/node_modules/mocha/bin/mocha"
+  "mochaExplorer.cwd": ".",
+  "mochaExplorer.files": "functions/test/**/*.js",
+  "mochaExplorer.timeout": 20000
 }

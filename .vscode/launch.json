@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
 
+
       {
         "type": "node",
         "request": "launch",
@@ -27,6 +28,12 @@
         "name": "Launch #",
         "program": "${file}",
         "cwd": "${workspaceFolder}/functions"
+      },
+      {
+        "type": "node",
+        "request": "attach",
+        "name": "Attach",
+        "port": 9229
       },
       {
         "type": "node",
