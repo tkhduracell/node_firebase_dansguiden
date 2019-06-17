@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const core = require('./core')
+const core = require('../core')
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

@@ -30,6 +30,31 @@ function scrape (url, extract) {
   })
 }
 
+const asEntry = module.exports.asEntry = ($, tr, databaseColumns) => {
+  const values = tr.children('td')
+    .get()
+    .map((elm) => $(elm).text().replace(/\s+/gi, ' ').trim()) // Trim
+  const keys = databaseColumns
+  const obj = zipAsObj(keys, values)
+  return _.omitBy(obj, _.isEmpty)
+}
+
+const asDatabaseColumns = module.exports.asDatabaseColumns = ($, html) => {
+  const columnsElm = $(html).children('th').get()
+
+  const columns = _.flatMap(columnsElm, itm => {
+    const colspan = parseInt($(itm).attr('colspan') || '1')
+    const txt = $(itm).text().trim()
+    if (colspan === 1) {
+      return [txt]
+    } else {
+      const range = Array(colspan).fill().map((v, i) => i)
+      return range.map(i => txt + '-' + i)
+    }
+  })
+  return columns.map(itm => COLUMN_MAP[itm])
+}
+
 module.exports.parse = (debug) => {
   debug('Running Dansguiden parser...')
 
@@ -48,40 +73,15 @@ module.exports.parse = (debug) => {
   }
 
   function readPage ($, url) {
-    const tableHeader = $('tr.headline').first()
-    const columnsElm = tableHeader.children('th').get()
+    const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
 
-    const columns = _.flatMap(columnsElm, itm => {
-      const colspan = parseInt($(itm).attr('colspan') || '1')
-      const txt = $(itm).text().trim()
-      if (colspan === 1) {
-        return [txt]
-      } else {
-        const range = Array(colspan).fill().map((v, i) => i)
-        return range.map(i => txt + '-' + i)
-      }
-    })
+    const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
+    const header = $(dateHeaderElm).text().replace(/\s+/gi, ' ').trim()
+    const rows = $("tr[class^='r']").get()
 
-    const databaseColumns = columns.map(itm => COLUMN_MAP[itm])
-
-    const dateHeaderElm = $('tr').not('.headline').not('.odd').not('.even').first()
-    const trimElement = (elm) => $(elm).text().replace(/\s+/gi, ' ').trim()
-    const header = trimElement(dateHeaderElm)
-
-    function data (tr) {
-      const values = $(tr).children('td')
-        .get()
-        .map(trimElement)
-      const keys = databaseColumns
-      const obj = zipAsObj(keys, values)
-      return _.omitBy(obj, _.isEmpty)
-    }
-
-    const rows = $('tr.even').get()
-      .concat($('tr.odd').get())
     debug(`Processing ${rows.length} rows... (page: ${header})`)
 
-    return rows.map(itm => {
+    return rows.map((itm, idx) => {
       return {
         type: 'event',
         debug: {
@@ -92,7 +92,7 @@ module.exports.parse = (debug) => {
             .trim(),
           url
         },
-        data: data(itm),
+        data: asEntry($, $(itm), databaseColumns),
         header
       }
     })

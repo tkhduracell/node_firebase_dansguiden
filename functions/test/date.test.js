@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const { parseYearDate } = require('./date')
+const { parseYearDate } = require('../lib/date')
 const chai = require('chai')
 
 chai.should()

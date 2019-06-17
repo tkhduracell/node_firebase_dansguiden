@@ -1,4 +1,5 @@
 const scraperjs = require('scraperjs')
+const flatMap = require('lodash.flatmap')
 
 module.exports.versionSort = (v) => {
   return v.name.split('.', 3)
@@ -7,31 +8,28 @@ module.exports.versionSort = (v) => {
 }
 
 const extractContent = module.exports.extractContent = $ => {
-  return {
-    lines: $("div:contains('What's New') > h2")
-      .parent()
-      .parent()
-      .find('content')
-      .get()
-      .map(block => block.children.map(node => {
-        return $(node).text()
-          .replace(/^\W*\*\W*/, '')
-          .trim()
-      }))
-      .map(items => items.filter(s => s !== ''))
-      .filter(s => s.indexOf('Read more') === -1)
-      .filter(s => s.indexOf('Collapse') === -1)
-      .pop(),
-    name: $("div:contains('Current Version') + span")
-      .get()
-      .map(itm => $(itm).text().trim())
-      .join(', '),
-    date: $("div:contains('Updated') + span")
-      .get()
-      .map(itm => $(itm).text().trim())
-      .join(', '),
-    html: $('html').html()
-  }
+  const content = $("div:contains('What's New') > h2")
+    .parent()
+    .parent()
+    .find("div[itemprop='description']")
+    .get()
+    .map(block => $(block).text())
+  const lines = flatMap(content, l => l.split(/\W*\*\W*/gi))
+    .map(s => s.trim())
+    .filter(s => s !== '')
+    .filter(s => s.indexOf('Read more') === -1)
+    .filter(s => s.indexOf('Collapse') === -1)
+  const name = $("div:contains('Current Version') + span")
+    .get()
+    .map(itm => $(itm).text().trim())
+    .join(', ')
+  const date = $("div:contains('Updated') + span")
+    .get()
+    .map(itm => $(itm).text().trim())
+    .join(', ')
+  const html = $('html').html()
+
+  return { lines, name, date, html }
 }
 
 module.exports.fetchLatestVersion = (log) => {
