@@ -4,9 +4,9 @@
   "description": "The webpage for dansguiden",
   "main": "dansguiden",
   "scripts": {
-    "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
-    "deploy-ci": "firebase -P dansguiden-b3a7d deploy --token=$FIREBASE_DEPLOY_TOKEN",
-    "serve": "firebase -P dansguiden-b3a7d serve"
+    "start": "firebase serve --only hosting,function",
+    "deploy-ci": "node -e \"if(process.env.CI){process.exit(0)}else{throw Error('\\nOnly runs from CI!\\n')}\" && firebase deploy",
+    "serve": "firebase serve"
   },
   "repository": {
     "type": "git",
@@ -17,9 +17,13 @@
   "bugs": {
     "url": "https://github.com/tkhduracell/node_firebase_dansguiden/issues"
   },
+  "private": true,
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "dependencies": {},
   "devDependencies": {
     "firebase-admin": "^8.1.0"
+  },
+  "engines": {
+    "node": ">=13.7.0"
   }
 }

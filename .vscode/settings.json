@@ -1,5 +1,13 @@
 {
-  "mochaExplorer.cwd": ".",
-  "mochaExplorer.files": "functions/test/**/*.js",
-  "mochaExplorer.timeout": 20000
+  "eslint.enable": true,
+  "eslint.workingDirectories": [
+    {
+      "directory": "functions",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "web",
+      "changeProcessCWD": true
+    }
+  ]
 }

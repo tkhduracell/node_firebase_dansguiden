@@ -1,46 +1,53 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-
-
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Mocha Test",
-        "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-        "args": [
-          "-u",
-          "tdd",
-          "--inspect",
-          "--timeout",
-          "999999",
-          "--colors",
-          "${file}"
-        ],
-        "internalConsoleOptions": "openOnSessionStart"
-      },
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "Launch #",
-        "program": "${file}",
-        "cwd": "${workspaceFolder}/functions"
-      },
-      {
-        "type": "node",
-        "request": "attach",
-        "name": "Attach",
-        "port": 9229
-      },
-      {
-        "type": "node",
-        "request": "launch",
-        "name": "debug_events.js",
-        "program": "${workspaceFolder}/functions/debug/debug_events.js",
-        "cwd": "${workspaceFolder}/functions/"
-      }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Test ${file}",
+      "program": "${workspaceFolder}/functions/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/functions",
+      "args": [
+        "-u",
+        "bdd",
+        "-r",
+        "ts-node/register",
+        "--inspect",
+        "--timeout",
+        "999999",
+        "--colors",
+        "${file}"
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Test All",
+      "program": "${workspaceFolder}/functions/node_modules/mocha/bin/_mocha",
+      "cwd": "${workspaceFolder}/functions",
+      "args": [
+        "-u",
+        "bdd",
+        "-r",
+        "ts-node/register",
+        "--inspect",
+        "--timeout",
+        "999999",
+        "--colors",
+        "./test/**/*.test.ts"
+      ],
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug_events.js",
+      "program": "${workspaceFolder}/functions/debug/debug_events.js",
+      "cwd": "${workspaceFolder}/functions/"
+    }
+  ]
 }
