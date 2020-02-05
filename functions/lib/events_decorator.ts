@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import _ from 'lodash'
 import firebase from 'firebase-admin'
 
@@ -6,7 +7,24 @@ import { TableFn, BatchFn } from './database'
 import { LogFn } from './log'
 import { ArtistImage } from './types'
 
-export function update (batch: BatchFn, table: TableFn, log: LogFn) {
+function getImage (images: ArtistImage[]): string | null {
+  return (_.first(
+    _.orderBy(images || [], i => i.height * i.width)
+  ) || { url: null }).url
+}
+
+function getImageAndId(metadata: firebase.firestore.DocumentData): SpotifyMetadata | null {
+  return _.isEmpty(metadata) ? null : {
+    spotify_id: metadata.id as string,
+    spotify_image: getImage(metadata.images as ArtistImage[])
+  }
+}
+
+function remap (band: string): string {
+  return band.replace(/-/gi, '')
+}
+
+export function update (batch: BatchFn, table: TableFn, log: LogFn): Promise<object> {
   const metadata = table('band_metadata')
     .get()
     .then(snapshot => {
@@ -55,23 +73,7 @@ export function update (batch: BatchFn, table: TableFn, log: LogFn) {
     })
 }
 
-function remap (band: string): string {
-  return band.replace(/-/gi, '')
-}
 type SpotifyMetadata = {
   spotify_id: string;
   spotify_image: string | null;
-}
-
-function getImageAndId(metadata: firebase.firestore.DocumentData): SpotifyMetadata | null {
-  return _.isEmpty(metadata) ? null : {
-    spotify_id: metadata.id as string,
-    spotify_image: getImage(metadata.images as ArtistImage[])
-  }
-}
-
-function getImage (images: ArtistImage[]): string | null {
-  return (_.first(
-    _.orderBy(images || [], i => i.height * i.width)
-  ) || { url: null }).url
 }
