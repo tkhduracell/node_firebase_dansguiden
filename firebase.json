@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "public",
+    "public": "web/public",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -9,33 +9,44 @@
     "rewrites": [
       {
         "source": "/",
-        "function": "index"
+        "destination": "index.html"
       },
       {
         "source": "/api/events",
-        "function": "getEvents"
+        "function": "eventsFetch"
       },
       {
         "source": "/api/versions",
-        "function": "getVersions"
+        "function": "versionsFetch"
+      },
+      {
+        "source": "/api/images",
+        "function": "imagesFetch"
       },
       {
         "source": "/api/update/events",
-        "function": "updateEvents"
+        "function": "eventsUpdate"
       },
       {
         "source": "/api/update/versions",
-        "function": "updateVersions"
+        "function": "versionsUpdate"
       },
       {
         "source": "/api/update/metadata",
-        "function": "updateBandMetadata"
+        "function": "metadataUpdate"
+      },
+      {
+        "source": "/api/update/bands",
+        "function": "bandsUpdate"
       }
     ]
   },
   "functions": {
     "predeploy": [
-      "npm test"
-    ]
+      "npm --prefix \"$RESOURCE_DIR\" run lint:ts",
+      "npm --prefix \"$RESOURCE_DIR\" run test:ts",
+      "npm --prefix \"$RESOURCE_DIR\" run build:ts"
+    ],
+    "source": "functions"
   }
 }

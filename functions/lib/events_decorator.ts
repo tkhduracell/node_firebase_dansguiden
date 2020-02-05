@@ -1,7 +1,12 @@
-const _ = require('lodash')
-const {snapshotAsObj} = require('../lib//fn_helpers')
+import _ from 'lodash'
+import firebase from 'firebase-admin'
 
-module.exports.update = (batch, table, log) => {
+import { snapshotAsObj } from './utils'
+import { TableFn, BatchFn } from './database'
+import { LogFn } from './log'
+import { ArtistImage } from './types'
+
+export function update (batch: BatchFn, table: TableFn, log: LogFn) {
   const metadata = table('band_metadata')
     .get()
     .then(snapshot => {
@@ -50,19 +55,23 @@ module.exports.update = (batch, table, log) => {
     })
 }
 
-function remap (band) {
+function remap (band: string): string {
   return band.replace(/-/gi, '')
 }
+type SpotifyMetadata = {
+  spotify_id: string;
+  spotify_image: string | null;
+}
 
-function getImageAndId (metadata) {
-  return _.isEmpty(metadata) ? undefined : {
-    spotify_id: metadata.id,
-    spotify_image: getImage(metadata.images)
+function getImageAndId(metadata: firebase.firestore.DocumentData): SpotifyMetadata | null {
+  return _.isEmpty(metadata) ? null : {
+    spotify_id: metadata.id as string,
+    spotify_image: getImage(metadata.images as ArtistImage[])
   }
 }
 
-function getImage (images) {
+function getImage (images: ArtistImage[]): string | null {
   return (_.first(
     _.orderBy(images || [], i => i.height * i.width)
-  ) || {}).url
+  ) || { url: null }).url
 }

@@ -5,13 +5,8 @@
   "main": "dansguiden",
   "scripts": {
     "start": "firebase -P dansguiden-b3a7d serve --only hosting,function",
-    "deploy": "./deploy",
     "deploy-ci": "firebase -P dansguiden-b3a7d deploy --token=$FIREBASE_DEPLOY_TOKEN",
-    "shell": "firebase -P dansguiden-b3a7d functions:shell",
-    "serve": "firebase -P dansguiden-b3a7d serve",
-    "test": "mocha --opts mocha.opts",
-    "test-inspect": "mocha --opts mocha.opts --inspect",
-    "lint": "eslint functions"
+    "serve": "firebase -P dansguiden-b3a7d serve"
   },
   "repository": {
     "type": "git",
@@ -23,19 +18,8 @@
     "url": "https://github.com/tkhduracell/node_firebase_dansguiden/issues"
   },
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
+  "dependencies": {},
   "devDependencies": {
-    "acorn": "^6.1.1",
-    "chai": "~4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "chai-match": "^1.1.1",
-    "eslint": "^5.8.0",
-    "eslint-config-google": "^0.11.0",
-    "eslint-plugin-chai-expect": "^2.0.1",
-    "mocha": "^6.1.4",
-    "nyc": "^14.1.1"
-  },
-  "dependencies": {
-    "firebase-admin": "^8.1.0",
-    "moment": "^2.24.0"
+    "firebase-admin": "^8.1.0"
   }
 }

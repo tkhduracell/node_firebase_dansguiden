@@ -1,27 +1,49 @@
 {
   "name": "functions",
   "description": "Cloud Functions for Firebase",
+  "main": "build/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --ext=jsx,ts,tsx src",
+    "test": "mocha -r ts-node/register test/**/*.test.ts --timeout 999999",
+    "backup": "ts-node debug/export.ts"
+  },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "debug": "^2.6.8",
-    "file-store-sync": "^0.1.0",
-    "firebase-admin": "^8.1.0",
-    "firebase-functions": "^3.0.1",
+    "core-js": "^3.6.4",
+    "firebase-admin": "^8.9.2",
+    "firebase-functions": "^3.3.0",
     "google-gax": "^0.22.1",
-    "jsonfile": "^4.0.0",
+    "grpc": "^1.23.3",
     "lodash": "^4.17.11",
-    "lodash.flatmap": "^4.5.0",
-    "mocha": "^6.1.4",
     "moment": "^2.22.2",
-    "nyc": "^14.1.1",
     "pug": "^2.0.0-rc.4",
-    "request": "^2.88.0",
     "scraperjs": "^1.2.0",
     "simple-oauth2": "^1.5.0",
+    "source-map-support": "^0.5.16",
     "spotify-web-api-node": "^4.0.0"
   },
   "private": true,
   "engines": {
-    "node": "8"
+    "node": "10"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.8",
+    "@types/cheerio": "^0.22.16",
+    "@types/mocha": "^7.0.1",
+    "@types/node": "^13.7.0",
+    "@types/simple-oauth2": "^2.5.2",
+    "@types/spotify-api": "0.0.2",
+    "@types/spotify-web-api-node": "^4.0.1",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "chai": "^4.2.0",
+    "cheerio": "^1.0.0-rc.3",
+    "eslint": "^5.14.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "mocha": "^7.0.1",
+    "nyc": "^14.1.1",
+    "spotify-api": "0.0.0",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5"
   }
 }

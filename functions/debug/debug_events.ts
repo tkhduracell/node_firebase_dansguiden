@@ -1,9 +1,9 @@
-const events = require('../lib/events')
+import { parse } from '../lib/events'
 
-events.parse(console.log)
+parse(console.log)
   .then((res) => {
     console.log('------------------------------------')
-    res.filter(e => e.date === '2019-03-06')
+    return res.filter(e => e.data.date === '2019-03-06')
       .forEach(e => {
         console.log(JSON.stringify(e, undefined, 2))
       })

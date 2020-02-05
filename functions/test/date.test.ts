@@ -1,12 +1,9 @@
-/* eslint-env mocha */
-const { parseYearDate } = require('../lib/date')
-const chai = require('chai')
+import moment from 'moment'
+import chai from 'chai'
 
 chai.should()
 
-const moment = require('moment')
-
-// node_modules/.bin/mocha --reporter spec functions/lib/events.test.js
+import { parseYearDate } from '../lib/date'
 
 describe('parseYearDate', () => {
   it('should return same year when not specified', () => {
