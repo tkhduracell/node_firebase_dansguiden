@@ -96,7 +96,7 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
       _id: key,
       date,
       // eslint-disable-next-line @typescript-eslint/camelcase
-      updated_at: moment().toDate(),
+      updated_at: moment().toDate().getTime(),
       // eslint-disable-next-line @typescript-eslint/camelcase
       updated_at_pretty: moment().toISOString()
     })
