@@ -1,11 +1,7 @@
 // Libraries
 import * as functions from 'firebase-functions'
 
-// Polyfills
-import 'core-js/stable/object'
-
-// Source map support
-import 'source-map-support/register';
+import './setup'
 
 import { SecretsFactory } from '../lib/secrets'
 import { database } from '../lib/database'
