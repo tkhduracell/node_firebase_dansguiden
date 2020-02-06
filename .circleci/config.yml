@@ -42,9 +42,16 @@ jobs:
           command: |
             npm run test
 
-      - deploy:
-          name: Deploy Master to Firebase
+      - deploy-functions:
+          name: if (master) Deploy to Firebase Functions
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              npm run deploy-ci
+              firebase deploy --token $FIREBASE_DEPLOY_TOKEN --only functions
+            fi
+
+      - deploy-hosting:
+          name: if (master ) Deploy to Firebase Hosting
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              firebase deploy --token $FIREBASE_DEPLOY_TOKEN --only hosting
             fi

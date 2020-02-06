@@ -5,7 +5,6 @@
   "main": "dansguiden",
   "scripts": {
     "start": "firebase serve --only hosting,function",
-    "deploy-ci": "node -e \"if(process.env.CI){process.exit(0)}else{throw Error('\\nOnly runs from CI!\\n')}\" && firebase deploy --token $FIREBASE_DEPLOY_TOKEN",
     "serve": "firebase serve"
   },
   "repository": {
