@@ -42,17 +42,17 @@ jobs:
           command: |
             npm run test
 
-      - deploy-functions:
+      - deploy:
           name: if (master) Deploy to Firebase Functions
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              firebase deploy --token $FIREBASE_DEPLOY_TOKEN --only functions
+              ./node_modules/firebase-tools/lib/bin/firebase.js deploy --token $FIREBASE_DEPLOY_TOKEN --only functions
             fi
 
-      - deploy-hosting:
+      - deploy:
           name: if (master ) Deploy to Firebase Hosting
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              echo $GOOGLE_APPLICATION_CREDENTIALS_JSON > auth.json
-              GOOGLE_APPLICATION_CREDENTIALS=./auth.json firebase deploy --token $FIREBASE_DEPLOY_TOKEN --only hosting
+              echo $GOOGLE_APPLICATION_CREDENTIALS_JSON > "`pwd`/auth.json"
+              GOOGLE_APPLICATION_CREDENTIALS=`pwd`/auth.json ./node_modules/firebase-tools/lib/bin/firebase.js deploy --token $FIREBASE_DEPLOY_TOKEN --only hosting
             fi
