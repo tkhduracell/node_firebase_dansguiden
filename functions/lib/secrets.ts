@@ -14,7 +14,7 @@ export type Secrets = {
 }
 
 export class SecretsFactory {
-  static init() {
+  static init(): Secrets {
     return config() as Secrets
   }
 }
