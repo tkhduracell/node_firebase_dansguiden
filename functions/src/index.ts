@@ -21,9 +21,11 @@ enum Schedule {
 }
 
 function schedule<T>(schedule: Schedule, onTrigger: () => Promise<T>): functions.CloudFunction<unknown> {
-  return functions.region('europe-west1').pubsub.schedule(schedule).onRun(async () => {
-    await onTrigger()
-  })
+  return functions.region('europe-west1')
+    .runWith({timeoutSeconds: 540}) // Timeout 9 min
+    .pubsub
+    .schedule(schedule)
+    .onRun(async () => await onTrigger());
 }
 
 function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): functions.HttpsFunction {
@@ -39,8 +41,12 @@ function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): func
 
 const logger = (prefix: string): (msg: string) => void => console.log.bind(console.log, prefix)
 
-export const eventsUpdate = schedule(Schedule.DAILY, () => Events.update(batch, table, logger("daily.updateEvents:")))
-export const bandsUpdate = schedule(Schedule.DAILY, () => Bands.update(table, logger("daily.updateBands:"), secrets))
+export const eventsUpdate = schedule(Schedule.DAILY, () => {
+  return Events.update(batch, table, logger("daily.updateEvents:"));
+})
+export const bandsUpdate = schedule(Schedule.DAILY, () => {
+  return Bands.update(table, logger("daily.updateBands:"), secrets);
+})
 
 export const versionsUpdate = schedule(Schedule.HOURLY, () => Versions.update(table, logger("hourly.updateVersions:")))
 export const metadataUpdate = schedule(Schedule.HOURLY, () => Metadata.update(table, logger("hourly.updateMetadata:")))

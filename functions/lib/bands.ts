@@ -2,7 +2,7 @@ import _ from 'lodash'
 import SpotifyWebApi from 'spotify-web-api-node'
 
 import { Secrets, SpotifyApiClientFactory } from '../lib/spotify_api_auth'
-import { delayed, serial } from './promises'
+import { serialDelayedFns } from './promises'
 import { Artist } from './types'
 import { Store } from './store'
 
@@ -18,20 +18,24 @@ const commonGenres = [
   'rock-and-roll'
 ]
 
+const blacklist = [
+  '42dnStXXTO4OXleuxwGL9F', // Andreas J
+  '4t56SOthZtGQkZdgZrAeqK', // Allstars,
+  '0MzvueasOOSFOrMKdkKb9C', // Bagatelle,
+  '3zo2TkHcXi6iXQxp4bipYW', // Bendix
+  '3h7VkDi0XjJMAtgZS4chp7', // Bendix
+  '7Fhj0K08T75UchC1p8T6g1', // Barons
+  ''
+]
+
 const remapping = {
   'PerHåkans': 'Per-Håkans',
-  'Larz Kristers': 'Larz-Kristers'
+  'Larz Kristers': 'Larz-Kristers',
+  'Agneta & Peter' : 'Agneta Olsson',
+  'Anne Nørdsti (N)': 'Anne Nørdsti'
 } as { [key: string]: string }
 
-const randomInt = (max: number): number => Math.round(Math.random() * max)
 const normalize = (str: string): string => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
-
-type SpotifyArtist = {
-  id: string;
-  name: string;
-  genres: string[];
-  images: string[];
-}
 
 function isSimilar (lhs: string, rhs: string): boolean {
   return normalize(lhs) === normalize(rhs)
@@ -45,51 +49,94 @@ function remap (band: string): string {
   return remapping[band] || band
 }
 
-function isDansbandish(a: { genres: string[] }): boolean {
-  return _.isEmpty(a.genres) ||
-    _.size(_.intersection(a.genres, commonGenres)) > 0
+function isDansbandishStrict(a: { genres: string[] }): boolean {
+  return _.size(_.intersection(a.genres, commonGenres)) > 0
 }
 
-function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): SpotifyArtist | {} {
-  const results = artists.filter(a => isSimilar(a.name, band))
-    .filter(isDansbandish)
+function isDansbandishOrUnknown(a: { genres: string[] }): boolean {
+  return _.isEmpty(a.genres) || isDansbandishStrict(a)
+}
+
+function isNotBlacklisted(a: {  id:  string }): boolean {
+  return !blacklist.includes(a.id)
+}
+
+function score (a: SpotifyApi.ArtistObjectFull, target: string): number {
+  let score = 0
+  if (isDansbandishOrUnknown(a)) score++
+  if (isDansbandishStrict(a)) score++
+  if (isNotBlacklisted(a)) score++
+  if (isSimilar(a.name, target)) score++
+  return score
+}
+
+function compare (a: SpotifyApi.ArtistObjectFull, b: SpotifyApi.ArtistObjectFull, target: string): number {
+  return score(b, target) -  score(a, target)
+}
+
+function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): Artist | undefined {
+
+  console.log('    -----  Search results ----- ')
+  for (const a of artists.sort((a, b) => compare(a, b, band))) {
+    const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band) ? " -->" : "    "
+    console.log(selected, JSON.stringify({
+      id: a.id,
+      score: score(a, band),
+      name: a.name,
+      genres: a.genres.join(','),
+      isDansbandishOrUnknown: isDansbandishOrUnknown(a),
+      isDansbandishStrict: isDansbandishStrict(a),
+      isNotBlacklisted: isNotBlacklisted(a),
+      isSimilar: isSimilar(a.name, band)
+    }).split('').slice(0, 160).join(''))
+  }
+
+  return artists.filter(a => isSimilar(a.name, band))
+    .filter(isDansbandishOrUnknown)
+    .filter(isNotBlacklisted)
+    .sort((a, b) => compare(a, b, band))
     .map(a => _.pick(a, ['id', 'name', 'genres', 'images']))
-  return _.first(results) || {}
+    .find(() => true)
 }
 
 async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
+  console.log("Spotify API call for artist " + artist)
   const result = await api.searchArtists(artist, { limit: 10, market: 'SE' })
   const items = result.body.artists ? result.body.artists.items : []
   return items
 }
 
-async function updateArtistMetadataForBand (api: SpotifyWebApi, store: Store<Artist>, band: string): Promise<Artist> {
+async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Artist>, band: string): Promise<Artist> {
+  console.log(`-------------------  ${band} -------------------`)
 
-  const artistInfo = await store.get(band)
+  const remapped = remap(removeSuffix(band))
+  if (remapped !== band) console.log(`Remapped artist from ${band} -> ${remapped}`)
 
-  if (artistInfo && _.size(artistInfo) > 0) {
-    console.log('Found artist', band)
-    return artistInfo
-  } else {
-    console.log('Searching for artist', band)
-    const delayedBand = await delayed(band, randomInt(5000))
+  const spotifyArtists = await searchArtist(api, remapped)
 
-    const remapped = remap(removeSuffix(delayedBand))
+  const mostSimilarArtist = findArtistInfo(remapped, spotifyArtists)
+  const explain = mostSimilarArtist
+    ? `${mostSimilarArtist.name} (${mostSimilarArtist.id}) seems to be best candidate`
+    : 'none seemed applicable'
+  console.log(`Found ${_.size(spotifyArtists)} artist, but ${explain}`)
 
-    const spotifyArtists = await searchArtist(api, remapped)
-
-    const mostSimilarArtist = findArtistInfo(band, spotifyArtists)
-
-    return store.set(band, mostSimilarArtist as Artist) // Set even if empty
-  }
+  return await store.set(band, mostSimilarArtist || {} as Artist) // Set even if empty
 }
 
 export class BandUpdater {
-  static async run(store: Store<Artist>, secrets: Secrets, bands: string[]): Promise<Artist[]> {
+  static async run(store: Store<Artist>, secrets: Secrets, bands: string[]): Promise<(Artist|null)[]> {
     const client = await SpotifyApiClientFactory.create(secrets)
 
-    const results = bands.map(band => updateArtistMetadataForBand(client, store, band))
+    const results = bands.map(band => (): Promise<Artist | null> => {
+      try {
+        return updateArtistInfoFromSpotify(client, store, band)
+      } catch (error) {
+        console.warn(`Unable to update artist ${band}, due to ${error.message || error}`)
+        return Promise.resolve(null)
+      }
+    })
 
-    return serial(results)
+    // Delayed and serial execution
+    return serialDelayedFns(results, 5000, 2000)
   }
 }

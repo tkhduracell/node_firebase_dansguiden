@@ -7,25 +7,16 @@
     ],
     "outDir": "build",
     "sourceMap": true,
-    "allowJs": true,
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types",
       "lib/types"
     ],
     "strict": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
     "noUnusedLocals": true,
   },
   "compileOnSave": true,
   "include": [
-    "src/**/*",
-    "test/**/*",
-    "debug/**/*"
-  ],
-  "exclude": [
-    "node_modules/**/*",
-    "build/**/*"
+    "src/**/*"
   ]
 }

@@ -1,15 +1,29 @@
 
 
-export function delayed<T>(value: T, duration: number): Promise<T> {
-  return new Promise(function (resolve, reject) {
-    setTimeout(() => resolve(value), duration)
-  })
+function delayed<T>(duration: number, t?: T): Promise<T | undefined> {
+  return new Promise(((resolve,) => {
+    setTimeout(() => resolve(t), duration)
+  }))
 }
 
-export function serial<T>(funcs: Promise<T>[]): Promise<T[]> {
-  return funcs.reduce(async (chain: Promise<T[]>, currentTask: Promise<T>) => {
-    const previousResults = await chain
-    const currentResult = await currentTask
-    return [...previousResults, currentResult]
-  }, Promise.resolve([]))
+export async function serialDelayed<T> (funcs: Promise<T>[], ms = 0, variance = 0): Promise<T[]> {
+  const result = [] as T[]
+  for (const p of funcs) {
+    // eslint-disable-next-line no-await-in-loop
+    result.push(await p)
+    // eslint-disable-next-line no-await-in-loop
+    await delayed(ms + Math.random() * variance * 2 - variance)
+  }
+  return result
+}
+
+export async function serialDelayedFns<T> (funcs: (() => Promise<T>)[], ms = 0, variance = 0): Promise<T[]> {
+  const result = [] as T[]
+  for (const p of funcs) {
+    // eslint-disable-next-line no-await-in-loop
+    result.push(await p())
+    // eslint-disable-next-line no-await-in-loop
+    await delayed(ms + Math.random() * variance * 2 - variance)
+  }
+  return result
 }

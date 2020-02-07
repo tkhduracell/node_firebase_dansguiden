@@ -1,6 +1,5 @@
 import _ from 'lodash'
 
-import { serial } from './promises'
 import { parseYearDate, validateWeekDay, validateDate, fixTime } from './date'
 import { LogFn } from './log'
 import { DanceEvent } from './types'
@@ -9,6 +8,7 @@ import { ScraperQuery, ScraperNode } from 'scraperjs'
 import { Scraper } from './scraper'
 import { InternalDanceEvent } from '../src/core'
 import { zipAsObj, removeNullValues } from './utils'
+import { serialDelayed } from './promises'
 
 const url = 'http://www.danslogen.se'
 
@@ -171,7 +171,7 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
     .filter(p => !_.isArray(months) || _.some(months, m => p.title.includes(m)))
     .map(loadPage)
 
-  const contents = serial(linkContents)
+  const contents = serialDelayed(linkContents, 1000)
     .then(_.flatten)
 
   return contents

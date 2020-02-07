@@ -18,6 +18,9 @@ import { Artist, Counter, DanceEvent } from '../lib/types';
 import { LogFn } from '../lib/log';
 import { Secrets } from '../lib/secrets';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]> {
   const dates = output.filter(event => event.type === 'event')
     .map(e => e.data.date)
@@ -75,6 +78,9 @@ async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionRef
   return _.flatten(await Promise.all(writes))
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]>  {
   const table = tableFn('events')
 
@@ -113,7 +119,7 @@ type KV<T> = { key: string; value: T }
 type ObjectExtractor<T, V> = (t: T) => KV<V> | boolean
 
 export class Bands {
-  static async update(table: TableFn, log: LogFn, secrets: Secrets): Promise<Artist[]> {
+  static async update(table: TableFn, log: LogFn, secrets: Secrets): Promise<(Artist|null)[]> {
     const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
 
     // Older events are broken
@@ -122,16 +128,16 @@ export class Bands {
     }
 
     log('Getting current bands in events')
-    const allBands = await getValues<string>(table, 'events', doc => doc.band, onlyNewEvents)
-    const sortedUniqueBands = _.uniq(allBands).sort()
+    const allBands = await getValues<string, DanceEvent>(table, 'events', event => event.band, onlyNewEvents)
+    const bands = _.uniq(allBands).sort() // debug: .slice(15, 20)
 
     log('Starting band update')
-    const update = await BandUpdater.run(bandsKeyValueStore, secrets.spotify, sortedUniqueBands)
+    const updates = await BandUpdater.run(bandsKeyValueStore, secrets.spotify, bands)
 
     log('Completed band metadata update!')
-    log(`Wrote ${_.size(update)} bands`)
+    log(`Wrote ${_.size(updates)} bands`)
 
-    return update
+    return updates
   }
 }
 
@@ -215,7 +221,7 @@ export class Metadata {
     log('Updating metadata table...')
 
     async function updater(fn: (e: DanceEvent) => string, db: Store<Counter>): Promise<Counters> {
-      const values = getValues<string>(table, 'events', fn, future)
+      const values = getValues<string, DanceEvent>(table, 'events', fn, future)
       const counts = _.countBy(values) as Counters
 
       await Promise.all(Object.entries(counts).map(x => {

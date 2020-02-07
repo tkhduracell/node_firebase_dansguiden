@@ -1,13 +1,14 @@
 
 export type Artist = {
-  genres: string[];
   id: string;
-  images: {  };
+  name: string;
+  genres: string[];
+  images: ArtistImage[];
 }
 
 export type ArtistImage = {
-  height: number;
-  width: number;
+  height?: number;
+  width?: number;
   url: string;
 }
 
