@@ -25,7 +25,7 @@ function schedule<T>(schedule: Schedule, onTrigger: () => Promise<T>): functions
     .runWith({timeoutSeconds: 540}) // Timeout 9 min
     .pubsub
     .schedule(schedule)
-    .onRun(async () => await onTrigger());
+    .onRun(async () => await onTrigger())
 }
 
 function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): functions.HttpsFunction {
@@ -42,10 +42,10 @@ function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): func
 const logger = (prefix: string): (msg: string) => void => console.log.bind(console.log, prefix)
 
 export const eventsUpdate = schedule(Schedule.DAILY, () => {
-  return Events.update(batch, table, logger("daily.updateEvents:"));
+  return Events.update(batch, table, logger("daily.updateEvents:"))
 })
 export const bandsUpdate = schedule(Schedule.DAILY, () => {
-  return Bands.update(table, logger("daily.updateBands:"), secrets);
+  return Bands.update(table, logger("daily.updateBands:"), secrets)
 })
 
 export const versionsUpdate = schedule(Schedule.HOURLY, () => Versions.update(table, logger("hourly.updateVersions:")))

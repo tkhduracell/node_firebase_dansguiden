@@ -1,6 +1,6 @@
 // Libraries
 
-import _ from 'lodash';
+import _ from 'lodash'
 import moment, { ISO_8601 } from 'moment'
 import admin, {firestore} from 'firebase-admin'
 
@@ -13,10 +13,10 @@ import { COLUMNS } from '../lib/events'
 import { fetchLatestVersion, versionSort, Version } from '../lib/versions'
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { snapshotAsArray } from '../lib/utils'
-import { BatchFn, TableFn } from '../lib/database';
-import { Artist, Counter, DanceEvent } from '../lib/types';
-import { LogFn } from '../lib/log';
-import { Secrets } from '../lib/secrets';
+import { BatchFn, TableFn } from '../lib/database'
+import { Artist, Counter, DanceEvent } from '../lib/types'
+import { LogFn } from '../lib/log'
+import { Secrets } from '../lib/secrets'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
 // @ts-ignore
