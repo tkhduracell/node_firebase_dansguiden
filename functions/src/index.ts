@@ -17,7 +17,7 @@ const secrets = SecretsFactory.init()
 
 enum Schedule {
   DAILY = "every 24 hours",
-  HOURLY = "every 1 hour"
+  HOURLY = "every 1 hours"
 }
 
 function schedule<T>(schedule: Schedule, onTrigger: () => Promise<T>): functions.CloudFunction<unknown> {
