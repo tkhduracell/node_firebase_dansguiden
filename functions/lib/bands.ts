@@ -25,14 +25,16 @@ const blacklist = [
   '3zo2TkHcXi6iXQxp4bipYW', // Bendix
   '3h7VkDi0XjJMAtgZS4chp7', // Bendix
   '7Fhj0K08T75UchC1p8T6g1', // Barons
-  ''
+  '0hYTsX1dRl01ss8jizhrJo', // Framed & Keko
+  '0kbxBTkWdVjByBeVVzSckZ' // Jive (rulltrappor)
 ]
 
 const remapping = {
   'PerHåkans': 'Per-Håkans',
   'Larz Kristers': 'Larz-Kristers',
   'Agneta & Peter' : 'Agneta Olsson',
-  'Anne Nørdsti (N)': 'Anne Nørdsti'
+  'Anne Nørdsti (N)': 'Anne Nørdsti',
+  'Tommys (FIN)': 'Tommys'
 } as { [key: string]: string }
 
 const normalize = (str: string): string => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
