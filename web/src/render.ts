@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import firebase from 'firebase-admin'
 import pug from 'pug'
 import path from 'path'
@@ -25,7 +26,7 @@ export function versionSort(v: { name: string }): string {
     .join('')
 }
 
-async function render() {
+async function render(): Promise<void> {
   console.log("Loading versions and images...")
   const [versions, images] = await Promise.all([
     fstore.collection('versions').get(),
@@ -59,7 +60,7 @@ async function render() {
 
 }
 
-async function run() {
+async function run(): Promise<void> {
   try {
     await render()
   } catch (error) {
