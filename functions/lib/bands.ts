@@ -5,6 +5,9 @@ import { Secrets, SpotifyApiClientFactory } from '../lib/spotify_api_auth'
 import { serialDelayedFns } from './promises'
 import { Artist } from './types'
 import { Store } from './store'
+import { firestore } from 'firebase-admin'
+
+const FieldValue = firestore.FieldValue
 
 const commonGenres = [
   'dansband',
@@ -122,7 +125,15 @@ async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Art
     : 'none seemed applicable'
   console.log(`Found ${_.size(spotifyArtists)} artist, but ${explain}`)
 
-  return await store.set(band, mostSimilarArtist || {} as Artist) // Set even if empty
+  const oldData = await store.get(band)
+  if (oldData && _.isEqual(mostSimilarArtist || {}, oldData)) {
+    return oldData
+  } else {
+    const update = Object.assign({}, mostSimilarArtist || {} as Artist, {
+      "updated_at": FieldValue.serverTimestamp()
+    })
+    return await store.set(band, update) // Set even if empty
+  }
 }
 
 export class BandUpdater {
