@@ -1,9 +1,13 @@
 import { fetchLatestVersion, extractContent, Version } from '../lib/versions'
 import cheerio from 'cheerio'
 import chai from 'chai'
+import {promisify} from 'util'
+import fs from 'fs'
 import 'mocha'
 
 chai.should()
+
+const readFile = promisify(fs.readFile)
 
 const whatsnew = `
   <div class="W4P4ne ">
@@ -63,10 +67,29 @@ describe('versions', () => {
     })
   })
 
+  context('with sample data', () => {
+    let version = {} as Version
+    before(async () => {
+      const html = await readFile('test/files/playstore-2020-02-08.html')
+      version = await extractContent(cheerio.load(html))
+    })
+
+    it('should return specific version', () => {
+      return version.name.should.be.equal('2.3.4')
+    })
+
+    it('should return specific lines', async () => {
+      return version.lines.should.be.eql(['Reducerat antalet omladdningar'])
+    })
+
+    it('should return spoecific date', async () => {
+      return version.date.should.be.equal('January 28, 2019')
+    })
+  })
+
   context('with real site', () => {
     let version = {} as Version
     before(async () => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       version = await fetchLatestVersion(() => { })
     })
 
