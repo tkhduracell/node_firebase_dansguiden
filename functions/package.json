@@ -4,7 +4,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint --ext=jsx,ts,tsx src",
+    "lint": "eslint --ext=jsx,ts,tsx src test lib debug",
     "test": "mocha -r ts-node/register --file src/setup.ts test/**/*.test.ts --timeout 999999",
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase functions:shell",

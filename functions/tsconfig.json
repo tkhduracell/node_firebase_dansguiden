@@ -10,13 +10,16 @@
     "esModuleInterop": true,
     "typeRoots": [
       "node_modules/@types",
-      "lib/types"
+      "lib/@types"
     ],
     "strict": true,
     "noUnusedLocals": true,
   },
   "compileOnSave": true,
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*",
+    "lib/**/*",
+    "debug/**/*"
   ]
 }

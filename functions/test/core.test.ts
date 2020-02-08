@@ -1,12 +1,9 @@
+import 'mocha'
 import firebase from 'firebase-admin'
-
 import chai from 'chai'
-
 import { Versions, Events } from '../src/core'
 
 chai.should()
-
-// node_modules/.bin/mocha --reporter spec functions/core.test.ts
 
 class QueryMock<T> {
   data: T[]

@@ -1,5 +1,3 @@
-import _ from 'lodash'
-
 import { database } from '../lib/database'
 const { table } = database()
 

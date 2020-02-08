@@ -21,7 +21,7 @@ export type Store<T> = {
 
 function hint (value: object): string {
   const json = JSON.stringify(value).split('').splice(0, 80).join('')
-  return json.length > 80 ? `${json}...` : json;
+  return json.length > 80 ? `${json}...` : json
 }
 
 export function simpleKeyValue<T extends {}>(table: TableFn, tableName: string, merge: boolean): Store<T> {

@@ -1,7 +1,7 @@
 import { fetchLatestVersion, extractContent, Version } from '../lib/versions'
 import cheerio from 'cheerio'
 import chai from 'chai'
-import { ScraperQuery } from 'scraperjs'
+import 'mocha'
 
 chai.should()
 
@@ -47,7 +47,7 @@ describe('versions', () => {
 
     let version = {} as Version
     before(async () => {
-      version = await extractContent($ as ScraperQuery)
+      version = await extractContent($)
     })
 
     it('should return specific version', () => {

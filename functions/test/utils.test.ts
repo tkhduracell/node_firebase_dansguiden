@@ -1,3 +1,4 @@
+import 'mocha'
 import {should} from 'chai'
 import {removeNullValues} from '../lib/utils'
 should()

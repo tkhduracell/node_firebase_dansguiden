@@ -1,5 +1,3 @@
-import { ScraperQuery } from 'scraperjs'
-
 import _ from 'lodash'
 import { Scraper } from './scraper'
 import { LogFn } from './log'
@@ -8,7 +6,7 @@ export type Version = {
   lines: string[];
   name: string;
   date: string;
-  html: any;
+  html: string;
 }
 
 export function versionSort(v: Version): string {
@@ -17,7 +15,7 @@ export function versionSort(v: Version): string {
     .join('')
 }
 
-export function extractContent ($: ScraperQuery): Version {
+export function extractContent ($: CheerioStatic): Version {
   const content = $("div:contains('What's New') > h2")
     .parent()
     .parent()
@@ -37,7 +35,7 @@ export function extractContent ($: ScraperQuery): Version {
     .get()
     .map(itm => $(itm).text().trim())
     .join(', ')
-  const html = $('html').html()
+  const html = $.html()
 
   return { lines, name, date, html }
 }

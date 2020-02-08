@@ -3,7 +3,6 @@ import _ from 'lodash'
 import { parseYearDate, validateWeekDay, validateDate, fixTime } from './date'
 import { LogFn } from './log'
 import { DanceEvent } from './types'
-import { ScraperQuery, ScraperNode } from 'scraperjs'
 
 import { Scraper } from './scraper'
 import { InternalDanceEvent } from '../src/core'
@@ -27,7 +26,7 @@ const COLUMN_MAP = {
 
 export const COLUMNS = _.values(COLUMN_MAP)
 
-export function asEntry<T>($: ScraperQuery, tr: ScraperNode, databaseColumns: string[]): T {
+export function asEntry<T>($: CheerioSelector, tr: Cheerio, databaseColumns: string[]): T {
   const values = tr.children('td')
     .get()
     .map((elm) => $(elm).text().replace(/\s+/gi, ' ').trim()) // Trim
@@ -36,7 +35,7 @@ export function asEntry<T>($: ScraperQuery, tr: ScraperNode, databaseColumns: st
   return _.omitBy(obj, _.isEmpty) as unknown as T
 }
 
-export function asDatabaseColumns($: ScraperQuery, html: ScraperNode): string[] {
+export function asDatabaseColumns($: CheerioSelector, html: Cheerio): string[] {
   const columnsElm = $(html).children('th').get()
 
   const columns = _.flatMap(columnsElm, itm => {
@@ -70,12 +69,12 @@ function parseAndFilterPages(res: Page[]): Page[] {
   return res.filter((obj) => obj.title.startsWith('Visa danser i '))
 }
 
-function getPages ($: ScraperQuery): Page[] {
+function getPages ($: CheerioSelector): Page[] {
   return $('a[title]').get()
-    .map((itm: ScraperNode) => {
+    .map(itm => {
       return {
-        link: $(itm).attr('href'),
-        title: $(itm).attr('title')
+        link: $(itm).attr('href') || '',
+        title: $(itm).attr('title') || ''
       }
     })
 }
@@ -112,7 +111,7 @@ function onEventSideEffect<D>(fn: (arg0: D) => void): RowFunction<InternalEvent<
 
 export async function parse (debug: LogFn, months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
 
-  function readPage ($: ScraperQuery, url: string): InternalDanceEvent[] {
+  function readPage ($: CheerioSelector, url: string): InternalDanceEvent[] {
     const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
 
     const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
@@ -126,7 +125,7 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
             type: 'event',
             debug: {
               raw: $(itm).html(),
-              pretty: $(itm).html()
+              pretty: ($(itm).html() || '')
                 .replace(/\n/g, '')
                 .replace(/\s+/g, ' ')
                 .replace(/>\s+</g, '><')
@@ -137,7 +136,7 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
             },
             data: asEntry<DanceEvent>($, $(itm), databaseColumns),
             header
-          } as InternalEvent<DanceEvent>;
+          } as InternalEvent<DanceEvent>
       })
       .filter(itm => {
         // Removing bad events in source
@@ -153,7 +152,7 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
         validateDate(e.date, debug)
         validateWeekDay(e.date, e.weekday, debug)
       }))
-      .map(onEventMap(e => removeNullValues(e)));
+      .map(onEventMap(e => removeNullValues(e)))
   }
 
   function loadPage (page: Page): Promise<InternalDanceEvent[]> {

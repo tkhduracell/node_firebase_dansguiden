@@ -18,9 +18,6 @@ import { Artist, Counter, DanceEvent } from '../lib/types'
 import { LogFn } from '../lib/log'
 import { Secrets } from '../lib/secrets'
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]> {
   const dates = output.filter(event => event.type === 'event')
     .map(e => e.data.date)
@@ -78,9 +75,6 @@ async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionRef
   return _.flatten(await Promise.all(writes))
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-// @ts-ignore
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]>  {
   const table = tableFn('events')
 
@@ -101,10 +95,8 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
     const value = _.merge(event, {
       _id: key,
       date,
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      updated_at: moment().toDate().getTime(),
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      updated_at_pretty: moment().toISOString()
+      "updated_at": moment().toDate().getTime(),
+      "updated_at_pretty": moment().toISOString()
     })
     //_.forEach(value, (v, k) => {
     //  if (_.isNil(v) || _.isNull(v) || _.isUndefined(v)) {

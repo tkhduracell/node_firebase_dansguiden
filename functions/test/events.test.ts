@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { should, assert } from 'chai'
 import { load } from 'cheerio'
 import moment from 'moment'
+import 'mocha'
 
 should()
 
 import { parse, asDatabaseColumns, asEntry } from '../lib/events'
 import { InternalDanceEvent } from '../src/core'
 import { DanceEvent } from '../lib/types'
-import { ScraperQuery, ScraperNode } from 'scraperjs'
 import _ from 'lodash'
 
 describe('events', () => {
@@ -16,7 +15,7 @@ describe('events', () => {
     let subject = [] as InternalDanceEvent[]
     before(async () => {
       try {
-        subject = await parse(() => { })
+        subject = await parse(() => {})
       } catch (error) {
         assert.fail("Unable to fetch real data, check your internet connection")
       }
@@ -96,7 +95,7 @@ describe('events', () => {
       const expected = [
         'weekday', 'date', 'time', 'band', 'place', 'city', '', 'county', 'region', 'extra'
       ]
-      asDatabaseColumns($ as ScraperQuery, $('tr').first() as ScraperNode).should.eql(expected)
+      asDatabaseColumns($, $('tr').first()).should.eql(expected)
     })
   })
 
@@ -126,7 +125,7 @@ describe('events', () => {
         time: '21.00-01.00',
         weekday: 'Fre'
       } as DanceEvent
-      asEntry<DanceEvent>($ as ScraperQuery, $('tr') as ScraperNode,
+      asEntry<DanceEvent>($, $('tr'),
         ['weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region', 'extra']
       ).should.eql(expected)
     })

@@ -1,5 +1,6 @@
 import moment from 'moment'
 import chai from 'chai'
+import 'mocha'
 
 chai.should()
 

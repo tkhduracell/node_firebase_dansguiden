@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/camelcase */
 import _ from 'lodash'
 import firebase from 'firebase-admin'
 
@@ -15,13 +14,13 @@ function getImage (images: ArtistImage[]): string | null {
 
 function getImageAndId(metadata: firebase.firestore.DocumentData): SpotifyMetadata | null {
   return _.isEmpty(metadata) ? null : {
-    spotify_id: metadata.id as string,
-    spotify_image: getImage(metadata.images as ArtistImage[])
+    "spotify_id": metadata.id as string,
+    "spotify_image": getImage(metadata.images as ArtistImage[])
   }
 }
 
 function remap (band: string): string {
-  return band.replace(/-/gi, '');
+  return band.replace(/-/gi, '')
 }
 
 export async function update (batch: BatchFn, table: TableFn, log: LogFn): Promise<object> {
