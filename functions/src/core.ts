@@ -207,13 +207,14 @@ export class Metadata {
     const today = moment.utc().format("YYYY-MM-DD")
     const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
       return col.where('date', '>=', today)
-        .where('date', '<', '2019-02-01')
     }
 
     log('Updating metadata table...')
 
     async function updater(fn: (e: DanceEvent) => string, db: Store<Counter>): Promise<Counters> {
       const values = await getValues<string, DanceEvent>(table, 'events', fn, future)
+
+      console.debug(`Updating ${db.name} using ${values.length} events`)
       const counts = _.countBy(values) as Counters
 
       await Promise.all(Object.entries(counts).map(([key, count]) => {

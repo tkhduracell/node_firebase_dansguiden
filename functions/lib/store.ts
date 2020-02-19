@@ -17,6 +17,7 @@ export async function getValues<T, V>(table: TableFn, tableName: string, optPick
 export type Store<T> = {
   get: (key: string) => Promise<T | null>;
   set: (key: string, value: T) => Promise<T>;
+  name: string;
 }
 
 function hint (value: object): string {
@@ -27,6 +28,7 @@ function hint (value: object): string {
 export function simpleKeyValue<T extends {}>(table: TableFn, tableName: string, merge: boolean): Store<T> {
   const metadata = table(tableName)
   return {
+    name: tableName,
     get: (key: string): Promise<T |null> => metadata.doc(key)
       .get()
       .then(doc => doc.exists ? doc.data() as T : null),
