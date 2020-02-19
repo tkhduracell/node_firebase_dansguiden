@@ -213,12 +213,11 @@ export class Metadata {
     log('Updating metadata table...')
 
     async function updater(fn: (e: DanceEvent) => string, db: Store<Counter>): Promise<Counters> {
-      const values = getValues<string, DanceEvent>(table, 'events', fn, future)
+      const values = await getValues<string, DanceEvent>(table, 'events', fn, future)
       const counts = _.countBy(values) as Counters
 
-      await Promise.all(Object.entries(counts).map(x => {
-        const [_id, count] = x
-        return db.set(_id, { _id, count})
+      await Promise.all(Object.entries(counts).map(([key, count]) => {
+        return db.set(key, { _id: key, count })
       }))
 
       return counts

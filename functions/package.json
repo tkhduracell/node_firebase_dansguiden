@@ -19,6 +19,7 @@
     "google-gax": "^0.22.1",
     "grpc": "^1.23.3",
     "lodash": "^4.17.15",
+    "lodash.orderby": "^4.6.0",
     "moment": "^2.22.2",
     "pug": "^2.0.4",
     "scraperjs": "^1.2.0",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.8",
     "@types/cheerio": "^0.22.16",
+    "@types/lodash.orderby": "^4.6.6",
     "@types/mocha": "^7.0.1",
     "@types/node": "^13.7.0",
     "@types/simple-oauth2": "^2.5.2",

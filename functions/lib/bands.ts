@@ -81,10 +81,10 @@ function compare (a: SpotifyApi.ArtistObjectFull, b: SpotifyApi.ArtistObjectFull
 
 function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): Artist | undefined {
 
-  console.log('    -----  Search results ----- ')
+  console.debug('    -----  Search results ----- ')
   for (const a of artists.sort((a, b) => compare(a, b, band))) {
     const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band) ? " -->" : "    "
-    console.log(selected, JSON.stringify({
+    console.debug(selected, JSON.stringify({
       id: a.id,
       score: score(a, band),
       name: a.name,
@@ -105,17 +105,17 @@ function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): A
 }
 
 async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
-  console.log("Spotify API call for artist " + artist)
+  console.debug("Spotify API call for artist " + artist)
   const result = await api.searchArtists(artist, { limit: 10, market: 'SE' })
   const items = result.body.artists ? result.body.artists.items : []
   return items
 }
 
 async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Artist>, band: string): Promise<Artist> {
-  console.log(`-------------------  ${band} -------------------`)
+  console.debug(`-------------------  ${band} -------------------`)
 
   const remapped = remap(removeSuffix(band))
-  if (remapped !== band) console.log(`Remapped artist from ${band} -> ${remapped}`)
+  if (remapped !== band) console.debug(`Remapped artist from ${band} -> ${remapped}`)
 
   const spotifyArtists = await searchArtist(api, remapped)
 
@@ -123,7 +123,7 @@ async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Art
   const explain = mostSimilarArtist
     ? `${mostSimilarArtist.name} (${mostSimilarArtist.id}) seems to be best candidate`
     : 'none seemed applicable'
-  console.log(`Found ${_.size(spotifyArtists)} artist, but ${explain}`)
+  console.debug(`Found ${_.size(spotifyArtists)} artist, but ${explain}`)
 
   const oldData = await store.get(band)
   if (oldData && _.isEqual(mostSimilarArtist || {}, oldData)) {
