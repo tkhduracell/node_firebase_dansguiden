@@ -5,7 +5,8 @@
   "main": "dansguiden",
   "scripts": {
     "start": "firebase serve --only hosting,function",
-    "serve": "firebase serve"
+    "serve": "firebase serve",
+    "test": "npm --prefix ./functions run test"
   },
   "repository": {
     "type": "git",

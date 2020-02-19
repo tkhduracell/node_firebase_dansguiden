@@ -1,6 +1,0 @@
---reporter spec
---ui bdd
---recursive
---harmony
---timeout 120000
-functions/test/*.js
