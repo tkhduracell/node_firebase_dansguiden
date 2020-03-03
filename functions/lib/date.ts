@@ -10,8 +10,11 @@ moment.updateLocale('sv', {
 
 export function fixTime(time: string): string {
   if (_.isString(time)) {
-    return time.replace(/(\d{2})\s*[:. ,]\s*(\d{2})/g, '$1:$2')
+    const fixed = time.replace(/(\d{2})\s*[:. ,]\s*(\d{2})/g, '$1:$2')
       .replace(/(\d{2}:\d{2})\s*[-,. ]\s*(\d{2}:\d{2})/g, '$1-$2')
+
+    // If we do not match still, then trash
+    return fixed.match(/^\d{2}:\d{2}(-\d{2}:\d{2})?$/) ? fixed : ''
   } else {
     return time
   }

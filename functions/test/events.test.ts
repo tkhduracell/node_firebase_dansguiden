@@ -16,6 +16,7 @@ describe('events', () => {
     before(async () => {
       try {
         subject = await parse(() => {})
+        console.log(`Fetched ${subject.length} events for test`)
       } catch (error) {
         assert.fail("Unable to fetch real data, check your internet connection")
       }
