@@ -22,7 +22,7 @@
     "firebase-admin": "^8.9.2",
     "glob-promise": "^3.4.0",
     "glob": "^7.1.6",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "mocha": "^7.0.1",
     "pug": "^2.0.4",
     "sharp": "^0.24.0",
