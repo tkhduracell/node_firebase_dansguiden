@@ -18,7 +18,7 @@
     "firebase-functions": "^3.3.0",
     "google-gax": "^0.22.1",
     "grpc": "^1.23.3",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "lodash.orderby": "^4.6.0",
     "moment": "^2.22.2",
     "pug": "^2.0.4",
