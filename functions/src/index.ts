@@ -15,13 +15,7 @@ const secrets = SecretsFactory.init()
 // https://firebase.google.com/docs/functions/locations under "* Important: "
 // functions.region("europe-west-1").https
 
-enum Schedule {
-  DAILY = "every 24 hours",
-  HOURLY = "every 1 hours",
-  WEEKLY = "every 7 days"
-}
-
-function schedule<T>(schedule: Schedule, onTrigger: () => Promise<T>): functions.CloudFunction<unknown> {
+function schedule<T>(schedule: string, onTrigger: () => Promise<T>): functions.CloudFunction<unknown> {
   return functions.region('europe-west1')
     .runWith({timeoutSeconds: 540}) // Timeout 9 min
     .pubsub
@@ -42,15 +36,19 @@ function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): func
 
 const logger = (prefix: string): (msg: string) => void => console.log.bind(console.log, prefix)
 
-export const eventsUpdate = schedule(Schedule.WEEKLY, () => {
+export const eventsUpdate = schedule("every monday 09:00", () => {
   return Events.update(batch, table, logger("weekly.updateEvents:"))
 })
-export const bandsUpdate = schedule(Schedule.WEEKLY, () => {
+export const bandsUpdate = schedule("every monday 10:00", () => {
   return Bands.update(table, logger("weekly.updateBands:"), secrets)
 })
 
-export const versionsUpdate = schedule(Schedule.WEEKLY, () => Versions.update(table, logger("weekly.updateVersions:")))
-export const metadataUpdate = schedule(Schedule.WEEKLY, () => Metadata.update(table, logger("weekly.updateMetadata:")))
+// Counts
+export const metadataUpdate = schedule("every monday 11:00", () => Metadata.update(table, logger("weekly.updateMetadata:")))
+
+// Playstore version
+export const versionsUpdate = schedule("every monday 12:00", () => Versions.update(table, logger("weekly.updateVersions:")))
+
 
 export const versionFetch = http(() => Versions.fetch(table))
 export const imagesFetch = http(() => Images.fetch(table))
