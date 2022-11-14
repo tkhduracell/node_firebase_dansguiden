@@ -87,7 +87,7 @@ describe('versions', () => {
     })
   })
 
-  context('with real site', () => {
+  context.skip('with real site', () => {
     let version = {} as Version
     before(async () => {
       version = await fetchLatestVersion(() => { })
