@@ -16,8 +16,6 @@
     "core-js": "^3.6.4",
     "firebase-admin": "^8.9.2",
     "firebase-functions": "^3.3.0",
-    "google-gax": "^0.22.1",
-    "grpc": "^1.23.3",
     "lodash": "^4.17.19",
     "lodash.orderby": "^4.6.0",
     "moment": "^2.22.2",
@@ -27,9 +25,13 @@
     "source-map-support": "^0.5.16",
     "spotify-web-api-node": "^4.0.0"
   },
+  "overrides": {
+    "google-gax": "^0.22.1",
+    "grpc": "^1.23.3"
+  },
   "private": true,
   "engines": {
-    "node": "10"
+    "node": "16"
   },
   "devDependencies": {
     "@types/chai": "^4.2.8",

@@ -12,11 +12,6 @@ export type ArtistImage = {
   url: string;
 }
 
-export type Counter = {
-  _id: string;
-  count: number;
-}
-
 export type DanceEvent = {
   _id?: string;
   band: string;
