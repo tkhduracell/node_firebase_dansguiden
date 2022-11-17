@@ -48,7 +48,7 @@ jobs:
       - name: Firebase Deploy (functions)
         run: firebase deploy --only functions
 
-  deploy-webapp:
+  deploy-web:
     runs-on: ubuntu-latest
 
     strategy:
@@ -63,10 +63,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-          cache-dependency-path: webapp/package-lock.json
+          cache-dependency-path: web/package-lock.json
 
       - name: Install deps
-        run: npm ci --prefix webapp
+        run: npm ci --prefix web
 
       - name: Install firebase
         run: npm i firebase-tools -g
