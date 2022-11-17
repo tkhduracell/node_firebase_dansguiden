@@ -2,11 +2,8 @@
   "name": "node_firebase_dansguiden",
   "version": "1.0.0",
   "description": "The webpage for dansguiden",
-  "main": "dansguiden",
   "scripts": {
-    "start": "firebase serve --only hosting,function",
-    "serve": "firebase serve",
-    "test": "npm --prefix ./functions run test"
+    "start": "firebase serve --only hosting,function"
   },
   "repository": {
     "type": "git",

@@ -4,7 +4,7 @@
   "description": "",
   "main": "render.ts",
   "scripts": {
-    "render": "ts-node src/render.ts",
+    "build": "ts-node src/render.ts",
     "lint": "eslint --ext=jsx,ts,tsx src"
   },
   "private": true,

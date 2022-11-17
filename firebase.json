@@ -8,8 +8,7 @@
     ],
     "predeploy": [
       "node -e \"if(process.env.CI){process.exit(0)}else{throw Error(\\'Only runs from CI!\\')}\"",
-      "npm --prefix \"$RESOURCE_DIR/..\" rebuild",
-      "npm --prefix \"$RESOURCE_DIR/..\" run render"
+      "npm --prefix \"$RESOURCE_DIR/..\" run build"
     ],
     "source": "web",
     "rewrites": [
@@ -50,9 +49,7 @@
   "functions": {
     "predeploy": [
       "node -e \"if(process.env.CI){process.exit(0)}else{throw Error(\\'Only runs from CI!\\')}\"",
-      "npm --prefix \"$RESOURCE_DIR\" run build",
-      "npm --prefix \"$RESOURCE_DIR\" run lint",
-      "npm --prefix \"$RESOURCE_DIR\" run test"
+      "npm --prefix \"$RESOURCE_DIR\" run build"
     ],
     "source": "functions"
   }
