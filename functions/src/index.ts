@@ -20,6 +20,7 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>): functions.C
     .runWith({timeoutSeconds: 540}) // Timeout 9 min
     .pubsub
     .schedule(schedule)
+    .timeZone('Europe/Stockholm')
     .onRun(async () => await onTrigger())
 }
 
@@ -44,7 +45,7 @@ export const bandsUpdate = schedule("every monday 10:00", () => {
 })
 
 // Counts
-export const metadataUpdate = schedule("daily 11:00", () => Metadata.update(table, logger("weekly.updateMetadata:")))
+export const metadataUpdate = schedule("0 11 * * *", () => Metadata.update(table, logger("weekly.updateMetadata:")))
 
 // Playstore version
 export const versionsUpdate = schedule("every monday 12:00", () => Versions.update(table, logger("weekly.updateVersions:")))
