@@ -10,7 +10,6 @@
       "node -e \"if(process.env.CI){process.exit(0)}else{throw Error(\\'Only runs from CI!\\')}\"",
       "npm --prefix \"$RESOURCE_DIR/..\" run build"
     ],
-    "source": "web",
     "rewrites": [
       {
         "source": "/",
