@@ -34,3 +34,5 @@ backups/
 
 .secrets.json
 .runtimeconfig.json
+
+dansguiden-b3a7d-*.json
