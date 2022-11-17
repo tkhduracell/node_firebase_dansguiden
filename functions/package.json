@@ -10,7 +10,7 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "logs": "firebase functions:log",
-    "backup": "ts-node debug/export.ts"
+    "backup": "ts-node scripts/export.ts"
   },
   "dependencies": {
     "core-js": "^3.6.4",
