@@ -9,7 +9,7 @@ export type FirestoreFn = {
 }
 
 export function database(): FirestoreFn {
-  admin.initializeApp()
+  admin.initializeApp({ projectId: 'dansguiden-b3a7d' })
   const db = admin.firestore()
   db.settings({ timestampsInSnapshots: true })
 
