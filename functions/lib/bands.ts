@@ -144,7 +144,7 @@ export class BandUpdater {
       try {
         return updateArtistInfoFromSpotify(client, store, band)
       } catch (error) {
-        console.warn(`Unable to update artist ${band}, due to ${error.message || error}`)
+        console.warn(`Unable to update artist ${band}`, error)
         return Promise.resolve(null)
       }
     })

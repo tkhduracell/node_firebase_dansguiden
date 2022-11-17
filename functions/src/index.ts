@@ -23,10 +23,10 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>): functions.C
     .onRun(async () => await onTrigger())
 }
 
-function http<T>(onCalled: (query: {[key: string]: string}) => Promise<T>): functions.HttpsFunction {
+function http<T>(onCalled: (query: Record<string, string>) => Promise<T>): functions.HttpsFunction {
   return functions.region('europe-west1').https.onRequest(async (req, res) => {
     try {
-      const result = await onCalled(req.query)
+      const result = await onCalled(req.query as unknown as Record<string, string>)
       res.status(200).send(result)
     } catch (err) {
       res.status(500).send('Internal error: ' + err)

@@ -30,7 +30,7 @@ export function snapshotAsObj<T>(snapshot: firebase.firestore.QuerySnapshot,
   const output = {} as { [key: string]: T }
   const fn = optFn || _.identity
   snapshot.forEach(doc => {
-    const data = fn(doc.data() as T)
+    const data = fn(doc.data())
     if (data) output[doc.id] = data
   })
   return output
@@ -47,9 +47,12 @@ export function zipAsObj<T>(keys: string[], values: T[]): { [key: string]: T } {
   return Object.fromEntries(zipped)
 }
 
-export function removeNullValues<T>(input: T): T {
+type WithOutNull<T> = {
+  [Property in keyof T]: Exclude<T[Property], null | undefined>;
+};
+export function removeNullValues<T extends Record<string, any>>(input: T): WithOutNull<T> {
   return Object.fromEntries(
     Object.entries(input)
       .filter(([, v]) => v !== null && v !== undefined)
-  )
+  ) as WithOutNull<T>
 }

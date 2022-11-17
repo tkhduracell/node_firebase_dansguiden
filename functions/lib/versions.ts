@@ -15,7 +15,7 @@ export function versionSort(v: Version): string {
     .join('')
 }
 
-export function extractContent ($: CheerioStatic): Version {
+export function extractContent ($: cheerio.CheerioAPI | cheerio.Root): Version {
   const content = $("div:contains('What's New') > h2")
     .parent()
     .parent()

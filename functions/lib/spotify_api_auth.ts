@@ -1,6 +1,6 @@
 
 import SpotifyWebApi from 'spotify-web-api-node'
-import SimpleOAuth2 from 'simple-oauth2'
+import { AccessToken, ClientCredentials } from 'simple-oauth2'
 
 const auth = {
   tokenHost: 'https://accounts.spotify.com',
@@ -12,16 +12,16 @@ export type Secrets = {
   client_secret: string;
 };
 
-async function getAccessToken (secrets: Secrets): Promise<SimpleOAuth2.AccessToken> {
-  const oauth2 = SimpleOAuth2.create({
+async function getAccessToken (secrets: Secrets): Promise<AccessToken> {
+  const oauth2 = new ClientCredentials({
     client: {
       id: secrets.client_id,
       secret: secrets.client_secret
     },
     auth
   })
-  const token = await oauth2.clientCredentials.getToken({})
-  return oauth2.accessToken.create(token)
+  const token = await oauth2.getToken({})
+  return oauth2.createToken(token)
 }
 
 export class SpotifyApiClientFactory {
