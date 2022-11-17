@@ -10,7 +10,7 @@ import glob from 'glob-promise'
 
 const writeFile = util.promisify(fs.writeFile)
 
-firebase.initializeApp()
+firebase.initializeApp({ projectId: 'dansguiden-b3a7d'})
 
 const fstore = firebase.firestore()
 
