@@ -143,17 +143,26 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
         // Removing bad events in source
         return !itm.debug.text.trim().endsWith(">")
       })
-      .map(onEvent<InternalDanceEvent, InternalDanceEvent>(itm => Object.assign({}, itm, {
-        data: Object.assign({}, itm.data, {
+      .map(onEvent<InternalDanceEvent, InternalDanceEvent>(itm => ({ ...itm,
+        data: {
+          ...itm.data,
           date: parseYearDate(itm.header, itm.data.date).format("YYYY-MM-DD"),
           time: fixTime(itm.data.time)
-        })
+        }
       })))
       .map(onEventSideEffect(e => {
         validateDate(e.date, debug)
         validateWeekDay(e.date, e.weekday, debug)
       }))
       .map(onEventMap(e => removeNullValues(e)))
+      .map(onEventMap(e => {
+        if (e.place.includes('Viking Rosella') ||
+            e.place.includes('Viking Cinderella') ||
+            e.place.includes('Viking Grace')) {
+          return { ...e, region: `${e.region} (Båt)`}
+        }
+        return e
+      }))
   }
 
   function loadPage (page: Page): Promise<InternalDanceEvent[]> {
