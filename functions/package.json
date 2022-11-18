@@ -10,7 +10,8 @@
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "logs": "firebase functions:log",
-    "backup": "ts-node scripts/export.ts"
+    "script:backup": "ts-node scripts/export.ts",
+    "script:events": "ts-node debug/debug_events.ts"
   },
   "dependencies": {
     "cheerio": "0.22.0",

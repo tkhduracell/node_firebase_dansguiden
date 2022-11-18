@@ -1,9 +1,10 @@
+import moment from 'moment'
 import { parse } from '../lib/events'
 
-parse(console.log)
+parse(console.log, ['januari'])
   .then((res) => {
     console.log('------------------------------------')
-    return res.filter(e => e.data.date === '2019-03-06')
+    return res.filter(e => e.data.date > moment().format('YYYY-MM-DD'))
       .forEach(e => {
         console.log(JSON.stringify(e, undefined, 2))
       })
