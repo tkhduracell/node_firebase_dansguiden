@@ -26,22 +26,6 @@
       {
         "source": "/api/images",
         "function": "imagesFetch"
-      },
-      {
-        "source": "/api/update/events",
-        "function": "eventsUpdate"
-      },
-      {
-        "source": "/api/update/versions",
-        "function": "versionsUpdate"
-      },
-      {
-        "source": "/api/update/metadata",
-        "function": "metadataUpdate"
-      },
-      {
-        "source": "/api/update/bands",
-        "function": "bandsUpdate"
       }
     ]
   },
