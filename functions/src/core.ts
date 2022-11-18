@@ -224,7 +224,7 @@ export class Metadata {
       const values = await getValues<{ value: string; date: string }, DanceEvent>(table, 'events', e => ({ value: fn(e), date: e.date }), future)
 
       const today = moment().utc().startOf('day')
-      const inDays = (days: number) => (e: { date: string }) => moment(e.date).isAfter(today.subtract(days, 'days'))
+      const inDays = (days: number) => (e: { date: string }) => moment(e.date).isBefore(today.add(days, 'days'))
 
       console.debug(`Updating ${db.name} using ${values.length} events`)
       const counts = _.countBy(values.map(e => e.value))
