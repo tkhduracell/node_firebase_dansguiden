@@ -202,6 +202,7 @@ export type Counter = {
   in7Days: number;
   in30Days: number;
   in90Days: number;
+  in180Days: number;
 }
 
 export type EntityCounters = {
@@ -222,13 +223,15 @@ export class Metadata {
     async function updater(fn: (e: DanceEvent) => string, db: Store<Counter>): Promise<void> {
       const values = await getValues<{ value: string; date: string }, DanceEvent>(table, 'events', e => ({ value: fn(e), date: e.date }), future)
 
-      const inDays = (days: number) => (e: { date: string }) => moment(e.date).isBefore(moment().utc().subtract(days, 'days'))
+      const today = moment().utc().startOf('day')
+      const inDays = (days: number) => (e: { date: string }) => moment(e.date).isAfter(today.subtract(days, 'days'))
 
       console.debug(`Updating ${db.name} using ${values.length} events`)
       const counts = _.countBy(values.map(e => e.value))
       const in7Days = _.countBy(values.filter(inDays(7)).map(e => e.value))
       const in30Days = _.countBy(values.filter(inDays(30)).map(e => e.value))
       const in90Days = _.countBy(values.filter(inDays(90)).map(e => e.value))
+      const in180Days = _.countBy(values.filter(inDays(180)).map(e => e.value))
 
 
       await Promise.all(Object.entries(counts).map(([key, count]) => {
@@ -238,6 +241,7 @@ export class Metadata {
           in7Days: in7Days[key] ?? 0,
           in30Days: in30Days[key] ?? 0,
           in90Days: in90Days[key] ?? 0,
+          in180Days: in180Days[key] ?? 0,
         })
       }))
     }
