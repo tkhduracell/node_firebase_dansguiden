@@ -50,6 +50,7 @@ export function zipAsObj<T>(keys: string[], values: T[]): { [key: string]: T } {
 type WithOutNull<T> = {
   [Property in keyof T]: Exclude<T[Property], null | undefined>;
 };
+
 export function removeNullValues<T extends Record<string, any>>(input: T): WithOutNull<T> {
   return Object.fromEntries(
     Object.entries(input)

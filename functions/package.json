@@ -13,11 +13,11 @@
     "backup": "ts-node scripts/export.ts"
   },
   "dependencies": {
+    "cheerio": "0.22.0",
     "firebase-admin": "^8.9.2",
     "firebase-functions": "^3.20.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
-    "cheerio": "0.22.0",
     "pug": "^3.0.2",
     "scraperjs": "^1.2.0",
     "simple-oauth2": "^5.0.0",
@@ -35,18 +35,17 @@
   "devDependencies": {
     "@types/chai": "^4.3.4",
     "@types/cheerio": "^0.22.31",
+    "@types/express": "4.17.14",
+    "@types/express-serve-static-core": "4.17.31",
     "@types/lodash.orderby": "^4.6.7",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.9",
     "@types/simple-oauth2": "^4.1.1",
     "@types/spotify-api": "0.0.19",
     "@types/spotify-web-api-node": "^5.0.7",
-
-    "@types/express-serve-static-core": "4.17.31",
-    "@types/express": "4.17.14",
-
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "@typescript-eslint/parser": "^5.43.0",
+    "@typescript-eslint/typescript-estree": "^5.43.0",
     "chai": "^4.3.7",
     "cheerio": "^1.0.0-rc.3",
     "eslint": "^8.27.0",

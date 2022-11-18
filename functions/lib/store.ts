@@ -25,7 +25,7 @@ function hint (value: object): string {
   return json.length > 80 ? `${json}...` : json
 }
 
-export function simpleKeyValue<T extends {}>(table: TableFn, tableName: string, merge: boolean): Store<T> {
+export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, tableName: string, merge: boolean): Store<T> {
   const metadata = table(tableName)
   return {
     name: tableName,

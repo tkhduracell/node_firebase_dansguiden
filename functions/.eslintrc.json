@@ -2,7 +2,7 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2022,
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
@@ -94,6 +94,7 @@
     //Enforces the use of catch() on un-returned promises
     "promise/catch-or-return": 2,
     // Warn against nested then() or catch() statements
-    "promise/no-nesting": 1
+    "promise/no-nesting": 1,
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
