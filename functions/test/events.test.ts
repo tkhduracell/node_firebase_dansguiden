@@ -1,9 +1,5 @@
-import { should, assert } from 'chai'
 import { load } from 'cheerio'
 import moment from 'moment'
-import 'mocha'
-
-should()
 
 import { parse, asDatabaseColumns, asEntry } from '../lib/events'
 import { InternalDanceEvent } from '../src/core'
@@ -13,44 +9,46 @@ import _ from 'lodash'
 describe('events', () => {
   describe('.parse (live data validation)', () => {
     let subject = [] as InternalDanceEvent[]
-    before(async () => {
+    beforeAll(async () => {
       try {
         subject = await parse(() => {})
         console.log(`Fetched ${subject.length} events for test`)
       } catch (error) {
-        assert.fail("Unable to fetch real data, check your internet connection")
+        fail("Unable to fetch real data, check your internet connection")
       }
-    })
+    }, 30000)
 
     it('should return none empty array', () => {
-      subject.should.have.length.greaterThan(1)
+      expect(subject).not.toHaveLength(0)
     })
 
     it('should return have no unknowns', () => {
       const output = subject.filter(e => e.type === 'unknown')
-      output.should.have.length(0)
+      expect(output).toHaveLength(0)
     })
 
     it('should return have no null values', () => {
       const output = subject.filter(e => e.type !== 'unknown')
         .map(e => e.data)
       output.forEach(e => {
-        _.forEach(e, v => should().exist(v))
+        _.forEach(e, v => expect(v).toBeTruthy())
       })
     })
 
     it('should only have proper weekdays', () => {
       const output = subject.filter(e => e.type !== 'unknown').map(d => d.data.weekday)
       const weekdays = Array.from(new Set(output).values())
-      weekdays.should.have.members(['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'])
+      for (const day of ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']) {
+        expect(weekdays).toContain(day)
+      }
     })
 
     it('should only have proper dates', () => {
       const output = subject.filter(e => e.type === 'event').map(d => d.data.date)
       const startofMonth = moment.utc().startOf('month')
       output.forEach(date => {
-        moment(date).isValid().should.be.true
-        moment(date).isSameOrAfter(startofMonth).should.be.true
+        expect(moment(date).isValid()).toStrictEqual(true)
+        expect(moment(date).isSameOrAfter(startofMonth)).toStrictEqual(true)
       })
     })
 
@@ -59,7 +57,7 @@ describe('events', () => {
       const times = output.filter(e => e.data.time)
 
       times.forEach(e => {
-        e.data.time.should.match(/^\d{2}:\d{2}(-\d{2}:\d{2})?$/)
+        expect(e.data.time).toMatch(/^\d{2}:\d{2}(-\d{2}:\d{2})?$/)
       })
     })
   })
@@ -96,7 +94,7 @@ describe('events', () => {
       const expected = [
         'weekday', 'date', 'time', 'band', 'place', 'city', '', 'county', 'region', 'extra'
       ]
-      asDatabaseColumns($, $('tr').first()).should.eql(expected)
+      expect(asDatabaseColumns($, $('tr').first())).toStrictEqual(expected)
     })
   })
 
@@ -126,9 +124,9 @@ describe('events', () => {
         time: '21.00-01.00',
         weekday: 'Fre'
       } as DanceEvent
-      asEntry<DanceEvent>($, $('tr'),
+      expect(asEntry<DanceEvent>($, $('tr'),
         ['weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region', 'extra']
-      ).should.eql(expected)
+      )).toStrictEqual(expected)
     })
   })
 })

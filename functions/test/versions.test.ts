@@ -1,11 +1,7 @@
 import { fetchLatestVersion, extractContent, Version } from '../lib/versions'
 import cheerio from 'cheerio'
-import chai from 'chai'
 import {promisify} from 'util'
 import fs from 'fs'
-import 'mocha'
-
-chai.should()
 
 const readFile = promisify(fs.readFile)
 
@@ -38,7 +34,7 @@ const meta = `
 `
 describe('versions', () => {
 
-  context('with fake data', () => {
+  describe('with fake data', () => {
     const $ = cheerio.load(`
     <html>
       <h1>Page</h1>
@@ -50,63 +46,63 @@ describe('versions', () => {
     `)
 
     let version = {} as Version
-    before(async () => {
+    beforeAll(async () => {
       version = await extractContent($)
     })
 
     it('should return specific version', () => {
-      return version.name.should.be.equal('2.9.0')
+      expect(version.name).toStrictEqual('2.9.0')
     })
 
     it('should return specific lines', async () => {
-      return version.lines.should.be.eql(['Foo', 'Bar'])
+      expect(version.lines).toStrictEqual(['Foo', 'Bar'])
     })
 
     it('should return spoecific date', async () => {
-      return version.date.should.be.equal('March 13, 2019')
+      expect(version.date).toStrictEqual('March 13, 2019')
     })
   })
 
-  context('with sample data', () => {
+  describe('with sample data', () => {
     let version = {} as Version
-    before(async () => {
+    beforeAll(async () => {
       const html = await readFile('test/files/playstore-2020-02-08.html')
       version = await extractContent(cheerio.load(html))
     })
 
     it('should return specific version', () => {
-      return version.name.should.be.equal('2.3.4')
+      expect(version.name).toStrictEqual('2.3.4')
     })
 
     it('should return specific lines', async () => {
-      return version.lines.should.be.eql(['Reducerat antalet omladdningar'])
+      expect(version.lines).toStrictEqual(['Reducerat antalet omladdningar'])
     })
 
     it('should return spoecific date', async () => {
-      return version.date.should.be.equal('January 28, 2019')
+      expect(version.date).toStrictEqual('January 28, 2019')
     })
   })
 
-  context.skip('with real site', () => {
+  describe.skip('with real site', () => {
     let version = {} as Version
-    before(async () => {
+    beforeAll(async () => {
       version = await fetchLatestVersion(() => { })
     })
 
     it('should have non empty name', () => {
-      return version.name.should.not.empty
+      expect(version.name).not.toBeTruthy()
     })
 
     it('should have non empty date', () => {
-      return version.date.should.not.empty
+      expect(version.date).not.toBeTruthy()
     })
 
     it('should have non empty html', () => {
-      return version.html.should.not.empty
+      expect(version.html).not.toBeTruthy()
     })
 
     it('should have lines as array', () => {
-      return version.lines.should.be.a.instanceof(Array)
+      expect(version.lines).toBeInstanceOf(Array)
     })
   })
 

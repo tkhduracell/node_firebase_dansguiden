@@ -1,4 +1,3 @@
-import 'mocha'
 import firebase from 'firebase-admin'
 import chai from 'chai'
 import { Versions, Events } from '../src/core'
@@ -47,8 +46,8 @@ describe('core.js', () => {
       const data = new QueryMock([version]) as unknown as Col
       const a = await Versions.fetch(() => data)
 
-      a.should.have.length(1)
-      a.should.deep.equal([version])
+      expect(a).toHaveLength(1)
+      expect(a).toStrictEqual([version])
     })
   })
 
@@ -59,8 +58,8 @@ describe('core.js', () => {
 
       const a = await Events.fetch(() => data, { from: 'a', to: 'b'}, () => silent)
 
-      a.should.have.length(1)
-      a.should.deep.equal([event])
+      expect(a).toHaveLength(1)
+      expect(a).toStrictEqual([event])
     })
   })
 })
