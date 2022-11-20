@@ -18,6 +18,7 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended"
   ],
+  "ignorePatterns": ["jest.config.js"],
   "rules": {
     // Remove semicolons
     "semi": [2, "never"],

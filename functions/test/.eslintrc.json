@@ -1,7 +1,7 @@
 {
   "root": false,
   "env": {
-    "mocha": true
+    "jest": true
   },
   "rules": {
     "no-empty-function": "off",

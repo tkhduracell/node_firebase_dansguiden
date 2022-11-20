@@ -1,6 +1,6 @@
 ## Compiled JavaScript files
-**/*.js
-**/*.js.map
+build/**/*.js
+build/**/*.map
 
 node_modules/
 backups/
