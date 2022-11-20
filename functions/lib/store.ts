@@ -25,7 +25,7 @@ function hint (value: object): string {
   return json.length > 80 ? `${json}...` : json
 }
 
-export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, tableName: string, merge: boolean): Store<T> {
+export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, tableName: string, merge: boolean, log: (mgs: string) => void = console.log): Store<T> {
   const metadata = table(tableName)
   return {
     name: tableName,
@@ -33,7 +33,7 @@ export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, ta
       .get()
       .then(doc => doc.exists ? doc.data() as T : null),
     set: (key: string, value: T): Promise<T> => {
-      console.log(`Updating '${key}' => ${hint(value)}`)
+      log(`Updating '${key}' => ${hint(value)}`)
       return metadata.doc(key)
         .set(value, { merge })
         .then(() => value)
