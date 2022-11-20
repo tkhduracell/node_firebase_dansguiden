@@ -34,7 +34,7 @@ jobs:
       - name: Run lint (ESLint)
         run: npm run --prefix functions lint
 
-      - name: Run lint (Mocha)
+      - name: Run lint (Jest)
         run: npm run --prefix functions test
 
       - name: Install firebase

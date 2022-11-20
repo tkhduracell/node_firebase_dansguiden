@@ -29,7 +29,7 @@ jobs:
       - name: Install deps
         run: npm ci --prefix functions
 
-      - name: Run lint (Mocha)
+      - name: Run lint (Jest)
         run: npm run --prefix functions test
 
   functions-lint:
