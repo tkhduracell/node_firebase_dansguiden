@@ -11,7 +11,7 @@ import * as eventsDecorator from '../lib/events_decorator'
 
 import { COLUMNS } from '../lib/events'
 import { fetchLatestVersion, versionSort, Version } from '../lib/versions'
-import { simpleKeyValue, getValues, Store } from '../lib/store'
+import { simpleKeyValue, getValues } from '../lib/store'
 import { snapshotAsArray } from '../lib/utils'
 import { BatchFn, TableFn } from '../lib/database'
 import { Artist, DanceEvent } from '../lib/types'
@@ -189,68 +189,6 @@ export class Events {
     const result = await query.get()
 
     return snapshotAsArray<DanceEvent>(result)
-  }
-}
-
-export type Counters = {
-  [key: string]: Counter;
-};
-
-export type Counter = {
-  _id: string;
-  count: number;
-  in7Days: number;
-  in30Days: number;
-  in90Days: number;
-  in180Days: number;
-}
-
-export type EntityCounters = {
-  bands: Counters;
-  places: Counters;
-  dates: Counters;
-};
-
-export class Metadata {
-  static async update(table: TableFn, log: LogFn): Promise<void> {
-    const today = moment.utc().format("YYYY-MM-DD")
-    const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
-      return col.where('date', '>=', today)
-    }
-
-    log('Updating metadata table...')
-
-    async function updater(fn: (e: DanceEvent) => string, db: Store<Counter>): Promise<void> {
-      const values = await getValues<{ value: string; date: string }, DanceEvent>(table, 'events', e => ({ value: fn(e), date: e.date }), future)
-
-      const today = moment().utc().startOf('day')
-      const inDays = (days: number) => (e: { date: string }) => moment(e.date).isBefore(today.add(days, 'days'))
-
-      console.debug(`Updating ${db.name} using ${values.length} events`)
-      const counts = _.countBy(values.map(e => e.value))
-      const in7Days = _.countBy(values.filter(inDays(7)).map(e => e.value))
-      const in30Days = _.countBy(values.filter(inDays(30)).map(e => e.value))
-      const in90Days = _.countBy(values.filter(inDays(90)).map(e => e.value))
-      const in180Days = _.countBy(values.filter(inDays(180)).map(e => e.value))
-
-
-      await Promise.all(Object.entries(counts).map(([key, count]) => {
-        return db.set(key, {
-          _id: key,
-          count,
-          in7Days: in7Days[key] ?? 0,
-          in30Days: in30Days[key] ?? 0,
-          in90Days: in90Days[key] ?? 0,
-          in180Days: in180Days[key] ?? 0,
-        })
-      }))
-    }
-
-    await Promise.all([
-      updater(e => e.band, simpleKeyValue<Counter>(table, 'metadata_bands', true)),
-      updater(e => e.place, simpleKeyValue<Counter>(table, 'metadata_places', true)),
-      updater(e => e.date, simpleKeyValue<Counter>(table, 'metadata_dates', true))
-    ])
   }
 }
 

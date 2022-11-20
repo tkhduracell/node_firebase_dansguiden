@@ -5,7 +5,9 @@ import './setup'
 
 import { SecretsFactory } from '../lib/secrets'
 import { database } from '../lib/database'
-import { Events, Bands, Versions, Metadata, Images, EventQueryParams } from './core'
+import { Events, Bands, Versions, Images, EventQueryParams } from './core'
+import { Metadata } from './metadata'
+
 const { table, batch } = database()
 
 const secrets = SecretsFactory.init()
