@@ -94,11 +94,15 @@ export class Metadata {
 
       log(`Updating ${db.name} using ${values.length} events`)
 
-      const updates = _.assign(agg.map(fn => fn(values)))
-
-      return await Promise.all(Object.entries(updates).map(([key, update]) => {
-        return db.set(key, update as T)
-      }))
+      const updates = agg.map(fn => fn(values))
+      const out: Record<string, any> = {}
+      for (const update of updates) {
+        for (const [k,v] of Object.entries(update)) {
+          out[k] = _.merge({}, out[k], v)
+        }
+      }
+      await Object.entries(out).map(([k, v]) => db.set(k, v as T))
+      return out
     }
 
     return await Promise.all([

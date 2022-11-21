@@ -25,8 +25,8 @@ class QueryMock<T> {
   }
   doc() {
     return {
-      set(val: T) {
-        return Promise.resolve(val)
+      set(key: string, val: T) {
+        return Promise.resolve({ [key]: val })
       }
     }
   }
@@ -58,41 +58,23 @@ describe('Metadata', () => {
         county: 'count of place1',
         region: 'region of place1'
       } as DanceEvent]) as unknown as Col
-      const ones = {
-        in180Days: 1,
-        in30Days: 1,
-        in7Days: 1,
-        in90Days: 1,
-      }
+      const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
       const a = await Metadata.update(tbl, silent)
       expect(a).toHaveLength(3)
 
       const [places, bands, dates] = a
-      expect(dates).toHaveLength(1)
-      {
-        const [counts] = dates
-        expect(counts).toStrictEqual({'2022-01-01': { count: 1 }})
-      }
 
-      expect(bands).toHaveLength(1)
-      {
-        const [counts] = bands
-        expect(counts).toStrictEqual({"band1": ones})
-      }
+      expect(dates).toStrictEqual({'2022-01-01': { count: 1 }})
+      expect(bands).toStrictEqual({"band1": ones})
+      expect(places).toStrictEqual({
+        "place1": {
+          ...ones,
+          city: 'city of place1',
+          county: 'count of place1',
+          region: 'region of place1'
+        }
+      })
 
-      expect(places).toHaveLength(2)
-      {
-        const [counts, location] = places
-
-        expect(counts).toStrictEqual({"place1": ones})
-        expect(location).toStrictEqual({
-          "place1": {
-            city: 'city of place1',
-            county: 'count of place1',
-            region: 'region of place1'
-          }
-        })
-      }
     })
 
     it('should calculcate location by majority', async () => {
@@ -116,13 +98,17 @@ describe('Metadata', () => {
         shuffle(data)
       ) as unknown as Col
 
-      const [[,places]] = await Metadata.update(tbl, silent)
+      const [places] = await Metadata.update(tbl, silent)
 
       expect(places).toStrictEqual({
         "place1": {
           city: 'city of place1',
           county: 'count of place1',
-          region: 'region of place1'
+          region: 'region of place1',
+          in180Days: data.length,
+          in30Days: data.length,
+          in7Days: data.length,
+          in90Days: data.length
         }
       })
     })
