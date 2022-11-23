@@ -6,6 +6,7 @@ import './setup'
 import { database } from '../lib/database'
 import { Events, Bands, Versions, Images, EventQueryParams } from './core'
 import { Metadata } from './metadata'
+import { z } from 'zod'
 
 const { table, batch } = database()
 
@@ -43,19 +44,22 @@ export const eventsUpdate = schedule("every monday 09:00", () => {
   return Events.update(batch, table, logger("weekly.updateEvents:"))
 })
 export const bandsUpdate = schedule("every monday 10:00", () => {
-  const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = process.env
+  const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = z.object({
+    SPOTIFY_CLIENT_ID: z.string(),
+    SPOTIFY_CLIENT_SECRET: z.string()
+  }).parse(process.env)
   return Bands.update(table, {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    client_id: SPOTIFY_CLIENT_ID!,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    client_secret: SPOTIFY_CLIENT_SECRET!
+    client_id: SPOTIFY_CLIENT_ID,
+    client_secret: SPOTIFY_CLIENT_SECRET
   }, logger("weekly.updateBands:"))
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata
 export const metadataUpdate = schedule("0 11 * * *", () => {
-  const { GCLOUD_PLACES_API_KEY } = process.env
-  const extra = { places_api_key: GCLOUD_PLACES_API_KEY ?? '' }
+  const { GCLOUD_PLACES_API_KEY } = z.object({
+    GCLOUD_PLACES_API_KEY: z.string()
+  }).parse(process.env)
+  const extra = { places_api_key: GCLOUD_PLACES_API_KEY }
   return Metadata.update(table, logger("weekly.updateMetadata:"), extra)
 }, { secrets: ['GCLOUD_PLACES_API_KEY'] })
 
