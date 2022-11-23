@@ -119,7 +119,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
     params.append('input', query)
     params.append('inputtype', 'textquery')
     params.append('language', 'sv')
-    return `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?${params.toString()}`
+    return `${BASE_URL}/findplacefromtext/json?${params.toString()}`
   }
 
   function photo(ref?: string, size = '512') {
@@ -128,7 +128,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
     param.append('maxheight', size)
     param.append('maxwith', size)
     param.append('key', apiKey)
-    return `https://maps.googleapis.com/maps/api/place/photo?${param.toString()}`
+    return `${BASE_URL}/photo?${param.toString()}`
   }
 
   return async (values: DanceEvent[]) => {
@@ -150,7 +150,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
             address: first.formatted_address,
             name: first.name,
             photo_small: ref ? photo(ref, '128') : undefined,
-            photo_large: ref ? photo(ref, '1024') : undefined
+            photo_large: ref ? photo(ref, '512') : undefined
           }
         }
       }
@@ -159,9 +159,14 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   }
 }
 
+type Secrets = {
+  places_api_key: string
+}
+
 export class Metadata {
 
-  static async update(table: TableFn, log: LogFn, secrets: { places_api_key: string }) {
+  static async update(table: TableFn, log: LogFn, secrets: Secrets) {
+
     const today = moment.utc().format("YYYY-MM-DD")
     const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
       return col.where('date', '>=', today)
