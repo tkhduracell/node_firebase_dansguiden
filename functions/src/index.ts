@@ -1,5 +1,5 @@
 // Libraries
-import functions, { RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-functions'
+import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-functions'
 
 import './setup'
 
@@ -15,7 +15,7 @@ const { table, batch } = database()
 // functions.region("europe-west-1").https
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
-  return functions.region('europe-west1')
+  return region('europe-west1')
     .runWith({timeoutSeconds: 540, ...(extra ?? {})}) // Timeout 9 min
     .pubsub
     .schedule(schedule)
@@ -24,7 +24,7 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Part
 }
 
 function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?: Partial<RuntimeOptions>): HttpsFunction {
-  return functions.region('europe-west1')
+  return region('europe-west1')
   .runWith(extra ?? {}) // Timeout 9 min
   .https
   .onRequest(async (req, res) => {
