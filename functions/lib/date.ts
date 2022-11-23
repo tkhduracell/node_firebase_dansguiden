@@ -1,5 +1,4 @@
 import moment, { Moment } from 'moment'
-import { LogFn } from './log'
 import _ from 'lodash'
 
 moment.updateLocale('sv', {
@@ -30,22 +29,23 @@ export function parseYearDate(monthYear: string, dateString: string): moment.Mom
   return dt
 }
 
-export function validateWeekDay (date: string, weekday: string, log: LogFn): boolean {
+export function validateWeekDay (date: string, weekday: string): boolean {
   const _date = moment.utc(date)
   const realWeekday = _date.format('ddd')
 
   if (weekday !== realWeekday) {
-    log(`
-      Warning: Weekday check failed, table says '${weekday}' but ${date} is a '${_date.format('ddd')}'
-    `.trim())
+    console.warn(
+      'Invalid weekday, actual', weekday,
+      'expected', date, 'to be', _date.format('ddd')
+    )
     return false
   }
   return true
 }
 
-export function validateDate(date: string, log: LogFn): boolean {
+export function validateDate(date: string): boolean {
   if (!moment.utc(date, false).isValid()) {
-    log(`Invalid date: ${date}`)
+    console.warn('Invalid date', date)
     return false
   }
   return true
