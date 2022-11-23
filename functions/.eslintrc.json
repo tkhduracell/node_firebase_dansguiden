@@ -94,6 +94,6 @@
     "promise/catch-or-return": 2,
     // Warn against nested then() or catch() statements
     "promise/no-nesting": 1,
-    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
