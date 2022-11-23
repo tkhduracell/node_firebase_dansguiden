@@ -33,3 +33,5 @@ backups/
 .firebase/
 
 dansguiden-b3a7d-*.json
+
+test.sh
