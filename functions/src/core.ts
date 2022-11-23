@@ -16,7 +16,6 @@ import { snapshotAsArray } from '../lib/utils'
 import { BatchFn, TableFn } from '../lib/database'
 import { Artist, DanceEvent } from '../lib/types'
 import { LogFn } from '../lib/log'
-import { Secrets } from '../lib/secrets'
 
 async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]> {
   const dates = output.filter(event => event.type === 'event')
@@ -109,9 +108,12 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
 
 type KV<T> = { key: string; value: T }
 type ObjectExtractor<T, V> = (t: T) => KV<V> | boolean
-
+export type SpotifyClientConfig = {
+  client_id: string,
+  client_secret: string
+}
 export class Bands {
-  static async update(table: TableFn, log: LogFn, secrets: Secrets): Promise<(Artist|null)[]> {
+  static async update(table: TableFn, spotify: SpotifyClientConfig, log: LogFn): Promise<(Artist|null)[]> {
     const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
 
     // Older events are broken
@@ -124,7 +126,7 @@ export class Bands {
     const bands = _.uniq(allBands).sort() // debug: .slice(15, 20)
 
     log('Starting band update')
-    const updates = await BandUpdater.run(bandsKeyValueStore, secrets.spotify, bands)
+    const updates = await BandUpdater.run(bandsKeyValueStore, spotify, bands)
 
     log('Completed band metadata update!')
     log(`Wrote ${_.size(updates)} bands`)
