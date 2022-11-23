@@ -2,6 +2,7 @@ import { DanceEvent } from './../lib/types'
 import { Metadata } from './../src/metadata'
 import firebase from 'firebase-admin'
 import { range, shuffle } from 'lodash'
+import moment from 'moment'
 
 class QueryMock<T> {
   data: T[]
@@ -104,11 +105,33 @@ describe('Metadata', () => {
         "place1": {
           city: 'city of place1',
           county: 'count of place1',
-          region: 'region of place1',
-          in180Days: data.length,
-          in30Days: data.length,
-          in7Days: data.length,
-          in90Days: data.length
+          region: 'region of place1'
+        }
+      })
+    })
+
+    it('should bucket count dates', async () => {
+      const f = 'YYYY-MM-DD'
+
+      const data = [
+        { band: 'band1', date: moment().add(1, 'days').format(f) },
+        { band: 'band1', date: moment().add(4, 'days').format(f) },
+        { band: 'band1', date: moment().add(16, 'days').format(f) },
+        { band: 'band1', date: moment().add(64, 'days').format(f) },
+        { band: 'band1', date: moment().add(256, 'days').format(f) }
+      ] as DanceEvent[]
+
+      const tbl  = () => new QueryMock<DanceEvent>(
+        shuffle(data)
+      ) as unknown as Col
+
+      const [,bands] = await Metadata.update(tbl, silent)
+      expect(bands).toStrictEqual({
+        "band1": {
+          in7Days: 2,
+          in30Days: 3,
+          in90Days: 4,
+          in180Days: 4,
         }
       })
     })

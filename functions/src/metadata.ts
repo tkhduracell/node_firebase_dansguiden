@@ -41,13 +41,17 @@ function counter(key: keyof DanceEvent): (values: DanceEvent[]) => Record<string
 function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Record<string, Partial<Counter>> {
   return (values: DanceEvent[]) => {
 
-    const today = moment().utc().startOf('day')
-    const inDays = (days: number) => (e: { date: string }) => moment(e.date).isBefore(today.add(days, 'days'))
+    const inDays = (days: number) => {
+      const limit = moment().utc().startOf('day').add(days, 'days')
+      return (e: { date: string} ) => {
+        return moment(e.date, moment.ISO_8601).isBefore(limit)
+      }
+    }
 
-    const in7Days = _.countBy(values.filter(inDays(7)).map(e => e[key]))
-    const in30Days = _.countBy(values.filter(inDays(30)).map(e => e[key]))
-    const in90Days = _.countBy(values.filter(inDays(90)).map(e => e[key]))
-    const in180Days = _.countBy(values.filter(inDays(180)).map(e => e[key]))
+    const in7Days = _.countBy(values.filter(inDays(7)), e => e[key])
+    const in30Days = _.countBy(values.filter(inDays(30)), e => e[key])
+    const in90Days = _.countBy(values.filter(inDays(90)), e => e[key])
+    const in180Days = _.countBy(values.filter(inDays(180)), e => e[key])
 
     return _.merge(
       _.mapValues(in7Days, o => ({ in7Days: o })),
