@@ -6,7 +6,7 @@ import admin, {firestore} from 'firebase-admin'
 
 // Dependencies
 import * as events from '../lib/events'
-import { BandUpdater } from '../lib/bands'
+import { BandUpdater } from './band_updater'
 import * as eventsDecorator from '../lib/events_decorator'
 
 import { COLUMNS } from '../lib/events'
@@ -108,17 +108,18 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
 
 type KV<T> = { key: string; value: T }
 type ObjectExtractor<T, V> = (t: T) => KV<V> | boolean
+
 export type SpotifyClientConfig = {
   client_id: string,
   client_secret: string
 }
+
 export class Bands {
   static async update(table: TableFn, spotify: SpotifyClientConfig, log: LogFn): Promise<(Artist|null)[]> {
     const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
 
-    // Older events are broken
     function onlyNewEvents(tbl: admin.firestore.Query): admin.firestore.Query {
-      return tbl.where('date', '>=', '2019-01-01')
+      return tbl.where('date', '>=', '2022-01-01')
     }
 
     log('Getting current bands in events')

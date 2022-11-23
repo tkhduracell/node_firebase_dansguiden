@@ -1,7 +1,7 @@
 import { database } from '../lib/database'
 const { table } = database()
 
-import {BandUpdater} from '../lib/bands'
+import {BandUpdater} from '../src/band_updater'
 import {simpleKeyValue} from '../lib/store'
 import { Artist } from '../lib/types'
 

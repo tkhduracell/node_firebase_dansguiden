@@ -2,9 +2,9 @@ import _ from 'lodash'
 import SpotifyWebApi from 'spotify-web-api-node'
 
 import { Secrets, SpotifyApiClientFactory } from '../lib/spotify_api_auth'
-import { serialDelayedFns } from './promises'
-import { Artist } from './types'
-import { Store } from './store'
+import { serialDelayedFns } from '../lib/promises'
+import { Artist } from '../lib/types'
+import { Store } from '../lib/store'
 import { firestore } from 'firebase-admin'
 
 const FieldValue = firestore.FieldValue
