@@ -60,7 +60,7 @@ describe('Metadata', () => {
         region: 'region of place1'
       } as DanceEvent]) as unknown as Col
       const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
-      const a = await Metadata.update(tbl, silent)
+      const a = await Metadata.update(tbl, silent, { places_api_key: '' })
       expect(a).toHaveLength(3)
 
       const [places, bands, dates] = a
@@ -99,7 +99,7 @@ describe('Metadata', () => {
         shuffle(data)
       ) as unknown as Col
 
-      const [places] = await Metadata.update(tbl, silent)
+      const [places] = await Metadata.update(tbl, silent, { places_api_key: '' })
 
       expect(places).toStrictEqual({
         "place1": {
@@ -125,7 +125,7 @@ describe('Metadata', () => {
         shuffle(data)
       ) as unknown as Col
 
-      const [,bands] = await Metadata.update(tbl, silent)
+      const [,bands] = await Metadata.update(tbl, silent, { places_api_key: '' })
       expect(bands).toStrictEqual({
         "band1": {
           in7Days: 2,

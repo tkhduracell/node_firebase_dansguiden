@@ -52,8 +52,12 @@ export const bandsUpdate = schedule("every monday 10:00", () => {
   }, logger("weekly.updateBands:"))
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
-// Counts
-export const metadataUpdate = schedule("0 11 * * *", () => Metadata.update(table, logger("weekly.updateMetadata:")))
+// Metadata
+export const metadataUpdate = schedule("0 11 * * *", () => {
+  const { GCLOUD_PLACES_API_KEY } = process.env
+  const extra = { places_api_key: GCLOUD_PLACES_API_KEY ?? '' }
+  return Metadata.update(table, logger("weekly.updateMetadata:"), extra)
+}, { secrets: ['GCLOUD_PLACES_API_KEY'] })
 
 // Playstore version
 export const versionsUpdate = schedule("every monday 12:00", () => {

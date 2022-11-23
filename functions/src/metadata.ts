@@ -3,6 +3,7 @@
 import _ from 'lodash'
 import moment from 'moment'
 import admin from 'firebase-admin'
+import fetch from 'node-fetch'
 
 // Dependencies
 
@@ -28,6 +29,26 @@ export type EntityCounters = {
   places: Counters;
   dates: Counters;
 };
+
+type PlacesApiResponse = {
+  candidates: PlaceApiSearchCandidate[]
+  status: "OK"
+}
+
+type PlaceApiSearchCandidate = {
+  formatted_address: string
+  name: string
+  photos: PlaceApiPhoto[]
+  types: string[]
+}
+
+type PlaceApiPhoto = {
+  height: number
+  html_attributions: string[]
+  photo_reference: string
+  width: number
+}
+
 
 function counter(key: keyof DanceEvent): (values: DanceEvent[]) => Record<string, Partial<Counter>> {
   return (values: DanceEvent[]) => {
@@ -81,9 +102,60 @@ function inferLocation(): (values: DanceEvent[]) => Record<string, Location> {
   }
 }
 
+type PlacesInfo = { name: string, address: string, photo: string } | {}
+
+function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
+
+  function search(query: string) {
+    const params = new URLSearchParams()
+    params.append('fields', 'name,formatted_address,photos,types')
+    params.append('key', apiKey)
+    params.append('input', query)
+    params.append('inputtype', 'textquery')
+    params.append('language', 'sv')
+    return `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?${params.toString()}`
+  }
+
+  function photo(ref?: string, size = '512') {
+    const param = new URLSearchParams()
+    param.append('photo_reference', ref ?? '')
+    param.append('maxheight', size)
+    param.append('maxwith', size)
+    param.append('key', apiKey)
+    return `https://maps.googleapis.com/maps/api/place/photo?${param.toString()}`
+  }
+
+  return async (values: DanceEvent[]) => {
+    const places = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
+
+    const out: Record<string, PlacesInfo> = {}
+    for (const { place, city, region } of _.uniqBy(places, p => p.place)) {
+      out[place] = {}
+
+      const query = [place, city, region, 'Sverige'].join(' ')
+
+      const response = await fetch(search(query))
+      if (response.ok) {
+        const { candidates } = await response.json() as PlacesApiResponse
+        if (candidates && candidates.length > 0) {
+          const [first] = candidates
+          const ref = first.photos?.find(() => true)?.photo_reference
+          out[place] = {
+            address: first.formatted_address,
+            name: first.name,
+            photo_small: ref ? photo(ref, '128') : undefined,
+            photo_large: ref ? photo(ref, '1024') : undefined
+          }
+        }
+      }
+    }
+    return out
+  }
+}
+
 export class Metadata {
 
-  static async update(table: TableFn, log: LogFn) {
+  static async update(table: TableFn, log: LogFn, secrets: { places_api_key: string }) {
     const today = moment.utc().format("YYYY-MM-DD")
     const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
       return col.where('date', '>=', today)
@@ -91,26 +163,32 @@ export class Metadata {
 
     log('Updating metadata table...')
 
-    type AggFn<T> = (all: DanceEvent[]) => Record<string, Partial<T>>
+    type MaybePromise<T> = T | Promise<T>
+    type AggFn<T> = (all: DanceEvent[]) => MaybePromise<Record<string, Partial<T>>>
 
     async function updater<T>(db: Store<T>, agg: AggFn<T>[]) {
       const values = await getValues<DanceEvent, DanceEvent>(table, 'events', e => e, future)
 
       log(`Updating ${db.name} using ${values.length} events`)
 
-      const updates = agg.map(fn => fn(values))
+      const updates = await agg.map(fn => fn(values))
       const out: Record<string, any> = {}
       for (const update of updates) {
         for (const [k,v] of Object.entries(update)) {
           out[k] = _.merge({}, out[k], v)
         }
       }
-      await Object.entries(out).map(([k, v]) => db.set(k, v as T))
+      await Object.entries(out)
+        .map(([k, v]) => db.set(k, v as T))
       return out
     }
 
     return await Promise.all([
-      updater<Counter & Location>(simpleKeyValue<Counter & Location>(table, 'metadata_places', true, log), [histogram('place'), inferLocation()]),
+      updater<Counter & Location & PlacesInfo>(simpleKeyValue<Counter & Location & PlacesInfo>(table, 'metadata_places', true, log), [
+        histogram('place'),
+        inferLocation(),
+        placesApiImage(secrets.places_api_key)
+      ]),
       updater(simpleKeyValue<Counter>(table, 'metadata_bands', true, log), [histogram('band')]),
       updater(simpleKeyValue<Counter>(table, 'metadata_dates', true, log), [counter('date')]),
     ])
