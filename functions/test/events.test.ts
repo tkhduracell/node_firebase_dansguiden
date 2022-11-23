@@ -32,7 +32,7 @@ describe('events', () => {
         .map(e => e.data)
       expect(output.length).toBeGreaterThan(0)
       output.forEach(e => {
-        _.forEach(e, v => expect(v).toBeTruthy())
+        _.forEach(e, v => expect(v).toMatch(/.+/))
       })
     })
 
