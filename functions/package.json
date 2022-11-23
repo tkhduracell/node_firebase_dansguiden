@@ -12,7 +12,7 @@
     "start": "npm run shell",
     "logs": "firebase functions:log",
     "script:backup": "ts-node scripts/export.ts",
-    "script:events": "ts-node debug/debug_events.ts"
+    "script:events": "ts-node debug/events.ts"
   },
   "dependencies": {
     "cheerio": "0.22.0",
