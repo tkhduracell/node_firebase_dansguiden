@@ -1,9 +1,10 @@
 import { load } from 'cheerio'
 import moment from 'moment'
 
-import { parse, asDatabaseColumns, asEntry } from '../lib/events'
+import { parse, asDatabaseColumns, asEntry, asObject, pipeline } from '../lib/events'
 import { InternalDanceEvent } from '../src/core'
 import { DanceEvent } from '../lib/types'
+import { month } from '../lib/date'
 import _ from 'lodash'
 
 describe('events', () => {
@@ -11,8 +12,7 @@ describe('events', () => {
     let subject = [] as InternalDanceEvent[]
     beforeAll(async () => {
       try {
-        subject = await parse(() => {})
-        console.log(`Fetched ${subject.length} events for test`)
+        subject = await parse(() => {}, [month(moment()).toLocaleLowerCase()])
       } catch (error) {
         fail("Unable to fetch real data, check your internet connection")
       }
@@ -30,6 +30,7 @@ describe('events', () => {
     it('should return have no null values', () => {
       const output = subject.filter(e => e.type !== 'unknown')
         .map(e => e.data)
+      expect(output.length).toBeGreaterThan(0)
       output.forEach(e => {
         _.forEach(e, v => expect(v).toBeTruthy())
       })
@@ -37,6 +38,8 @@ describe('events', () => {
 
     it('should only have proper weekdays', () => {
       const output = subject.filter(e => e.type !== 'unknown').map(d => d.data.weekday)
+      expect(output.length).toBeGreaterThan(0)
+
       const weekdays = Array.from(new Set(output).values())
       for (const day of ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön']) {
         expect(weekdays).toContain(day)
@@ -45,7 +48,9 @@ describe('events', () => {
 
     it('should only have proper dates', () => {
       const output = subject.filter(e => e.type === 'event').map(d => d.data.date)
-      const startofMonth = moment.utc().startOf('month')
+      const startofMonth = moment().startOf('month')
+
+      expect(output.length).toBeGreaterThan(0)
       output.forEach(date => {
         expect(moment(date).isValid()).toStrictEqual(true)
         expect(moment(date).isSameOrAfter(startofMonth)).toStrictEqual(true)
@@ -56,6 +61,7 @@ describe('events', () => {
       const output = subject.filter(e => e.type === 'event')
       const times = output.filter(e => e.data.time)
 
+      expect(times.length).toBeGreaterThan(0)
       times.forEach(e => {
         expect(e.data.time).toMatch(/^\d{2}:\d{2}(-\d{2}:\d{2})?$/)
       })
@@ -98,21 +104,28 @@ describe('events', () => {
     })
   })
 
-  describe('.asEntry', () => {
-    const $ = load(`
-    <table><tr>
-      <td>Fre</td><td>28</td>
-      <td>21.00-01.00</td>
-      <td>Highlights</td>
-      <td>Folkets Hus Ersboda</td>
-      <td>Ersboda</td>
-      <td>Ume&#xE5;</td>
-      <td>V&#xE4;sterbotten</td>
-      <td>&gt;</td>
-    <tr></table>
-    `)
+  describe('.asObject', () => {
+    function parse(data: string) {
+      const $ = load(data)
+      return asObject<DanceEvent>($, $('tr'), [
+        'weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region', 'extra'
+      ])
+    }
 
     it('should parse row', () => {
+      const event = parse(`
+      <table><tr>
+        <td>Fre</td><td>28</td>
+        <td>21.00-01.00</td>
+        <td>Highlights</td>
+        <td>Folkets Hus Ersboda</td>
+        <td>Ersboda</td>
+        <td>Ume&#xE5;</td>
+        <td>V&#xE4;sterbotten</td>
+        <td>&gt;</td>
+      </tr></table>
+      `)
+
       const expected = {
         county: 'Umeå',
         band: 'Highlights',
@@ -124,9 +137,71 @@ describe('events', () => {
         time: '21.00-01.00',
         weekday: 'Fre'
       } as DanceEvent
-      expect(asEntry<DanceEvent>($, $('tr'),
-        ['weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region', 'extra']
-      )).toStrictEqual(expected)
+      expect(event).toStrictEqual(expected)
+    })
+  })
+  describe('pipeline', () => {
+    function parse(data: string) {
+      const $ = load(data)
+      return $('tr').toArray().map(elm => asEntry($, elm as cheerio.TagElement, 'December 2022', [
+        'weekday', 'date', 'time', 'band', 'place', 'city', 'county', 'region', 'extra'
+      ]))
+    }
+
+    it('should classify vikings as boat', () => {
+      const e = parse(`
+        <table>
+          <tr>
+            <td>Tor</td>
+            <td>1</td>
+            <td>21.00-01.00</td>
+            <td>Highlights</td>
+            <td>Viking Grace</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>PRO</td>
+          </tr>
+          <tr>
+            <td>Tor</td>
+            <td>1</td>
+            <td>21.00-01.00</td>
+            <td>Highlights</td>
+            <td>Folkets Hus Grace</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>PRO</td>
+          </tr>
+        </table>
+      `)
+
+      const [e1, e2] = pipeline(e, console.log)
+
+      expect(e1.data.region).toStrictEqual('Stockholm (Båt)')
+      expect(e2.data.region).toStrictEqual('Stockholm')
+    })
+
+    it('remove > in extra', () => {
+      const e = parse(`
+        <table>
+          <tr>
+            <td>Tor</td>
+            <td>1</td>
+            <td>21.00-01.00</td>
+            <td>Highlights</td>
+            <td>Viking Grace</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>Stockholm</td>
+            <td>&gt;</td>
+          </tr>
+        </table>
+      `)
+
+      const [e1] = pipeline(e, console.log)
+
+      expect(e1.data.extra).toStrictEqual('')
     })
   })
 })

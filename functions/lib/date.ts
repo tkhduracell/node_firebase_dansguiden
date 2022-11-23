@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment, { Moment } from 'moment'
 import { LogFn } from './log'
 import _ from 'lodash'
 
@@ -7,6 +7,10 @@ moment.updateLocale('sv', {
   weekdaysShort: ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"],
   months: ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
 })
+
+export function month(date: Moment, locale = 'sv'): string {
+  return date.locale(locale).format('MMMM')
+}
 
 export function fixTime(time: string): string {
   if (_.isString(time)) {
@@ -40,7 +44,7 @@ export function validateWeekDay (date: string, weekday: string, log: LogFn): boo
 }
 
 export function validateDate(date: string, log: LogFn): boolean {
-  if (!moment.utc(date).isValid()) {
+  if (!moment.utc(date, false).isValid()) {
     log(`Invalid date: ${date}`)
     return false
   }

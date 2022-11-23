@@ -1,4 +1,3 @@
-
 import _ from 'lodash'
 
 import { parseYearDate, validateWeekDay, validateDate, fixTime } from './date'
@@ -27,7 +26,7 @@ const COLUMN_MAP = {
 
 export const COLUMNS = _.values(COLUMN_MAP)
 
-export function asEntry<T>($: cheerio.Root, tr: cheerio.Cheerio, databaseColumns: string[]): T {
+export function asObject<T>($: cheerio.Root, tr: cheerio.Cheerio, databaseColumns: string[]): T {
   const values = tr.children('td')
     .get()
     .map((elm) => $(elm).text().replace(/\s+/gi, ' ').trim()) // Trim
@@ -110,66 +109,69 @@ function onEventSideEffect<D>(fn: (arg0: D) => void): RowFunction<InternalEvent<
   })
 }
 
+export function asEntry($: cheerio.Root, itm: cheerio.TagElement, header: string, cols: string[]): InternalEvent<DanceEvent> {
+  return {
+    type: 'event',
+    debug: {
+      raw: $(itm).html() ?? '',
+      pretty: ($(itm).html() || '')
+        .replace(/\n/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/>\s+</g, '><')
+        .trim(),
+      text: $(itm).text()
+        .replace(/[\n\t]+/g, ' '),
+      url
+    },
+    data: asObject<DanceEvent>($, $(itm), cols),
+    header
+  }
+}
+
+export function pipeline(list: InternalDanceEvent[], debug: LogFn): InternalDanceEvent[] {
+  return list
+    .map(onEvent<InternalDanceEvent, InternalDanceEvent>(itm => ({ ...itm,
+      data: {
+        ...itm.data,
+        date: parseYearDate(itm.header, itm.data.date).format("YYYY-MM-DD"),
+        time: fixTime(itm.data.time),
+        extra: itm.data.extra?.replace(/^>$/, '')
+      }
+    })))
+    .map(onEventSideEffect(e => {
+      validateDate(e.date, debug)
+      validateWeekDay(e.date, e.weekday, debug)
+    }))
+    .map(onEventMap(e => removeNullValues(e)))
+    .map(onEventMap(e => {
+      if (e.place?.includes('Viking Rosella') ||
+          e.place?.includes('Viking Cinderella') ||
+          e.place?.includes('Viking Grace')) {
+        return { ...e, region: `${e.region} (Båt)`}
+      }
+      return e
+    }))
+}
+
 export async function parse (debug: LogFn, months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
 
-  function readPage ($: cheerio.CheerioAPI, url: string): InternalDanceEvent[] {
+  function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
     const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
+    debug(`asDatabaseColumns = ${databaseColumns}`)
 
     const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
     const header = $(dateHeaderElm).text().replace(/\s+/gi, ' ').trim()
-    const rows = $("tr[class^='r']").get()
+
+    const rows = $("tr[class^='r']").get() as cheerio.TagElement[]
 
     debug(`Processing ${rows.length} rows... (page: ${header})`)
 
-    return rows.map((itm) => {
-          return {
-            type: 'event',
-            debug: {
-              raw: $(itm).html(),
-              pretty: ($(itm).html() || '')
-                .replace(/\n/g, '')
-                .replace(/\s+/g, ' ')
-                .replace(/>\s+</g, '><')
-                .trim(),
-              text: $(itm).text()
-                .replace(/[\n\t]+/g, ' '),
-              url
-            },
-            data: asEntry<DanceEvent>($, $(itm), databaseColumns),
-            header
-          } as InternalEvent<DanceEvent>
-      })
-      .filter(itm => {
-        // Removing bad events in source
-        return !itm.debug.text.trim().endsWith(">")
-      })
-      .map(onEvent<InternalDanceEvent, InternalDanceEvent>(itm => ({ ...itm,
-        data: {
-          ...itm.data,
-          date: parseYearDate(itm.header, itm.data.date).format("YYYY-MM-DD"),
-          time: fixTime(itm.data.time)
-        }
-      })))
-      .map(onEventSideEffect(e => {
-        validateDate(e.date, debug)
-        validateWeekDay(e.date, e.weekday, debug)
-      }))
-      .map(onEventMap(e => removeNullValues(e)))
-      .map(onEventMap(e => {
-        if (e.place.includes('Viking Rosella') ||
-            e.place.includes('Viking Cinderella') ||
-            e.place.includes('Viking Grace')) {
-          return { ...e, region: `${e.region} (Båt)`}
-        }
-        return e
-      }))
+    return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)), debug)
   }
 
   function loadPage (page: Page): Promise<InternalDanceEvent[]> {
     debug('Running Dansguiden parse on page ' + JSON.stringify(page))
-    return Scraper.create(url + page.link, scpr => {
-      return readPage(scpr, url + page.link)
-    })
+    return Scraper.create(url + page.link, readPage)
   }
 
   debug('Running Dansguiden parser...')
