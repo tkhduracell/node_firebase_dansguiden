@@ -5,3 +5,6 @@ build/**/*.map
 node_modules/
 backups/
 build/
+
+.secrets.local
+.env

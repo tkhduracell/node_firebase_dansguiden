@@ -32,8 +32,4 @@ cron/lib
 backups/
 .firebase/
 
-.secrets.json
-.runtimeconfig.json
-
 dansguiden-b3a7d-*.json
-functions/.env
