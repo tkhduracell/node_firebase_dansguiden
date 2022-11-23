@@ -128,7 +128,7 @@ export function asEntry($: cheerio.Root, itm: cheerio.TagElement, header: string
   }
 }
 
-export function pipeline(list: InternalDanceEvent[], debug: LogFn): InternalDanceEvent[] {
+export function pipeline(list: InternalDanceEvent[]): InternalDanceEvent[] {
   return list
     .map(onEvent<InternalDanceEvent, InternalDanceEvent>(itm => ({ ...itm,
       data: {
@@ -139,8 +139,8 @@ export function pipeline(list: InternalDanceEvent[], debug: LogFn): InternalDanc
       }
     })))
     .map(onEventSideEffect(e => {
-      validateDate(e.date, debug)
-      validateWeekDay(e.date, e.weekday, debug)
+      validateDate(e.date)
+      validateWeekDay(e.date, e.weekday)
     }))
     .map(onEventMap(e => removeNullValues(e)))
     .map(onEventMap(e => {
@@ -148,6 +148,12 @@ export function pipeline(list: InternalDanceEvent[], debug: LogFn): InternalDanc
           e.place?.includes('Viking Cinderella') ||
           e.place?.includes('Viking Grace')) {
         return { ...e, region: `${e.region} (Båt)`}
+      }
+      if (e.place === 'Donnez') {
+        console.warn('Invalid place', e)
+      }
+      if (e.band === '13.30-17.00') {
+        console.warn('Invalid band', e)
       }
       return e
     }))
@@ -157,29 +163,47 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
 
   function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
     const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
-    debug(`asDatabaseColumns = ${databaseColumns}`)
+    console.log('DatabaseColumns', databaseColumns)
 
+    const count = $('.danceprogram').siblings('p')
+      .first()
+      .text()
+      .replace(/.*:\s*(\d+)/, '$1') // Antal danser: 109
+    const style = $('.danceprogram').siblings('style').text().trim()
+
+    const ghosts = style
+      .match(/tr\.r\d+\s*{.*font-size:\s*0.*}/g)
+      ?.map(g => g.replace(/tr\.(.*){.*/, '$1').trim())
+      .map(clz => `.${clz}`)
+      .join(',')
+
+    console.debug({ ghosts, count })
     const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
     const header = $(dateHeaderElm).text().replace(/\s+/gi, ' ').trim()
 
-    const rows = $("tr[class^='r']").get() as cheerio.TagElement[]
+    const rows = $("tr[class^='r']")
+      .not(ghosts ?? '.__not_a_ghost__')
+      .get() as cheerio.TagElement[]
 
-    debug(`Processing ${rows.length} rows... (page: ${header})`)
+    if (`${rows.length}` === count) {
+      console.log('Processing', rows.length, 'rows', `(page: ${header})`)
+    } else {
+      console.warn('Processing', rows.length, 'rows, expected: ', count, `(page: ${header})`)
+    }
 
-    return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)), debug)
+    return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)))
   }
 
   function loadPage (page: Page): Promise<InternalDanceEvent[]> {
-    debug('Running Dansguiden parse on page ' + JSON.stringify(page))
+    console.log('Running Dansguiden parse on page ' + JSON.stringify(page))
     return Scraper.create(url + page.link, readPage)
   }
 
-  debug('Running Dansguiden parser...')
+  console.log('Running Dansguiden parser...')
 
   const pages = await Scraper.create(url + '/dansprogram', getPages)
-
   const linkContents = parseAndFilterPages(pages)
-    .filter(p => !_.isArray(months) || _.some(months, m => p.title.includes(m)))
+    .filter(p => !_.isArray(months) || _.some(months, m => p.title.includes(m.toLocaleLowerCase())))
     .map(loadPage)
 
   const contents = serialDelayed(linkContents, 1000)
