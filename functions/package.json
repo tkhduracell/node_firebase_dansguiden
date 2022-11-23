@@ -25,7 +25,8 @@
     "scraperjs": "^1.2.0",
     "simple-oauth2": "^5.0.0",
     "source-map-support": "^0.5.21",
-    "spotify-web-api-node": "^5.0.2"
+    "spotify-web-api-node": "^5.0.2",
+    "zod": "^3.19.1"
   },
   "overrides": {
     "google-gax": "^0.22.1",
