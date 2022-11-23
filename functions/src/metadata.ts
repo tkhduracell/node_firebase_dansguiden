@@ -191,7 +191,7 @@ export class Metadata {
 
       log(`Updating ${db.name} using ${values.length} events`)
 
-      const updates = await agg.map(fn => fn(values))
+      const updates = await Promise.all(agg.map(fn => fn(values)))
       const out: Record<string, any> = {}
       for (const update of updates) {
         for (const [k,v] of Object.entries(update)) {
