@@ -132,6 +132,12 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   }
 
   return async (values: DanceEvent[]) => {
+    for (const e of values) {
+      if (e.place === 'Donnez') {
+        console.error(e)
+      }
+    }
+
     const places = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
 
     const out: Record<string, PlacesInfo> = {}
@@ -140,9 +146,12 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 
       const query = [place, city, region, 'Sverige'].join(' ')
 
+      console.log('Looking Google Maps Place for', query)
       const response = await fetch(search(query))
+      console.log('Response for', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
       if (response.ok) {
         const { candidates } = await response.json() as PlacesApiResponse
+        console.log('Response for', query, 'candidates', candidates.length)
         if (candidates && candidates.length > 0) {
           const [first] = candidates
           const ref = first.photos?.find(() => true)?.photo_reference
