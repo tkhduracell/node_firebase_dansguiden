@@ -110,6 +110,7 @@ type PlacesInfo = {
 } | Record<string, never>
 
 function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
+  const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
 
   function search(query: string) {
     const params = new URLSearchParams()
