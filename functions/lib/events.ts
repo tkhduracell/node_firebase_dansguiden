@@ -189,6 +189,7 @@ export async function parse (debug: LogFn, months?: string[]): Promise<InternalE
       console.log('Processing', rows.length, 'rows', `(page: ${header})`)
     } else {
       console.warn('Processing', rows.length, 'rows, expected: ', count, `(page: ${header})`)
+      console.warn('Page style', style)
     }
 
     return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)))
