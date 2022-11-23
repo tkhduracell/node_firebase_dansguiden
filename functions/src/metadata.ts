@@ -102,7 +102,12 @@ function inferLocation(): (values: DanceEvent[]) => Record<string, Location> {
   }
 }
 
-type PlacesInfo = { name: string, address: string, photo: string } | {}
+type PlacesInfo = {
+  name: string,
+  address: string,
+  photo_small?: string
+  photo_large?: string
+} | Record<string, never>
 
 function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
 
