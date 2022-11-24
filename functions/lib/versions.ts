@@ -1,6 +1,5 @@
 import _ from 'lodash'
 import { Scraper } from './scraper'
-import { LogFn } from './log'
 
 export type Version = {
   lines: string[];
@@ -40,10 +39,10 @@ export function extractContent($: cheerio.CheerioAPI | cheerio.Root): Version {
   return { lines, name, date, html }
 }
 
-export async function fetchLatestVersion (log: LogFn): Promise<Version> {
+export async function fetchLatestVersion (): Promise<Version> {
   const url = 'https://play.google.com/store/apps/details?id=feality.dans'
 
-  log('Running Google Play parser...')
+  console.log('Running Google Play parser...')
   const data = await Scraper.create(url, extractContent)
 
   return data

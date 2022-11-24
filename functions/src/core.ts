@@ -15,31 +15,30 @@ import { simpleKeyValue, getValues } from '../lib/store'
 import { snapshotAsArray } from '../lib/utils'
 import { BatchFn, TableFn } from '../lib/database'
 import { Artist, DanceEvent } from '../lib/types'
-import { LogFn } from '../lib/log'
 
-async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]> {
+async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[]): Promise<firestore.WriteResult[]> {
   const dates = output.filter(event => event.type === 'event')
     .map(e => e.data.date)
 
-  log(`Starting batch delete between ${_.min(dates)} <-> ${_.max(dates)}`)
+  console.log(`Starting batch delete between ${_.min(dates)} <-> ${_.max(dates)}`)
   const eventsResult = await table('events')
     .where('date', '>=', _.min(dates))
     .where('date', '<=', _.max(dates))
     .get()
 
-  log(`Found ${eventsResult.size} overlapping events`)
+  console.log(`Found ${eventsResult.size} overlapping events`)
   const events = snapshotAsArray<string>(eventsResult, e => e._id)
 
   const commits = _.chunk(events, 500).map((chunk, idx) => {
     const deleteBatch = batch()
     chunk.forEach(id => {
-      log('Deleting event ' + id)
+      console.debug('Deleting event ' + id)
       const ref = table('events').doc(id)
       deleteBatch.delete(ref)
     })
     return deleteBatch.commit()
       .then(result => {
-        log('Batch#' + idx + ' deletion done!')
+        console.debug('Batch#' + idx + ' deletion done!')
         return result
       })
   })
@@ -47,11 +46,10 @@ async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, outp
   return _.flatten(await Promise.all(commits))
 }
 
-async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionReference, log: LogFn,
-  output: T[], kvFn: ObjectExtractor<T, V>): Promise<firestore.WriteResult[]> {
+async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionReference, output: T[], kvFn: ObjectExtractor<T, V>): Promise<firestore.WriteResult[]> {
 
   const writes = _.chunk(output, 500).map(async (chunk, idx) => {
-      log('Batch#' + idx + ' creating...')
+      console.log('Batch#' + idx + ' creating...')
       const batcher = batch()
       chunk.forEach(source => {
         const result = kvFn(source)
@@ -60,31 +58,31 @@ async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionRef
           const document = _.merge(value, {
             _id: key
           })
-          log('Adding change to ' + key)
+          console.log('Adding change to ' + key)
           const ref = table.doc(key)
           batcher.set(ref, document, { merge: true })
         }
       })
 
       const writeResult = await batcher.commit()
-      log(`Batch# ${idx} write done!`)
+      console.log(`Batch# ${idx} write done!`)
 
       return writeResult
     })
   return _.flatten(await Promise.all(writes))
 }
 
-function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDanceEvent[], log: LogFn): Promise<firestore.WriteResult[]>  {
+function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDanceEvent[]): Promise<firestore.WriteResult[]>  {
   const table = tableFn('events')
 
-  return batchWriteFn(batch, table, log, output, (source: InternalDanceEvent) => {
+  return batchWriteFn(batch, table, output, (source: InternalDanceEvent) => {
     if (source.type !== 'event') {
-      log(`Ignoring non-event ${source.type} item...`)
+      console.log(`Ignoring non-event ${source.type} item...`)
       return false
     }
 
     if (!moment.utc(source.data.date, ISO_8601).isValid()) {
-      log('Invalid date: ' + JSON.stringify(source))
+      console.log('Invalid date: ' + JSON.stringify(source))
       return false
     }
 
@@ -115,22 +113,22 @@ export type SpotifyClientConfig = {
 }
 
 export class Bands {
-  static async update(table: TableFn, spotify: SpotifyClientConfig, log: LogFn): Promise<(Artist|null)[]> {
+  static async update(table: TableFn, spotify: SpotifyClientConfig): Promise<(Artist|null)[]> {
     const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
 
     function onlyNewEvents(tbl: admin.firestore.Query): admin.firestore.Query {
       return tbl.where('date', '>=', '2022-01-01')
     }
 
-    log('Getting current bands in events')
+    console.log('Getting current bands in events')
     const allBands = await getValues<string, DanceEvent>(table, 'events', event => event.band, onlyNewEvents)
     const bands = _.uniq(allBands).sort() // debug: .slice(15, 20)
 
-    log('Starting band update')
+    console.log('Starting band update')
     const updates = await BandUpdater.run(bandsKeyValueStore, spotify, bands)
 
-    log('Completed band metadata update!')
-    log(`Wrote ${_.size(updates)} bands`)
+    console.log('Completed band metadata update!')
+    console.log(`Wrote ${_.size(updates)} bands`)
 
     return updates
   }
@@ -142,33 +140,29 @@ export type EventQueryParams = { from: string; to: string;[key: string]: string 
 
 export class Events {
 
-  static async update(
-    batch: BatchFn, table: TableFn, log: LogFn
-  ): Promise<InternalDanceEvent[]> {
+  static async update(batch: BatchFn, table: TableFn): Promise<InternalDanceEvent[]> {
 
-    log('Parsing all events from external source')
-    const allEvents = await events.parse(log)
-    log(`Completed parsing, found ${_.size(allEvents)} events!`)
+    console.log('Parsing all events from external source')
+    const allEvents = await events.parse()
+    console.log(`Completed parsing, found ${_.size(allEvents)} events!`)
 
-    log('Starting overlap removal')
-    await batchDeleteOverlappingEvents(batch, table, allEvents, log)
-    log('Completed overlap removal!')
+    console.log('Starting overlap removal')
+    await batchDeleteOverlappingEvents(batch, table, allEvents)
+    console.log('Completed overlap removal!')
 
-    log('Starting event writes')
-    const batchWrite = await batchWriteEvents(batch, table, allEvents, log)
-    log(`Completed event writes, wrote ${_.size(batchWrite)} events!`)
+    console.log('Starting event writes')
+    const batchWrite = await batchWriteEvents(batch, table, allEvents)
+    console.log(`Completed event writes, wrote ${_.size(batchWrite)} events!`)
 
-    log('Starting event metadata updates')
-    await eventsDecorator.update(batch, table, log)
-    log('Completed event metadata update!')
+    console.log('Starting event metadata updates')
+    await eventsDecorator.update(batch, table)
+    console.log('Completed event metadata update!')
 
     return allEvents
   }
 
-  static async fetch(
-    table: TableFn, params: EventQueryParams, log: LogFn
-  ): Promise<DanceEvent[]> {
-    log(`Fetch events using params: ${JSON.stringify(params)}`)
+  static async fetch(table: TableFn, params: EventQueryParams): Promise<DanceEvent[]> {
+    console.log(`Fetch events using params: `, params)
     let query = table('events') as firestore.Query
 
     // default to today
@@ -214,17 +208,17 @@ export class Versions {
     return sorted ? _.sortBy(list, versionSort) : list
   }
 
-  static async update (table: TableFn, log: LogFn): Promise<Version> {
-    const version: Version = await fetchLatestVersion(log)
+  static async update (table: TableFn): Promise<Version> {
+    const version: Version = await fetchLatestVersion()
 
     const invalid = _.isEmpty(version.name) || _.isEmpty(version.lines)
     if (invalid) {
-      log('No updated version, result was empty: ' + JSON.stringify(version, null, 2))
+      console.log('No updated version, result was empty: ' + JSON.stringify(version, null, 2))
     }
 
     const key = _.snakeCase('v ' + version.name)
 
-    log('Updating version' + key)
+    console.log('Updating version' + key)
     const ref = table('versions').doc(key)
 
     const data = _.pickBy(version, (_k, v) => !_.isNull(v)) as object

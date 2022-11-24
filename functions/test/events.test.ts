@@ -12,7 +12,7 @@ describe('events', () => {
     let subject = [] as InternalDanceEvent[]
     beforeAll(async () => {
       try {
-        subject = await parse(() => {}, [month(moment()).toLocaleLowerCase()])
+        subject = await parse([month(moment()).toLocaleLowerCase()])
       } catch (error) {
         fail("Unable to fetch real data, check your internet connection")
       }
@@ -176,7 +176,7 @@ describe('events', () => {
         </table>
       `)
 
-      const [e1, e2] = pipeline(e, console.log)
+      const [e1, e2] = pipeline(e)
 
       expect(e1.data.region).toStrictEqual('Stockholm (Båt)')
       expect(e2.data.region).toStrictEqual('Stockholm')
@@ -199,7 +199,7 @@ describe('events', () => {
         </table>
       `)
 
-      const [e1] = pipeline(e, console.log)
+      const [e1] = pipeline(e)
 
       expect(e1.data.extra).toStrictEqual('')
     })

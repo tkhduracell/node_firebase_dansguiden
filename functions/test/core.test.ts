@@ -36,8 +36,6 @@ type MockDoc<T> = {
 
 type Col = firebase.firestore.CollectionReference
 
-function silent (): void {}
-
 describe('core.js', () => {
 
   describe('Versions', () => {
@@ -56,7 +54,7 @@ describe('core.js', () => {
       const event = { event: true }
       const data = new QueryMock([event]) as unknown as Col
 
-      const a = await Events.fetch(() => data, { from: 'a', to: 'b'}, () => silent)
+      const a = await Events.fetch(() => data, { from: 'a', to: 'b'})
 
       expect(a).toHaveLength(1)
       expect(a).toStrictEqual([event])

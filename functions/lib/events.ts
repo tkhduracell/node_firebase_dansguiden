@@ -1,7 +1,6 @@
 import _ from 'lodash'
 
 import { parseYearDate, validateWeekDay, validateDate, fixTime } from './date'
-import { LogFn } from './log'
 import { DanceEvent } from './types'
 
 import { Scraper } from './scraper'
@@ -159,7 +158,7 @@ export function pipeline(list: InternalDanceEvent[]): InternalDanceEvent[] {
     }))
 }
 
-export async function parse (debug: LogFn, months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
+export async function parse (months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
 
   function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
     const databaseColumns = asDatabaseColumns($, $('tr.headline').first())

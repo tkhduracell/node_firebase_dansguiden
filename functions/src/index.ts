@@ -38,10 +38,8 @@ function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?
   })
 }
 
-const logger = (prefix: string): (msg: string) => void => console.log.bind(console.log, prefix)
-
 export const eventsUpdate = schedule("every monday 09:00", () => {
-  return Events.update(batch, table, logger("weekly.updateEvents:"))
+  return Events.update(batch, table)
 })
 export const bandsUpdate = schedule("every monday 10:00", () => {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = z.object({
@@ -51,7 +49,7 @@ export const bandsUpdate = schedule("every monday 10:00", () => {
   return Bands.update(table, {
     client_id: SPOTIFY_CLIENT_ID,
     client_secret: SPOTIFY_CLIENT_SECRET
-  }, logger("weekly.updateBands:"))
+  })
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata
@@ -60,15 +58,15 @@ export const metadataUpdate = schedule("0 11 * * *", () => {
     GCLOUD_PLACES_API_KEY: z.string()
   }).parse(process.env)
   const extra = { places_api_key: GCLOUD_PLACES_API_KEY }
-  return Metadata.update(table, logger("weekly.updateMetadata:"), extra)
+  return Metadata.update(table, extra)
 }, { secrets: ['GCLOUD_PLACES_API_KEY'] })
 
 // Playstore version
 export const versionsUpdate = schedule("every monday 12:00", () => {
-  return Versions.update(table, logger("weekly.updateVersions:"))
+  return Versions.update(table)
 })
 
 
 export const versionFetch = http(() => Versions.fetch(table))
 export const imagesFetch = http(() => Images.fetch(table))
-export const eventsFetch = http(query => Events.fetch(table, query as EventQueryParams, logger('http.eventsFetch')))
+export const eventsFetch = http(query => Events.fetch(table, query as EventQueryParams))

@@ -3,7 +3,6 @@ import firebase from 'firebase-admin'
 
 import { snapshotAsObj } from './utils'
 import { TableFn, BatchFn } from './database'
-import { LogFn } from './log'
 import { ArtistImage } from './types'
 
 function getImage (images: ArtistImage[]): string | null {
@@ -23,20 +22,20 @@ function remap (band: string): string {
   return band.replace(/-/gi, '')
 }
 
-export async function update (batch: BatchFn, table: TableFn, log: LogFn): Promise<object> {
+export async function update (batch: BatchFn, table: TableFn): Promise<object> {
   const metadataTable = await table('band_metadata').get()
-  log('Fetched band_metadata table!')
+  console.log('Fetched band_metadata table!')
   const meta = snapshotAsObj<SpotifyMetadata | null>(metadataTable, m => getImageAndId(m))
 
   const eventsTable = await table('events').get()
-  log('Fetched events table!')
+  console.log('Fetched events table!')
   const events = snapshotAsObj<string>(eventsTable, e => e.band)
 
-  log(`Joining ${_.size(events)} events with ${_.size(meta)} bands`)
+  console.log(`Joining ${_.size(events)} events with ${_.size(meta)} bands`)
   const pairChunks = _.chunk(_.toPairs(events), 500)
 
   const batches = pairChunks.map((chunk, idx) => {
-    log(`Creating batch#${idx}`)
+    console.debug(`Creating batch#${idx}`)
     const batcher = batch()
     const counters = { touched: 0, unknowns: 0 }
     _.forEach(chunk, ([id, band]) => {
@@ -49,14 +48,14 @@ export async function update (batch: BatchFn, table: TableFn, log: LogFn): Promi
         counters.unknowns++
       }
     })
-    log(`Executing batch#${idx}, ${JSON.stringify(counters)}`)
+    console.debug(`Executing batch#${idx}, ${JSON.stringify(counters)}`)
     return batcher.commit()
   })
 
-  log("Awaiting all batches...")
+  console.debug("Awaiting all batches...")
   const writes = await Promise.all(batches)
 
-  log(`${_.size(writes)} batches and ${_.size(_.flatten(writes))} writes committed succesfully!`)
+  console.log(`${_.size(writes)} batches and ${_.size(_.flatten(writes))} writes committed succesfully!`)
   return events
 }
 

@@ -10,7 +10,6 @@ import fetch from 'node-fetch'
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { TableFn } from '../lib/database'
 import { DanceEvent } from '../lib/types'
-import { LogFn } from '../lib/log'
 
 export type Counters = {
   [key: string]: Counter;
@@ -174,14 +173,14 @@ type Secrets = {
 
 export class Metadata {
 
-  static async update(table: TableFn, log: LogFn, secrets: Secrets) {
+  static async update(table: TableFn, secrets: Secrets) {
 
     const today = moment.utc().format("YYYY-MM-DD")
     const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
       return col.where('date', '>=', today)
     }
 
-    log('Updating metadata table...')
+    console.log('Updating metadata table...')
 
     type MaybePromise<T> = T | Promise<T>
     type AggFn<T> = (all: DanceEvent[]) => MaybePromise<Record<string, Partial<T>>>
@@ -189,7 +188,7 @@ export class Metadata {
     async function updater<T>(db: Store<T>, agg: AggFn<T>[]) {
       const values = await getValues<DanceEvent, DanceEvent>(table, 'events', e => e, future)
 
-      log(`Updating ${db.name} using ${values.length} events`)
+      console.log(`Updating ${db.name} using ${values.length} events`)
 
       const updates = await Promise.all(agg.map(fn => fn(values)))
       const out: Record<string, any> = {}
@@ -204,13 +203,13 @@ export class Metadata {
     }
 
     return await Promise.all([
-      updater<Counter & Location & PlacesInfo>(simpleKeyValue<Counter & Location & PlacesInfo>(table, 'metadata_places', true, log), [
+      updater<Counter & Location & PlacesInfo>(simpleKeyValue<Counter & Location & PlacesInfo>(table, 'metadata_places', true), [
         histogram('place'),
         inferLocation(),
         placesApiImage(secrets.places_api_key)
       ]),
-      updater(simpleKeyValue<Counter>(table, 'metadata_bands', true, log), [histogram('band')]),
-      updater(simpleKeyValue<Counter>(table, 'metadata_dates', true, log), [counter('date')]),
+      updater(simpleKeyValue<Counter>(table, 'metadata_bands', true), [histogram('band')]),
+      updater(simpleKeyValue<Counter>(table, 'metadata_dates', true), [counter('date')]),
     ])
   }
 }

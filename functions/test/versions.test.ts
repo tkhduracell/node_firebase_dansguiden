@@ -86,7 +86,7 @@ describe('versions', () => {
   describe.skip('with real site', () => {
     let version = {} as Version
     beforeAll(async () => {
-      version = await fetchLatestVersion(() => { })
+      version = await fetchLatestVersion()
     })
 
     it('should have non empty name', () => {

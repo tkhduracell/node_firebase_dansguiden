@@ -20,12 +20,7 @@ export type Store<T> = {
   name: string;
 }
 
-function hint (value: object): string {
-  const json = JSON.stringify(value).split('').splice(0, 80).join('')
-  return json.length > 80 ? `${json}...` : json
-}
-
-export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, tableName: string, merge: boolean, log: (mgs: string) => void = console.log): Store<T> {
+export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, tableName: string, merge: boolean): Store<T> {
   const metadata = table(tableName)
   return {
     name: tableName,
@@ -33,7 +28,7 @@ export function simpleKeyValue<T extends Record<string, any>>(table: TableFn, ta
       .get()
       .then(doc => doc.exists ? doc.data() as T : null),
     set: (key: string, value: T): Promise<T> => {
-      log(`Updating '${key}' => ${hint(value)}`)
+      console.debug('Updating', key, ' => ', value)
       return metadata.doc(key)
         .set(value, { merge })
         .then(() => value)
