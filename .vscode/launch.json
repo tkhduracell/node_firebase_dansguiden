@@ -5,6 +5,21 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "script:metadata",
+      "request": "launch",
+      "autoAttachChildProcesses": true,
+      "cwd": "${workspaceFolder}/functions",
+      "runtimeArgs": [
+        "run",
+        "script:metadata"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Test ${file}",
@@ -26,28 +41,32 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Test All",
-      "program": "${workspaceFolder}/functions/node_modules/mocha/bin/_mocha",
-      "cwd": "${workspaceFolder}/functions",
-      "args": [
-        "-u",
-        "bdd",
-        "-r",
-        "ts-node/register",
-        "--inspect",
-        "--timeout",
-        "999999",
-        "--colors",
-        "./test/**/*.test.ts"
-      ],
-      "internalConsoleOptions": "openOnSessionStart"
-    },
-    {
-      "type": "node",
-      "request": "launch",
       "name": "debug_events.js",
       "program": "${workspaceFolder}/functions/debug/debug_events.js",
       "cwd": "${workspaceFolder}/functions/"
+    },
+    {
+      "type": "node",
+      "name": "vscode-jest-tests.v2",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true,
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "npm",
+      "args": [
+        "--prefix",
+        "functions",
+        "run",
+        "test",
+        "--",
+        "--runInBand",
+        "--watchAll=false",
+        "--testNamePattern",
+        "${jest.testNamePattern}",
+        "--runTestsByPath",
+        "${jest.testFile}"
+      ]
     }
   ]
 }

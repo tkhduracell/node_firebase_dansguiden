@@ -9,5 +9,9 @@
       "directory": "web",
       "changeProcessCWD": true
     }
-  ]
+  ],
+  "jest.jestCommandLine": "npm --prefix functions run test --",
+  "jest.testExplorer": {
+    "enabled": true
+  },
 }
