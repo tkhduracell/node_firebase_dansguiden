@@ -101,6 +101,10 @@ function inferLocation(): (values: DanceEvent[]) => Record<string, Location> {
   }
 }
 
+function blacklist<T, K>(valFn: (e: T) => K[], ...exclude: K[]): (e: T) => boolean {
+  return (t: T) => !valFn(t).some(p => exclude.includes(p))
+}
+
 type PlacesInfo = {
   name: string,
   address: string,
@@ -146,17 +150,19 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
         const { candidates } = await response.json() as PlacesApiResponse
         console.log('Response for', query, 'candidates', candidates.length, candidates)
         if (candidates && candidates.length > 0) {
-          const [first] = candidates.filter(c => !c.types.includes('locality'))
-          const ref = first.photos?.find(() => true)?.photo_reference
-          const photos = ref ?  {
-            photo_small: photo(ref, '128'),
-            photo_large: photo(ref, '512')
-          } : {}
+          const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
+          if (first) {
+            const ref = first.photos?.find(() => true)?.photo_reference
+            const photos = ref ?  {
+              photo_small: photo(ref, '128'),
+              photo_large: photo(ref, '512')
+            } : {}
 
-          out[place] = {
-            address: first.formatted_address,
-            name: first.name,
-            ...photos
+            out[place] = {
+              address: first.formatted_address,
+              name: first.name,
+              ...photos
+            }
           }
         }
       }
