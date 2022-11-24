@@ -157,57 +157,57 @@ export function pipeline(list: InternalDanceEvent[]): InternalDanceEvent[] {
       return e
     }))
 }
+export class Events {
+  static async parse (months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
+    function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
+      const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
+      console.log('DatabaseColumns', databaseColumns)
 
-export async function parse (months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
+      const count = $('.danceprogram').siblings('p')
+        .first()
+        .text()
+        .replace(/.*:\s*(\d+)/, '$1') // Antal danser: 109
+      const style = $('.danceprogram').siblings('style').text().trim()
 
-  function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
-    const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
-    console.log('DatabaseColumns', databaseColumns)
+      const ghosts = style
+        .match(/tr\.r\d+\s*{.*font-size:\s*0.*}/g)
+        ?.map(g => g.replace(/tr\.(.*){.*/, '$1').trim())
+        .map(clz => `.${clz}`)
+        .join(',')
 
-    const count = $('.danceprogram').siblings('p')
-      .first()
-      .text()
-      .replace(/.*:\s*(\d+)/, '$1') // Antal danser: 109
-    const style = $('.danceprogram').siblings('style').text().trim()
+      console.debug({ ghosts, count })
+      const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
+      const header = $(dateHeaderElm).text().replace(/\s+/gi, ' ').trim()
 
-    const ghosts = style
-      .match(/tr\.r\d+\s*{.*font-size:\s*0.*}/g)
-      ?.map(g => g.replace(/tr\.(.*){.*/, '$1').trim())
-      .map(clz => `.${clz}`)
-      .join(',')
+      const rows = $("tr[class^='r']")
+        .not(ghosts ?? '.__not_a_ghost__')
+        .get() as cheerio.TagElement[]
 
-    console.debug({ ghosts, count })
-    const dateHeaderElm = $('tr').not('.headline').not("tr[class^='r']").first()
-    const header = $(dateHeaderElm).text().replace(/\s+/gi, ' ').trim()
+      if (`${rows.length}` === count) {
+        console.log('Processing', rows.length, 'rows', `(page: ${header})`)
+      } else {
+        console.warn('Processing', rows.length, 'rows, expected: ', count, `(page: ${header})`)
+        console.warn('Page style', style)
+      }
 
-    const rows = $("tr[class^='r']")
-      .not(ghosts ?? '.__not_a_ghost__')
-      .get() as cheerio.TagElement[]
-
-    if (`${rows.length}` === count) {
-      console.log('Processing', rows.length, 'rows', `(page: ${header})`)
-    } else {
-      console.warn('Processing', rows.length, 'rows, expected: ', count, `(page: ${header})`)
-      console.warn('Page style', style)
+      return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)))
     }
 
-    return pipeline(rows.map(i => asEntry($, i, header, databaseColumns)))
+    function loadPage (page: Page): Promise<InternalDanceEvent[]> {
+      console.log('Running Dansguiden parse on page ' + JSON.stringify(page))
+      return Scraper.create(url + page.link, readPage)
+    }
+
+    console.log('Running Dansguiden parser...')
+
+    const pages = await Scraper.create(url + '/dansprogram', getPages)
+    const linkContents = parseAndFilterPages(pages)
+      .filter(p => !_.isArray(months) || _.some(months, m => p.title.includes(m.toLocaleLowerCase())))
+      .map(loadPage)
+
+    const contents = serialDelayed(linkContents, 1000)
+      .then(_.flatten)
+
+    return contents
   }
-
-  function loadPage (page: Page): Promise<InternalDanceEvent[]> {
-    console.log('Running Dansguiden parse on page ' + JSON.stringify(page))
-    return Scraper.create(url + page.link, readPage)
-  }
-
-  console.log('Running Dansguiden parser...')
-
-  const pages = await Scraper.create(url + '/dansprogram', getPages)
-  const linkContents = parseAndFilterPages(pages)
-    .filter(p => !_.isArray(months) || _.some(months, m => p.title.includes(m.toLocaleLowerCase())))
-    .map(loadPage)
-
-  const contents = serialDelayed(linkContents, 1000)
-    .then(_.flatten)
-
-  return contents
 }

@@ -152,4 +152,17 @@ export class BandUpdater {
     // Delayed and serial execution
     return serialDelayedFns(results, 1000, 200)
   }
+
+  static async get(secrets: Secrets, band: string) {
+    const client = await SpotifyApiClientFactory.create(secrets)
+
+    const remapped = remap(removeSuffix(band))
+    if (remapped !== band) console.debug(`Remapped artist from ${band} -> ${remapped}`)
+
+    const spotifyArtists = await searchArtist(client, remapped)
+
+    const mostSimilarArtist = findArtistInfo(remapped, spotifyArtists)
+
+    return mostSimilarArtist
+  }
 }

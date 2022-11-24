@@ -9,7 +9,10 @@ import fetch from 'node-fetch'
 
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { TableFn } from '../lib/database'
+import { Artist } from './../lib/types'
 import { DanceEvent } from '../lib/types'
+import type { Secrets as SpotifySecrets } from '../lib/spotify_api_auth'
+import { BandUpdater } from './band_updater'
 
 export type Counters = {
   [key: string]: Counter;
@@ -171,53 +174,76 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   }
 }
 
-type Secrets = {
-  places_api_key: string
+type SpotifyInfo = Artist | Record<string, never>
+
+function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<Record<string, SpotifyInfo>> {
+  return async (values: DanceEvent[]) => {
+    const bands = values.map(e => _.pick(e, 'band'))
+
+    const out: Record<string, SpotifyInfo> = {}
+    for (const { band } of _.uniqBy(bands, p => p.band)) {
+      const info = await BandUpdater.get(secrets, band)
+      out[band] = info ?? {}
+    }
+    return out
+  }
 }
+
+type PlacesSecerts = { api_key: string }
+
+type MaybePromise<T> = T | Promise<T>
+type AggFn<T> = (all: DanceEvent[]) => MaybePromise<Record<string, Partial<T>>>
+
+async function updater<T>(db: Store<T>, agg: AggFn<T>[], table: TableFn, limit?: number) {
+  const today = moment.utc().format("YYYY-MM-DD")
+  const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
+    if (limit) {
+      return col.where('date', '>=', today).limit(limit)
+    } else {
+      return col.where('date', '>=', today)
+    }
+  }
+
+  const values = await getValues<DanceEvent, DanceEvent>(table, 'events', e => e, future)
+
+  console.log(`Updating ${db.name} using ${values.length} events`)
+
+  const updates = await Promise.all(agg.map(fn => fn(values)))
+  const out: Record<string, any> = {}
+  for (const update of updates) {
+    for (const [k,v] of Object.entries(update)) {
+      out[k] = _.merge({}, out[k], v)
+    }
+  }
+  await Object.entries(out)
+    .map(([k, v]) => db.set(k, v as T))
+  return out
+}
+
+type PlaceMetadata = Counter & Location & PlacesInfo
+type BandMetadata = Counter & SpotifyInfo
+type DateMetadata = Counter
 
 export class Metadata {
 
-  static async update(table: TableFn, secrets: Secrets, limit?: number) {
+  static async places(table: TableFn, secrets: { places: PlacesSecerts }, limit?: number): Promise<Record<string, PlaceMetadata>> {
+    return updater<PlaceMetadata>(simpleKeyValue<PlaceMetadata>(table, 'metadata_places', true), [
+      histogram('place'),
+      inferLocation(),
+      placesApiImage(secrets.places.api_key)
+    ], table, limit)
+  }
 
-    const today = moment.utc().format("YYYY-MM-DD")
-    const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
-      if (limit) {
-        return col.where('date', '>=', today).limit(limit)
-      } else {
-        return col.where('date', '>=', today)
-      }
-    }
+  static async bands(table: TableFn, secrets: { spotify: SpotifySecrets }, limit?: number): Promise<Record<string, BandMetadata>> {
+    return updater<BandMetadata>(simpleKeyValue<BandMetadata>(table, 'metadata_bands', true), [
+        histogram('band'),
+        spotifyApi(secrets.spotify)
+      ], table, limit)
+  }
 
-    console.log('Updating metadata table...')
-
-    type MaybePromise<T> = T | Promise<T>
-    type AggFn<T> = (all: DanceEvent[]) => MaybePromise<Record<string, Partial<T>>>
-
-    async function updater<T>(db: Store<T>, agg: AggFn<T>[]) {
-      const values = await getValues<DanceEvent, DanceEvent>(table, 'events', e => e, future)
-
-      console.log(`Updating ${db.name} using ${values.length} events`)
-
-      const updates = await Promise.all(agg.map(fn => fn(values)))
-      const out: Record<string, any> = {}
-      for (const update of updates) {
-        for (const [k,v] of Object.entries(update)) {
-          out[k] = _.merge({}, out[k], v)
-        }
-      }
-      await Object.entries(out)
-        .map(([k, v]) => db.set(k, v as T))
-      return out
-    }
-
-    return await Promise.all([
-      updater<Counter & Location & PlacesInfo>(simpleKeyValue<Counter & Location & PlacesInfo>(table, 'metadata_places', true), [
-        histogram('place'),
-        inferLocation(),
-        placesApiImage(secrets.places_api_key)
-      ]),
-      updater(simpleKeyValue<Counter>(table, 'metadata_bands', true), [histogram('band')]),
-      updater(simpleKeyValue<Counter>(table, 'metadata_dates', true), [counter('date')]),
-    ])
+  static async dates(table: TableFn, limit?: number): Promise<Record<string, DateMetadata>> {
+    return updater(simpleKeyValue<Counter>(table, 'metadata_dates', true), [
+      counter('date')
+    ], table, limit)
   }
 }

@@ -3,17 +3,12 @@ import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-fu
 
 import './setup'
 
-import { database } from '../lib/database'
 import { Events, Bands, Versions, Images, EventQueryParams } from './core'
 import { Metadata } from './metadata'
 import { z } from 'zod'
 
+import { database } from '../lib/database'
 const { table, batch } = database()
-
-// HTTP functions
-// Must be us-central1 due to limitation in hosting. Hosting will redirect to wrong domain!
-// https://firebase.google.com/docs/functions/locations under "* Important: "
-// functions.region("europe-west-1").https
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
   return region('europe-west1')
@@ -26,7 +21,7 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Part
 
 function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?: Partial<RuntimeOptions>): HttpsFunction {
   return region('europe-west1')
-  .runWith(extra ?? {}) // Timeout 9 min
+  .runWith(extra ?? {})
   .https
   .onRequest(async (req, res) => {
     try {
@@ -52,20 +47,37 @@ export const bandsUpdate = schedule("every monday 10:00", () => {
   })
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
-// Metadata
-export const metadataUpdate = schedule("0 11 * * *", () => {
+// Metadata Places
+export const metadataPlaces = schedule("every monday 12:00", () => {
   const { GCLOUD_PLACES_API_KEY } = z.object({
     GCLOUD_PLACES_API_KEY: z.string()
   }).parse(process.env)
-  const extra = { places_api_key: GCLOUD_PLACES_API_KEY }
-  return Metadata.update(table, extra)
+  const places = { api_key: GCLOUD_PLACES_API_KEY }
+  return Metadata.places(table, { places })
 }, { secrets: ['GCLOUD_PLACES_API_KEY'] })
+
+// Metadata Bands
+export const metadataBands = schedule("every monday 12:00", () => {
+  const {
+    SPOTIFY_CLIENT_ID: client_id,
+    SPOTIFY_CLIENT_SECRET: client_secret
+  } = z.object({
+    SPOTIFY_CLIENT_ID: z.string(),
+    SPOTIFY_CLIENT_SECRET: z.string()
+  }).parse(process.env)
+  const spotify = { client_id, client_secret }
+  return Metadata.bands(table, { spotify })
+}, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
+
+// Metadata Dates
+export const metadataDates = schedule("every monday 12:00", () => {
+  return Metadata.dates(table)
+})
 
 // Playstore version
 export const versionsUpdate = schedule("every monday 12:00", () => {
   return Versions.update(table)
 })
-
 
 export const versionFetch = http(() => Versions.fetch(table))
 export const imagesFetch = http(() => Images.fetch(table))
