@@ -1,7 +1,7 @@
 import moment from 'moment'
-import { Events } from '../lib/events'
+import { EventsParser } from '../lib/events'
 
-Events.parse(['november'])
+EventsParser.parse(['november'])
   .then((res) => {
     console.log('------------------------------------')
     return res.filter(e => e.data.date > moment().format('YYYY-MM-DD'))

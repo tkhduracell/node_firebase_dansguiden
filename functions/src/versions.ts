@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import { TableFn } from '../lib/database';
+import { TableFn } from '../lib/database'
 import { Scraper } from '../lib/scraper'
-import { snapshotAsArray } from '../lib/utils';
+import { snapshotAsArray } from '../lib/utils'
 
 export type Version = {
   lines: string[];

@@ -1,7 +1,7 @@
 import { DanceEvent } from './../lib/types'
 import { Metadata } from './../src/metadata'
 import firebase from 'firebase-admin'
-import { range, shuffle } from 'lodash'
+import { shuffle } from 'lodash'
 import moment from 'moment'
 
 class QueryMock<T> {
@@ -49,7 +49,6 @@ type Col = firebase.firestore.CollectionReference
 
 describe('Metadata', () => {
   const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
-  const location = { city: '', county: '', region: '' }
 
   describe('update:dates', () => {
 
@@ -74,38 +73,9 @@ describe('Metadata', () => {
 
       const places = await Metadata.places(data, emptySecrets)
 
-      expect(places).toStrictEqual({ "place1": { ...ones, ...location } })
+      expect(places).toStrictEqual({ "place1": { ...ones } })
 
     })
-
-    it('should calculcate location by majority', async () => {
-
-      const data = queryMock([
-        ...range(51).map(() => ({
-          place: 'place1',
-          city: 'city of place1',
-          county: 'count of place1',
-          region: 'region of place1'
-        })),
-        ...range(50).map(() => ({
-          place: 'place1',
-          city: 'wrong city of place1',
-          county: 'wrong count of place1',
-          region: 'wrong region of place1'
-        }))
-      ])
-
-      const places = await Metadata.places(data, emptySecrets)
-
-      expect(places).toStrictEqual({
-        "place1": {
-          city: 'city of place1',
-          county: 'count of place1',
-          region: 'region of place1'
-        }
-      })
-    })
-
 
     it('should bucket count dates', async () => {
       const f = 'YYYY-MM-DD'
@@ -124,8 +94,7 @@ describe('Metadata', () => {
           in7Days: 2,
           in30Days: 3,
           in90Days: 4,
-          in180Days: 4,
-          ...location
+          in180Days: 4
         }
       })
     })

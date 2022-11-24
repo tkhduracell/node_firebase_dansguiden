@@ -10,7 +10,7 @@ const bandMetadataStore = simpleKeyValue<Artist>(table, 'band_metadata', false)
 async function run (): Promise<void> {
   const secrets = await require('../../.secrets.json')
 
-  const band = await BandUpdater.run(bandMetadataStore, secrets, ['Lövgrens'])
+  const band = await BandUpdater.update(bandMetadataStore, secrets, ['Lövgrens'])
   console.log(JSON.stringify(band, null, 2))
 }
 
