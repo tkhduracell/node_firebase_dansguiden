@@ -12,7 +12,9 @@
     "start": "npm run shell",
     "logs": "firebase functions:log",
     "script:backup": "ts-node scripts/export.ts",
-    "script:events": "ts-node debug/events.ts"
+    "script:events": "ts-node debug/events.ts",
+    "script:metadata": "ts-node debug/metadata.ts",
+    "script:band_search": "ts-node debug/band_search.ts"
   },
   "dependencies": {
     "cheerio": "0.22.0",
@@ -53,6 +55,7 @@
     "@typescript-eslint/typescript-estree": "^5.43.0",
     "chai": "^4.3.7",
     "cheerio": "^1.0.0-rc.3",
+    "dotenv": "^16.0.3",
     "eslint": "^8.27.0",
     "eslint-plugin-promise": "^6.1.1",
     "jest": "^29.3.1",
