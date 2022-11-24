@@ -1,6 +1,6 @@
 import { DanceEvent } from './../lib/types'
 import { Metadata } from './../src/metadata'
-import firebase from 'firebase-admin'
+import { firestore } from 'firebase-admin'
 import { shuffle } from 'lodash'
 import moment from 'moment'
 
@@ -28,13 +28,22 @@ class QueryMock<T> {
     return {
       set(key: string, val: T) {
         return Promise.resolve({ [key]: val })
+      },
+      get() {
+        return Promise.resolve({ exists: true })
       }
     }
   }
 }
 
-function queryMock(data: Partial<DanceEvent>[]): () => Col {
-  return () => new QueryMock(shuffle(data) as DanceEvent[]) as unknown as Col
+function queryMock(data: Partial<DanceEvent>[]) {
+  return {
+    tableFn: () => new QueryMock(shuffle(data) as DanceEvent[]) as unknown as Col,
+    batchFn: () => ({
+      update: (ref: Doc, data: any) => console.log(ref, '<=', data),
+      commit: () => Promise.resolve()
+    }) as unknown as Batch,
+  }
 }
 
 type MockResult<T> = {
@@ -45,20 +54,22 @@ type MockDoc<T> = {
   data: () => T;
 }
 
-type Col = firebase.firestore.CollectionReference
+type Col = firestore.CollectionReference
+type Doc = firestore.DocumentReference
+type Batch = firestore.WriteBatch
 
 describe('Metadata', () => {
-  const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
+  const ones = { in_total: 1, in_180_days: 1, in_30_days: 1, in_7_days: 1, in_90_days: 1 }
 
   describe('update:dates', () => {
 
     it('should calulcate counts', async () => {
 
-      const data  = queryMock([{ date: '2022-01-01' }])
+      const { tableFn, batchFn } = queryMock([{ date: '2022-01-01' }])
 
-      const dates = await Metadata.dates(data)
+      const dates = await Metadata.dates(tableFn, batchFn)
 
-      expect(dates).toStrictEqual({'2022-01-01': { count: 1 }})
+      expect(dates).toHaveProperty('counts', {'2022-01-01': { count: 1 }})
     })
   })
 
@@ -67,20 +78,19 @@ describe('Metadata', () => {
 
     it('should calulcate counts', async () => {
 
-      const data  = queryMock([
+      const { tableFn, batchFn } = queryMock([
         { place: 'place1', date: moment().format('YYYY-MM-DD') }
       ])
 
-      const places = await Metadata.places(data, emptySecrets)
+      const places = await Metadata.places(tableFn, batchFn, emptySecrets)
 
-      expect(places).toStrictEqual({ "place1": { ...ones } })
-
+      expect(places).toHaveProperty('counts', { "place1": { ...ones } })
     })
 
     it('should bucket count dates', async () => {
       const f = 'YYYY-MM-DD'
 
-      const data = queryMock([
+      const { tableFn, batchFn } = queryMock([
         { place: 'place1', date: moment().add(1, 'days').format(f) },
         { place: 'place1', date: moment().add(4, 'days').format(f) },
         { place: 'place1', date: moment().add(16, 'days').format(f) },
@@ -88,13 +98,14 @@ describe('Metadata', () => {
         { place: 'place1', date: moment().add(256, 'days').format(f) }
       ])
 
-      const places = await Metadata.places(data, emptySecrets)
-      expect(places).toStrictEqual({
+      const places = await Metadata.places(tableFn, batchFn, emptySecrets)
+      expect(places).toHaveProperty('counts', {
         "place1": {
-          in7Days: 2,
-          in30Days: 3,
-          in90Days: 4,
-          in180Days: 4
+          in_7_days: 2,
+          in_30_days: 3,
+          in_90_days: 4,
+          in_180_days: 4,
+          in_total: 5
         }
       })
     })
@@ -106,7 +117,7 @@ describe('Metadata', () => {
     it('should bucket count dates', async () => {
       const f = 'YYYY-MM-DD'
 
-      const data = queryMock([
+      const { tableFn, batchFn } = queryMock([
         { band: 'band1', date: moment().add(1, 'days').format(f) },
         { band: 'band1', date: moment().add(4, 'days').format(f) },
         { band: 'band1', date: moment().add(16, 'days').format(f) },
@@ -114,13 +125,24 @@ describe('Metadata', () => {
         { band: 'band1', date: moment().add(256, 'days').format(f) }
       ])
 
-      const bands = await Metadata.bands(data, secrets)
-      expect(bands).toStrictEqual({
-        "band1": { in7Days: 2, in30Days: 3, in90Days: 4, in180Days: 4,
+      const bands = await Metadata.bands(tableFn, batchFn, secrets)
+
+      expect(bands).toHaveProperty('counts', {
+        "band1": {
+          in_7_days: 2,
+          in_30_days: 3,
+          in_90_days: 4,
+          in_180_days: 4,
+          in_total: 5
+        }
+      })
+      expect(bands).toHaveProperty('spotify', {
+        "band1": {
           spotify_id: undefined,
           spotify_image_large: undefined,
           spotify_image_small: undefined,
-          spotify_name: undefined, }
+          spotify_name: undefined,
+        }
       })
     })
   })

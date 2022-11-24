@@ -2,34 +2,28 @@
 
 import _ from 'lodash'
 import moment from 'moment'
-import admin from 'firebase-admin'
 import fetch from 'node-fetch'
 
 // Dependencies
 
-import { simpleKeyValue, getValues, Store } from '../lib/store'
-import { TableFn } from '../lib/database'
+import { firestore } from 'firebase-admin'
+import { getValues } from '../lib/store'
+import { BatchFn, TableFn } from '../lib/database'
 import { DanceEvent } from '../lib/types'
 import { PlacessParser } from './../lib/places'
 import { BandUpdater } from './band_updater'
 
-export type Counters = {
-  [key: string]: Counter;
-};
-
 export type Counter = {
-  count: number;
-  in7Days: number;
-  in30Days: number;
-  in90Days: number;
-  in180Days: number;
+  in_total: number;
+  in_7_Days: number;
+  in_30_days: number;
+  in_90_days: number;
+  in_180_days: number;
 }
 
-export type EntityCounters = {
-  bands: Counters;
-  places: Counters;
-  dates: Counters;
-};
+export type SimpleCounter = {
+  in_total: number;
+}
 
 type PlacesApiResponse = {
   candidates: PlaceApiSearchCandidate[]
@@ -51,17 +45,15 @@ type PlaceApiPhoto = {
 }
 
 
-function counter(key: keyof DanceEvent): (values: DanceEvent[]) => Record<string, Partial<Counter>> {
-  return (values: DanceEvent[]) => {
+function counter(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Record<string, Partial<Counter>>> {
+  return async (values: DanceEvent[]) => {
     const counts = _.countBy(values.map(e => e[key]))
-    return _.merge(
-      _.mapValues(counts, o => ({ count: o })),
-    )
+    return _.merge(_.mapValues(counts, o => ({ count: o })))
   }
 }
 
-function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Record<string, Partial<Counter>> {
-  return (values: DanceEvent[]) => {
+function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Record<string, Partial<Counter>>> {
+  return async (values: DanceEvent[]) => {
 
     const inDays = (days: number) => {
       const limit = moment().utc().startOf('day').add(days, 'days')
@@ -74,12 +66,14 @@ function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Record<stri
     const in30Days = _.countBy(values.filter(inDays(30)), e => e[key])
     const in90Days = _.countBy(values.filter(inDays(90)), e => e[key])
     const in180Days = _.countBy(values.filter(inDays(180)), e => e[key])
+    const inTotal = _.countBy(values, e => e[key])
 
     return _.merge(
-      _.mapValues(in7Days, o => ({ in7Days: o })),
-      _.mapValues(in30Days, o => ({ in30Days: o })),
-      _.mapValues(in90Days, o => ({ in90Days: o })),
-      _.mapValues(in180Days, o => ({ in180Days: o })),
+      _.mapValues(inTotal, o => ({ in_total: o })),
+      _.mapValues(in7Days, o => ({ in_7_days: o })),
+      _.mapValues(in30Days, o => ({ in_30_days: o })),
+      _.mapValues(in90Days, o => ({ in_90_days: o })),
+      _.mapValues(in180Days, o => ({ in_180_days: o })),
     )
   }
 }
@@ -124,9 +118,9 @@ function blacklist<T, K>(valFn: (e: T) => K[], ...exclude: K[]): (e: T) => boole
 type PlacesApiInfo = {
   name: string,
   address: string,
-  photo_small?: string
-  photo_large?: string
-} | Record<string, never>
+  photo_small: string
+  photo_large: string
+}
 
 function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesApiInfo>> {
   const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
@@ -155,7 +149,6 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 
     const out: Record<string, PlacesApiInfo> = {}
     for (const { place, region } of _.uniqBy(places, p => p.place)) {
-      out[place] = {}
 
       const query = [place, region, 'Sverige'].join(', ')
 
@@ -169,16 +162,13 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
           const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
           if (first) {
             const ref = first.photos?.find(() => true)?.photo_reference
-            const photos = ref ?  {
-              photo_small: photo(ref, '128'),
-              photo_large: photo(ref, '512')
-            } : {}
 
-            out[place] = {
+            out[place] = _.omitBy({
               address: first.formatted_address,
               name: first.name,
-              ...photos
-            }
+              photo_small: ref ? photo(ref, '128') : undefined,
+              photo_large: ref ? photo(ref, '512') : undefined
+            }, _.isUndefined) as PlacesApiInfo
           }
         }
       }
@@ -193,6 +183,7 @@ type SpotifyInfo = {
   spotify_image_small?: string
   spotify_image_large?: string
 }
+
 type SpotifySecrets = { client_id: string; client_secret: string }
 
 function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<Record<string, SpotifyInfo>> {
@@ -202,12 +193,12 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
     const out: Record<string, SpotifyInfo> = {}
     for (const { band } of _.uniqBy(bands, p => p.band)) {
       const { id, name, images } = await BandUpdater.get(secrets, band) ?? {}
-      out[band] = {
+      out[band] = _.omitBy({
         spotify_id: id,
         spotify_name: name,
         spotify_image_small: _.minBy(images, i => Math.abs(64 - (i.width ?? Number.MAX_VALUE)) )?.url,
         spotify_image_large: _.minBy(images, i => Math.abs(640 - (i.width ?? Number.MAX_VALUE)) )?.url
-      }
+      }, _.isUndefined)
       await new Promise((res) => setTimeout(res, 500))
     }
     return out
@@ -216,60 +207,83 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
 
 type PlacesSecerts = { api_key: string }
 
-type MaybePromise<T> = T | Promise<T>
-type AggFn<T> = (all: DanceEvent[]) => MaybePromise<Record<string, Partial<T>>>
+type MetadataTypes = 'dates' | 'places' | 'bands'
+type Table = `metadata_${MetadataTypes}`
 
-async function updater<T>(db: Store<T>, agg: AggFn<T>[], table: TableFn, limit?: number) {
-  const today = moment.utc().format("YYYY-MM-DD")
-  const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
-    if (limit) {
-      return col.where('date', '>=', today).limit(limit)
-    } else {
-      return col.where('date', '>=', today)
+async function updater<T, U extends Record<string, T>, Data extends Record<string, Promise<U>>>(table: TableFn, batch: BatchFn, tbl: Table, data: Data): Promise<Record<string, U> | undefined> {
+  const out: Record<string, U> = {}
+  for (const [wrapperKey, valuePromise] of Object.entries(data)) {
+    const values = await valuePromise
+    const chunks = _.chunk(Object.entries(values), 500)
+    for (const chunk of chunks) {
+      const s = batch()
+      for (const [key, value] of chunk) {
+
+        const prev = await table(tbl).doc(key).get()
+        if (prev.exists) {
+          s.update(table(tbl).doc(key), {
+            [wrapperKey]: value,
+            updated_at: firestore.FieldValue.serverTimestamp()
+          })
+        } else {
+          s.create(table(tbl).doc(key), {
+            [wrapperKey]: value,
+            created_at: firestore.FieldValue.serverTimestamp()
+          })
+        }
+      }
+      await s.commit()
     }
+
+    out[wrapperKey] = values
   }
 
-  const values = await getValues<DanceEvent, DanceEvent>(table, 'events', e => e, future)
-
-  console.log(`Updating ${db.name} using ${values.length} events`)
-
-  const updates = await Promise.all(agg.map(fn => fn(values)))
-  const out: Record<string, any> = {}
-  for (const update of updates) {
-    for (const [k,v] of Object.entries(update)) {
-      out[k] = _.merge({}, out[k], v)
-    }
-  }
-  await Object.entries(out)
-    .map(([k, v]) => db.set(k, v as T))
   return out
 }
 
-type PlaceMetadata = Counter & PlacesInfo & PlacesApiInfo
-type BandMetadata = Counter & SpotifyInfo
-type DateMetadata = Counter
+function getevents(table: TableFn, limit?: number) {
+  const today = moment.utc().format("YYYY-MM-DD")
+  return getValues<DanceEvent, DanceEvent>(table, 'events', e => e, collection => {
+    if (limit) {
+      return collection.where('date', '>=', today).limit(limit)
+    } else {
+      return collection.where('date', '>=', today)
+    }
+  })
+}
 
 export class Metadata {
 
-  static async places(table: TableFn, secrets: { places: PlacesSecerts }, limit?: number): Promise<Record<string, PlaceMetadata>> {
-    return updater<PlaceMetadata>(simpleKeyValue<PlaceMetadata>(table, 'metadata_places', true), [
-      histogram('place'),
-      // inferLocation(),
-      placesInfo(),
-      placesApiImage(secrets.places.api_key),
-    ], table, limit)
+  static async places(table: TableFn, batch: BatchFn, secrets: { places: PlacesSecerts }, limit?: number) {
+    const tbl = 'metadata_places'
+    const events = await getevents(table, limit)
+    console.log(`Updating ${tbl} using ${events.length} events`)
+
+    return updater(table, batch, tbl, {
+      counts: histogram('place')(events),
+      general: placesInfo()(events),
+      places_api: placesApiImage(secrets.places.api_key)(events),
+    })
   }
 
-  static async bands(table: TableFn, secrets: { spotify: SpotifySecrets }, limit?: number): Promise<Record<string, BandMetadata>> {
-    return updater<BandMetadata>(simpleKeyValue<BandMetadata>(table, 'metadata_bands', true), [
-        histogram('band'),
-        spotifyApi(secrets.spotify)
-      ], table, limit)
+  static async bands(table: TableFn, batch: BatchFn, secrets: { spotify: SpotifySecrets }, limit?: number) {
+    const tbl = 'metadata_bands'
+    const events = await getevents(table, limit)
+    console.log(`Updating ${tbl} using ${events.length} events`)
+
+    return updater(table, batch, tbl, {
+      counts: histogram('band')(events),
+      spotify: spotifyApi(secrets.spotify)(events)
+    })
   }
 
-  static async dates(table: TableFn, limit?: number): Promise<Record<string, DateMetadata>> {
-    return updater(simpleKeyValue<Counter>(table, 'metadata_dates', true), [
-      counter('date')
-    ], table, limit)
+  static async dates(table: TableFn, batch: BatchFn, limit?: number) {
+    const tbl = 'metadata_dates'
+    const events = await getevents(table, limit)
+    console.log(`Updating ${tbl} using ${events.length} events`)
+
+    return updater(table, batch, tbl, {
+      counts: counter('date')(events)
+    })
   }
 }
