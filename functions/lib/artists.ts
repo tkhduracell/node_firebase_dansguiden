@@ -3,6 +3,7 @@ import SpotifyWebApi from 'spotify-web-api-node'
 
 import { Artist } from '../lib/types'
 
+const linkToId = (s: string) => s.replace(/https:\/\/open.spotify.com\/artist\/(.*)(\?.*)?/gi, '$1').replace(/\?.*/, '')
 
 const commonGenres = [
   'dansband',
@@ -12,6 +13,7 @@ const commonGenres = [
   'swedish pop',
   'classic swedish pop',
   'swedish folk pop',
+  'swedish country',
   'rockabilly',
   'rock-and-roll'
 ]
@@ -24,11 +26,32 @@ const blacklist = [
   '3h7VkDi0XjJMAtgZS4chp7', // Bendix
   '7Fhj0K08T75UchC1p8T6g1', // Barons
   '0hYTsX1dRl01ss8jizhrJo', // Framed & Keko
-  '0kbxBTkWdVjByBeVVzSckZ' // Jive (rulltrappor)
-]
+  '0kbxBTkWdVjByBeVVzSckZ', // Jive (rulltrappor)
+  '5ecCx0PnQGB6odt9F9XD46', // Caspers,
+  'https://open.spotify.com/artist/4zYFHS8R8wSOhcIBEbwxwA', // Charlies
+  'https://open.spotify.com/artist/60rrONrFQipKsTXYazdmQO', // Remix,
+  'https://open.spotify.com/artist/3CEF3A8IybbJcwFSUVtAYM', // Strike
+  'https://open.spotify.com/artist/6zNO1D32YLKnbC87DYVVBx', // Junix
+  'https://open.spotify.com/artist/3zHaWg01z30TzjlWqSpeB4', // Karl Erik
+  'https://open.spotify.com/artist/5XZN5RKQkiN6hGofPCnpjK', // Serenad
+  'https://open.spotify.com/artist/5QmZNcdq0h1NuL1G7t2yGp', // Tempo
+  'https://open.spotify.com/artist/2wpdrWJCZhr737YxVJh2fe', // Bendix
+  'https://open.spotify.com/artist/0XY9QKkTnONBkjszYTfsZl', // Cedrix
+  'https://open.spotify.com/artist/56url7nLtPIXWu0PD6XhIw', // Freqvens
+  'https://open.spotify.com/artist/5Aql8TJ5Kfjf9f0hjtXiKZ', // Framed
+  'https://open.spotify.com/artist/4AiqdizfguNQoWQ5N6Aaza', // C-Laget
+  'https://open.spotify.com/artist/36jTseDCcfNAXsplm6dHiT', // Glads,
+  'https://open.spotify.com/artist/0B114ZpJddB3jl8AHu4OKT', // Phix
+].map(linkToId)
+
+const exact = _.mapValues({
+  'Holidays': '6IxjXsaqZ81Fi1HiwRq4LS',
+  'Framed': 'https://open.spotify.com/artist/5vDnmN0QFphRUc5mNfPjtf?si=SYBL_F4-Qe-GNERFUmmLBQ'
+} as Record<string, string>, linkToId)
 
 const remapping = {
   'PerHåkans': 'Per-Håkans',
+  'PHs': 'Per-Håkans',
   'Larz Kristers': 'Larz-Kristers',
   'Agneta & Peter' : 'Agneta Olsson',
   'Anne Nørdsti (N)': 'Anne Nørdsti',
@@ -61,8 +84,13 @@ function isNotBlacklisted(a: {  id:  string }): boolean {
   return !blacklist.includes(a.id)
 }
 
+function isWhitelisted(a: { id: string }, target: string): boolean {
+  return exact[target] === a.id
+}
+
 function score (a: SpotifyApi.ArtistObjectFull, target: string): number {
   let score = 0
+  if (isWhitelisted(a, target)) score+=10
   if (isDansbandishOrUnknown(a)) score++
   if (isDansbandishStrict(a)) score++
   if (isNotBlacklisted(a)) score++
@@ -84,8 +112,8 @@ export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFul
 
   console.debug('    -----  Search results ----- ')
   for (const a of artists.sort((a, b) => compare(a, b, band))) {
-    const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band) ? " -->" : "    "
-    console.debug(selected, JSON.stringify({
+    const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band)
+    console.debug(selected ? " -->" : "    ", JSON.stringify({
       id: a.id,
       score: score(a, band),
       name: a.name,
@@ -94,7 +122,10 @@ export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFul
       isDansbandishStrict: isDansbandishStrict(a),
       isNotBlacklisted: isNotBlacklisted(a),
       isSimilar: isSimilar(a.name, band)
-    }).split('').slice(0, 160).join(''))
+    }))
+    if (selected) {
+      console.log(` --> https://open.spotify.com/artist/${a.id}`)
+    }
   }
 
   return artists.filter(a => isSimilar(a.name, band))
@@ -107,7 +138,7 @@ export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFul
 
 export async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
   console.debug("Spotify API call for artist", artist)
-  const result = await api.searchArtists(artist, { limit: 10, market: 'SE' })
+  const result = await api.searchArtists(artist, { limit: 20, market: 'SE' })
   const items = result.body.artists ? result.body.artists.items : []
   return items
 }
