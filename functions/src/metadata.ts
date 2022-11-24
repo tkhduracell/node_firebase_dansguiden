@@ -131,34 +131,32 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   }
 
   return async (values: DanceEvent[]) => {
-    for (const e of values) {
-      if (e.place === 'Donnez') {
-        console.error(e)
-      }
-    }
-
     const places = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
 
     const out: Record<string, PlacesInfo> = {}
-    for (const { place, city, region } of _.uniqBy(places, p => p.place)) {
+    for (const { place, region } of _.uniqBy(places, p => p.place)) {
       out[place] = {}
 
-      const query = [place, city, region, 'Sverige'].join(' ')
+      const query = [place, region, 'Sverige'].join(', ')
 
       console.log('Looking Google Maps Place for', query)
       const response = await fetch(search(query))
       console.log('Response for', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
       if (response.ok) {
         const { candidates } = await response.json() as PlacesApiResponse
-        console.log('Response for', query, 'candidates', candidates.length)
+        console.log('Response for', query, 'candidates', candidates.length, candidates)
         if (candidates && candidates.length > 0) {
-          const [first] = candidates
+          const [first] = candidates.filter(c => !c.types.includes('locality'))
           const ref = first.photos?.find(() => true)?.photo_reference
+          const photos = ref ?  {
+            photo_small: photo(ref, '128'),
+            photo_large: photo(ref, '512')
+          } : {}
+
           out[place] = {
             address: first.formatted_address,
             name: first.name,
-            photo_small: ref ? photo(ref, '128') : undefined,
-            photo_large: ref ? photo(ref, '512') : undefined
+            ...photos
           }
         }
       }
@@ -173,11 +171,15 @@ type Secrets = {
 
 export class Metadata {
 
-  static async update(table: TableFn, secrets: Secrets) {
+  static async update(table: TableFn, secrets: Secrets, limit?: number) {
 
     const today = moment.utc().format("YYYY-MM-DD")
     const future = (col: admin.firestore.CollectionReference): admin.firestore.Query => {
-      return col.where('date', '>=', today)
+      if (limit) {
+        return col.where('date', '>=', today).limit(limit)
+      } else {
+        return col.where('date', '>=', today)
+      }
     }
 
     console.log('Updating metadata table...')
