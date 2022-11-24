@@ -116,7 +116,11 @@ describe('Metadata', () => {
 
       const bands = await Metadata.bands(data, secrets)
       expect(bands).toStrictEqual({
-        "band1": { in7Days: 2, in30Days: 3, in90Days: 4, in180Days: 4 }
+        "band1": { in7Days: 2, in30Days: 3, in90Days: 4, in180Days: 4,
+          spotify_id: undefined,
+          spotify_image_large: undefined,
+          spotify_image_small: undefined,
+          spotify_name: undefined, }
       })
     })
   })

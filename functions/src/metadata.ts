@@ -9,7 +9,6 @@ import fetch from 'node-fetch'
 
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { TableFn } from '../lib/database'
-import { Artist } from './../lib/types'
 import { DanceEvent } from '../lib/types'
 import { PlacessParser } from './../lib/places'
 import { BandUpdater } from './band_updater'
@@ -188,7 +187,12 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   }
 }
 
-type SpotifyInfo = Artist | Record<string, never>
+type SpotifyInfo = {
+  spotify_id?: string,
+  spotify_name?: string,
+  spotify_image_small?: string
+  spotify_image_large?: string
+}
 type SpotifySecrets = { client_id: string; client_secret: string }
 
 function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<Record<string, SpotifyInfo>> {
@@ -197,8 +201,14 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
 
     const out: Record<string, SpotifyInfo> = {}
     for (const { band } of _.uniqBy(bands, p => p.band)) {
-      const info = await BandUpdater.get(secrets, band)
-      out[band] = info ?? {}
+      const { id, name, images } = await BandUpdater.get(secrets, band) ?? {}
+      out[band] = {
+        spotify_id: id,
+        spotify_name: name,
+        spotify_image_small: _.minBy(images, i => Math.abs(64 - (i.width ?? Number.MAX_VALUE)) )?.url,
+        spotify_image_large: _.minBy(images, i => Math.abs(640 - (i.width ?? Number.MAX_VALUE)) )?.url
+      }
+      await new Promise((res) => setTimeout(res, 500))
     }
     return out
   }
