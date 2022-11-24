@@ -3,120 +3,18 @@ import SpotifyWebApi from 'spotify-web-api-node'
 
 import { Secrets, SpotifyApiClientFactory } from '../lib/spotify_api_auth'
 import { serialDelayedFns } from '../lib/promises'
-import { Artist } from '../lib/types'
-import { Store } from '../lib/store'
+import { Artist, DanceEvent } from '../lib/types'
+import { getValues, simpleKeyValue, Store } from '../lib/store'
 import { firestore } from 'firebase-admin'
+import { findArtistInfo, searchArtist, remapArtist } from '../lib/artists'
+import { TableFn } from '../lib/database'
 
 const FieldValue = firestore.FieldValue
+type FieldValue = typeof FieldValue
 
-const commonGenres = [
-  'dansband',
-  'danspunk',
-  'danseband',
-  'folkmusik',
-  'swedish pop',
-  'classic swedish pop',
-  'swedish folk pop',
-  'rockabilly',
-  'rock-and-roll'
-]
-
-const blacklist = [
-  '42dnStXXTO4OXleuxwGL9F', // Andreas J
-  '4t56SOthZtGQkZdgZrAeqK', // Allstars,
-  '0MzvueasOOSFOrMKdkKb9C', // Bagatelle,
-  '3zo2TkHcXi6iXQxp4bipYW', // Bendix
-  '3h7VkDi0XjJMAtgZS4chp7', // Bendix
-  '7Fhj0K08T75UchC1p8T6g1', // Barons
-  '0hYTsX1dRl01ss8jizhrJo', // Framed & Keko
-  '0kbxBTkWdVjByBeVVzSckZ' // Jive (rulltrappor)
-]
-
-const remapping = {
-  'PerHåkans': 'Per-Håkans',
-  'Larz Kristers': 'Larz-Kristers',
-  'Agneta & Peter' : 'Agneta Olsson',
-  'Anne Nørdsti (N)': 'Anne Nørdsti',
-  'Tommys (FIN)': 'Tommys'
-} as { [key: string]: string }
-
-const normalize = (str: string): string => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
-
-function isSimilar (lhs: string, rhs: string): boolean {
-  return normalize(lhs) === normalize(rhs)
-}
-
-function removeSuffix (band: string): string {
-  return band.replace(/\W+\([[:upper:]]+\)/gi, '')
-}
-
-function remap (band: string): string {
-  return remapping[band] || band
-}
-
-function isDansbandishStrict(a: { genres: string[] }): boolean {
-  return _.size(_.intersection(a.genres, commonGenres)) > 0
-}
-
-function isDansbandishOrUnknown(a: { genres: string[] }): boolean {
-  return _.isEmpty(a.genres) || isDansbandishStrict(a)
-}
-
-function isNotBlacklisted(a: {  id:  string }): boolean {
-  return !blacklist.includes(a.id)
-}
-
-function score (a: SpotifyApi.ArtistObjectFull, target: string): number {
-  let score = 0
-  if (isDansbandishOrUnknown(a)) score++
-  if (isDansbandishStrict(a)) score++
-  if (isNotBlacklisted(a)) score++
-  if (isSimilar(a.name, target)) score++
-  return score
-}
-
-function compare (a: SpotifyApi.ArtistObjectFull, b: SpotifyApi.ArtistObjectFull, target: string): number {
-  return score(b, target) -  score(a, target)
-}
-
-function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): Artist | undefined {
-
-  console.debug('    -----  Search results ----- ')
-  for (const a of artists.sort((a, b) => compare(a, b, band))) {
-    const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band) ? " -->" : "    "
-    console.debug(selected, JSON.stringify({
-      id: a.id,
-      score: score(a, band),
-      name: a.name,
-      genres: a.genres.join(','),
-      isDansbandishOrUnknown: isDansbandishOrUnknown(a),
-      isDansbandishStrict: isDansbandishStrict(a),
-      isNotBlacklisted: isNotBlacklisted(a),
-      isSimilar: isSimilar(a.name, band)
-    }).split('').slice(0, 160).join(''))
-  }
-
-  return artists.filter(a => isSimilar(a.name, band))
-    .filter(isDansbandishOrUnknown)
-    .filter(isNotBlacklisted)
-    .sort((a, b) => compare(a, b, band))
-    .map(a => _.pick(a, ['id', 'name', 'genres', 'images']))
-    .find(() => true)
-}
-
-async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
-  console.debug("Spotify API call for artist " + artist)
-  const result = await api.searchArtists(artist, { limit: 10, market: 'SE' })
-  const items = result.body.artists ? result.body.artists.items : []
-  return items
-}
 
 async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Artist>, band: string): Promise<Artist> {
-  console.debug(`-------------------  ${band} -------------------`)
-
-  const remapped = remap(removeSuffix(band))
-  if (remapped !== band) console.debug(`Remapped artist from ${band} -> ${remapped}`)
-
+  const remapped = remapArtist(band)
   const spotifyArtists = await searchArtist(api, remapped)
 
   const mostSimilarArtist = findArtistInfo(remapped, spotifyArtists)
@@ -136,8 +34,13 @@ async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Art
   }
 }
 
+export type SpotifyClientConfig = {
+  client_id: string,
+  client_secret: string
+}
+
 export class BandUpdater {
-  static async run(store: Store<Artist>, secrets: Secrets, bands: string[]): Promise<(Artist|null)[]> {
+  static async update(store: Store<Artist>, secrets: Secrets, bands: string[]): Promise<(Artist|null)[]> {
     const client = await SpotifyApiClientFactory.create(secrets)
 
     const results = bands.map(band => (): Promise<Artist | null> => {
@@ -153,16 +56,35 @@ export class BandUpdater {
     return serialDelayedFns(results, 1000, 200)
   }
 
-  static async get(secrets: Secrets, band: string) {
-    const client = await SpotifyApiClientFactory.create(secrets)
+  static async get(secrets: Secrets, band: string): Promise<Artist | undefined> {
+    const remapped = remapArtist(band)
+    try {
+      const client = await SpotifyApiClientFactory.create(secrets)
+      const spotifyArtists = await searchArtist(client, remapped)
+      const mostSimilarArtist = findArtistInfo(remapped, spotifyArtists)
+      return mostSimilarArtist
+    } catch (e) {
+      console.warn('Error looking up artist', { band, remapped }, _.get(e, 'output', e))
+      return Promise.resolve(undefined)
+    }
+  }
 
-    const remapped = remap(removeSuffix(band))
-    if (remapped !== band) console.debug(`Remapped artist from ${band} -> ${remapped}`)
+  static async run(table: TableFn, spotify: SpotifyClientConfig, breakoff = '2022-01-01'): Promise<(Artist|null)[]> {
+    const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
 
-    const spotifyArtists = await searchArtist(client, remapped)
+    console.log('Getting current bands in events')
+    const allBands = await getValues<string, DanceEvent>(table, 'events',
+      event => event.band,
+      tbl => tbl.where('date', '>=', breakoff)
+    )
+    const bands = _.uniq(allBands).sort()
 
-    const mostSimilarArtist = findArtistInfo(remapped, spotifyArtists)
+    console.log('Starting band update')
+    const updates = await BandUpdater.update(bandsKeyValueStore, spotify, bands)
 
-    return mostSimilarArtist
+    console.log('Completed band metadata update!')
+    console.log(`Wrote ${_.size(updates)} bands`)
+
+    return updates
   }
 }

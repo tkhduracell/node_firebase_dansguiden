@@ -1,4 +1,4 @@
-import { fetchLatestVersion, extractContent, Version } from '../lib/versions'
+import { fetchLatestVersion, extractContent, Version } from '../src/versions'
 import cheerio from 'cheerio'
 import {promisify} from 'util'
 import fs from 'fs'

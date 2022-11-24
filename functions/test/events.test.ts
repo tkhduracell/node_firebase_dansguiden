@@ -1,18 +1,18 @@
 import { load } from 'cheerio'
 import moment from 'moment'
 
-import { parse, asDatabaseColumns, asEntry, asObject, pipeline } from '../lib/events'
+import { asDatabaseColumns, asEntry, asObject, pipeline, EventsParser } from '../lib/events'
 import { InternalDanceEvent } from '../src/core'
 import { DanceEvent } from '../lib/types'
 import { month } from '../lib/date'
 import _ from 'lodash'
 
-describe('events', () => {
+describe('EventsParser', () => {
   describe('.parse (live data validation)', () => {
     let subject = [] as InternalDanceEvent[]
     beforeAll(async () => {
       try {
-        subject = await parse([month(moment()).toLocaleLowerCase()])
+        subject = await EventsParser.parse([month(moment()).toLocaleLowerCase()])
       } catch (error) {
         fail("Unable to fetch real data, check your internet connection")
       }

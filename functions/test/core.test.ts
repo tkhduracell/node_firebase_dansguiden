@@ -1,6 +1,7 @@
 import firebase from 'firebase-admin'
 import chai from 'chai'
-import { Versions, Events } from '../src/core'
+import { Events } from '../src/core'
+import { Versions } from '../src/versions'
 
 chai.should()
 
@@ -36,7 +37,7 @@ type MockDoc<T> = {
 
 type Col = firebase.firestore.CollectionReference
 
-describe('core.js', () => {
+describe('core', () => {
 
   describe('Versions', () => {
     it('fetch() should return data', async () => {

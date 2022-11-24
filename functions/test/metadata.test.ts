@@ -33,6 +33,10 @@ class QueryMock<T> {
   }
 }
 
+function queryMock(data: Partial<DanceEvent>[]): () => Col {
+  return () => new QueryMock(shuffle(data) as DanceEvent[]) as unknown as Col
+}
+
 type MockResult<T> = {
   forEach: (fn: (itm: MockDoc<T>) => void) => void;
 }
@@ -44,41 +48,39 @@ type MockDoc<T> = {
 type Col = firebase.firestore.CollectionReference
 
 describe('Metadata', () => {
+  const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
+  const location = { city: '', county: '', region: '' }
 
-  describe('update', () => {
+  describe('update:dates', () => {
+
     it('should calulcate counts', async () => {
 
-      const tbl  = () => new QueryMock<DanceEvent>([{
-        place: 'place1',
-        band: 'band1',
-        date: '2022-01-01',
+      const data  = queryMock([{ date: '2022-01-01' }])
 
-        city: 'city of place1',
-        county: 'count of place1',
-        region: 'region of place1'
-      } as DanceEvent]) as unknown as Col
-      const ones = { in180Days: 1, in30Days: 1, in7Days: 1, in90Days: 1 }
-      const a = await Metadata.update(tbl, { places_api_key: '' })
-      expect(a).toHaveLength(3)
-
-      const [places, bands, dates] = a
+      const dates = await Metadata.dates(data)
 
       expect(dates).toStrictEqual({'2022-01-01': { count: 1 }})
-      expect(bands).toStrictEqual({"band1": ones})
-      expect(places).toStrictEqual({
-        "place1": {
-          ...ones,
-          city: 'city of place1',
-          county: 'count of place1',
-          region: 'region of place1'
-        }
-      })
+    })
+  })
+
+  describe('update:places', () => {
+    const emptySecrets = { places: { api_key: '' } }
+
+    it('should calulcate counts', async () => {
+
+      const data  = queryMock([
+        { place: 'place1', date: moment().format('YYYY-MM-DD') }
+      ])
+
+      const places = await Metadata.places(data, emptySecrets)
+
+      expect(places).toStrictEqual({ "place1": { ...ones, ...location } })
 
     })
 
     it('should calculcate location by majority', async () => {
 
-      const data = [
+      const data = queryMock([
         ...range(51).map(() => ({
           place: 'place1',
           city: 'city of place1',
@@ -91,13 +93,9 @@ describe('Metadata', () => {
           county: 'wrong count of place1',
           region: 'wrong region of place1'
         }))
-      ] as DanceEvent[]
+      ])
 
-      const tbl  = () => new QueryMock<DanceEvent>(
-        shuffle(data)
-      ) as unknown as Col
-
-      const [places] = await Metadata.update(tbl, { places_api_key: '' })
+      const places = await Metadata.places(data, emptySecrets)
 
       expect(places).toStrictEqual({
         "place1": {
@@ -108,29 +106,48 @@ describe('Metadata', () => {
       })
     })
 
+
     it('should bucket count dates', async () => {
       const f = 'YYYY-MM-DD'
 
-      const data = [
+      const data = queryMock([
+        { place: 'place1', date: moment().add(1, 'days').format(f) },
+        { place: 'place1', date: moment().add(4, 'days').format(f) },
+        { place: 'place1', date: moment().add(16, 'days').format(f) },
+        { place: 'place1', date: moment().add(64, 'days').format(f) },
+        { place: 'place1', date: moment().add(256, 'days').format(f) }
+      ])
+
+      const places = await Metadata.places(data, emptySecrets)
+      expect(places).toStrictEqual({
+        "place1": {
+          in7Days: 2,
+          in30Days: 3,
+          in90Days: 4,
+          in180Days: 4,
+          ...location
+        }
+      })
+    })
+  })
+
+  describe('update:bands', () => {
+    const secrets = { spotify: { client_id: '', client_secret: '' } }
+
+    it('should bucket count dates', async () => {
+      const f = 'YYYY-MM-DD'
+
+      const data = queryMock([
         { band: 'band1', date: moment().add(1, 'days').format(f) },
         { band: 'band1', date: moment().add(4, 'days').format(f) },
         { band: 'band1', date: moment().add(16, 'days').format(f) },
         { band: 'band1', date: moment().add(64, 'days').format(f) },
         { band: 'band1', date: moment().add(256, 'days').format(f) }
-      ] as DanceEvent[]
+      ])
 
-      const tbl  = () => new QueryMock<DanceEvent>(
-        shuffle(data)
-      ) as unknown as Col
-
-      const [,bands] = await Metadata.update(tbl, { places_api_key: '' })
+      const bands = await Metadata.bands(data, secrets)
       expect(bands).toStrictEqual({
-        "band1": {
-          in7Days: 2,
-          in30Days: 3,
-          in90Days: 4,
-          in180Days: 4,
-        }
+        "band1": { in7Days: 2, in30Days: 3, in90Days: 4, in180Days: 4 }
       })
     })
   })

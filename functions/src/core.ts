@@ -2,19 +2,16 @@
 
 import _ from 'lodash'
 import moment, { ISO_8601 } from 'moment'
-import admin, {firestore} from 'firebase-admin'
+import {firestore} from 'firebase-admin'
 
 // Dependencies
 import * as events from '../lib/events'
-import { BandUpdater } from './band_updater'
 import * as eventsDecorator from '../lib/events_decorator'
 
-import { COLUMNS } from '../lib/events'
-import { fetchLatestVersion, versionSort, Version } from '../lib/versions'
-import { simpleKeyValue, getValues } from '../lib/store'
+import { COLUMNS, EventsParser } from '../lib/events'
 import { snapshotAsArray } from '../lib/utils'
 import { BatchFn, TableFn } from '../lib/database'
-import { Artist, DanceEvent } from '../lib/types'
+import { DanceEvent } from '../lib/types'
 
 async function batchDeleteOverlappingEvents(batch: BatchFn, table: TableFn, output: InternalDanceEvent[]): Promise<firestore.WriteResult[]> {
   const dates = output.filter(event => event.type === 'event')
@@ -107,33 +104,6 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
 type KV<T> = { key: string; value: T }
 type ObjectExtractor<T, V> = (t: T) => KV<V> | boolean
 
-export type SpotifyClientConfig = {
-  client_id: string,
-  client_secret: string
-}
-
-export class Bands {
-  static async update(table: TableFn, spotify: SpotifyClientConfig): Promise<(Artist|null)[]> {
-    const bandsKeyValueStore = simpleKeyValue<Artist>(table, 'band_metadata', true)
-
-    function onlyNewEvents(tbl: admin.firestore.Query): admin.firestore.Query {
-      return tbl.where('date', '>=', '2022-01-01')
-    }
-
-    console.log('Getting current bands in events')
-    const allBands = await getValues<string, DanceEvent>(table, 'events', event => event.band, onlyNewEvents)
-    const bands = _.uniq(allBands).sort() // debug: .slice(15, 20)
-
-    console.log('Starting band update')
-    const updates = await BandUpdater.run(bandsKeyValueStore, spotify, bands)
-
-    console.log('Completed band metadata update!')
-    console.log(`Wrote ${_.size(updates)} bands`)
-
-    return updates
-  }
-}
-
 export type InternalDanceEvent = events.InternalEvent<DanceEvent>
 
 export type EventQueryParams = { from: string; to: string;[key: string]: string }
@@ -143,7 +113,7 @@ export class Events {
   static async update(batch: BatchFn, table: TableFn): Promise<InternalDanceEvent[]> {
 
     console.log('Parsing all events from external source')
-    const allEvents = await events.parse()
+    const allEvents = await EventsParser.parse()
     console.log(`Completed parsing, found ${_.size(allEvents)} events!`)
 
     console.log('Starting overlap removal')
@@ -189,42 +159,3 @@ export class Events {
   }
 }
 
-type Image = {
-  src: string;
-  text: string;
-}
-
-export class Images {
-  static async fetch(table: TableFn): Promise<Image[]> {
-    const images = await table('images').get()
-    return snapshotAsArray<Image>(images)
-  }
-}
-
-export class Versions {
-  static async fetch (table: TableFn, sorted?: boolean): Promise<Version[]> {
-    const versions = await table('versions').get()
-    const list = snapshotAsArray<Version>(versions)
-    return sorted ? _.sortBy(list, versionSort) : list
-  }
-
-  static async update (table: TableFn): Promise<Version> {
-    const version: Version = await fetchLatestVersion()
-
-    const invalid = _.isEmpty(version.name) || _.isEmpty(version.lines)
-    if (invalid) {
-      console.log('No updated version, result was empty: ' + JSON.stringify(version, null, 2))
-    }
-
-    const key = _.snakeCase('v ' + version.name)
-
-    console.log('Updating version' + key)
-    const ref = table('versions').doc(key)
-
-    const data = _.pickBy(version, (_k, v) => !_.isNull(v)) as object
-
-    await ref.set(data, { merge: true })
-
-    return version
-  }
-}

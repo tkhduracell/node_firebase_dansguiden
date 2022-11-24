@@ -3,11 +3,14 @@ import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-fu
 
 import './setup'
 
-import { Events, Bands, Versions, Images, EventQueryParams } from './core'
+import { Events, EventQueryParams } from './core'
 import { Metadata } from './metadata'
 import { z } from 'zod'
 
 import { database } from '../lib/database'
+import { Versions } from './versions'
+import { Images } from './images'
+import { BandUpdater } from './band_updater'
 const { table, batch } = database()
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
@@ -41,7 +44,7 @@ export const bandsUpdate = schedule("every monday 10:00", () => {
     SPOTIFY_CLIENT_ID: z.string(),
     SPOTIFY_CLIENT_SECRET: z.string()
   }).parse(process.env)
-  return Bands.update(table, {
+  return BandUpdater.run(table, {
     client_id: SPOTIFY_CLIENT_ID,
     client_secret: SPOTIFY_CLIENT_SECRET
   })

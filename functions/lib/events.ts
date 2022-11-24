@@ -157,7 +157,7 @@ export function pipeline(list: InternalDanceEvent[]): InternalDanceEvent[] {
       return e
     }))
 }
-export class Events {
+export class EventsParser {
   static async parse (months?: string[]): Promise<InternalEvent<DanceEvent>[]> {
     function readPage ($: cheerio.CheerioAPI): InternalDanceEvent[] {
       const databaseColumns = asDatabaseColumns($, $('tr.headline').first())
