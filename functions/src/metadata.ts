@@ -7,11 +7,12 @@ import fetch from 'node-fetch'
 
 // Dependencies
 
+import type { Secrets as SpotifySecrets } from '../lib/spotify_api_auth'
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { TableFn } from '../lib/database'
 import { Artist } from './../lib/types'
 import { DanceEvent } from '../lib/types'
-import type { Secrets as SpotifySecrets } from '../lib/spotify_api_auth'
+import { PlacessParser } from './../lib/places'
 import { BandUpdater } from './band_updater'
 
 export type Counters = {
@@ -85,8 +86,22 @@ function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Record<stri
   }
 }
 
-type Location = { city: string, county: string, region: string }
-function inferLocation(): (values: DanceEvent[]) => Record<string, Location> {
+type PlacesInfo = { city: string, county: string, region: string, website_url?: string, facebook_url?: string } | Record<string, never>
+function placesInfo(): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
+  return async (values: DanceEvent[]) => {
+    const info = await PlacessParser.parse()
+    const infoByName = _.keyBy(info, 'name')
+    const groups = _.keyBy(values, 'place')
+    return _.mapValues(groups, ({ place }) => {
+      if (place in infoByName) {
+        return infoByName[place]
+      }
+      return {}
+    })
+  }
+}
+
+export function inferLocation(): (values: DanceEvent[]) => Record<string, PlacesInfo> {
   return (values: DanceEvent[]) => {
     const places: Pick<DanceEvent, 'place' | 'city' | 'county' | 'region'>[] = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
     const groups = _.groupBy(places, p => p.place)
@@ -99,7 +114,7 @@ function inferLocation(): (values: DanceEvent[]) => Record<string, Location> {
 
       const [city, county, region] = key.split('|')
 
-      return { city, county, region}
+      return { city, county, region }
     })
   }
 }
@@ -108,14 +123,14 @@ function blacklist<T, K>(valFn: (e: T) => K[], ...exclude: K[]): (e: T) => boole
   return (t: T) => !valFn(t).some(p => exclude.includes(p))
 }
 
-type PlacesInfo = {
+type PlacesApiInfo = {
   name: string,
   address: string,
   photo_small?: string
   photo_large?: string
 } | Record<string, never>
 
-function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
+function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesApiInfo>> {
   const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
 
   function search(query: string) {
@@ -140,18 +155,18 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
   return async (values: DanceEvent[]) => {
     const places = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
 
-    const out: Record<string, PlacesInfo> = {}
+    const out: Record<string, PlacesApiInfo> = {}
     for (const { place, region } of _.uniqBy(places, p => p.place)) {
       out[place] = {}
 
       const query = [place, region, 'Sverige'].join(', ')
 
-      console.log('Looking Google Maps Place for', query)
+      console.log('Looking Google Maps place', query)
       const response = await fetch(search(query))
-      console.log('Response for', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
+      console.log('Response ', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
       if (response.ok) {
         const { candidates } = await response.json() as PlacesApiResponse
-        console.log('Response for', query, 'candidates', candidates.length, candidates)
+        console.log('Response ', query, 'candidates', candidates.length, candidates)
         if (candidates && candidates.length > 0) {
           const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
           if (first) {
@@ -220,7 +235,7 @@ async function updater<T>(db: Store<T>, agg: AggFn<T>[], table: TableFn, limit?:
   return out
 }
 
-type PlaceMetadata = Counter & Location & PlacesInfo
+type PlaceMetadata = Counter & PlacesInfo & PlacesApiInfo
 type BandMetadata = Counter & SpotifyInfo
 type DateMetadata = Counter
 
@@ -229,8 +244,9 @@ export class Metadata {
   static async places(table: TableFn, secrets: { places: PlacesSecerts }, limit?: number): Promise<Record<string, PlaceMetadata>> {
     return updater<PlaceMetadata>(simpleKeyValue<PlaceMetadata>(table, 'metadata_places', true), [
       histogram('place'),
-      inferLocation(),
-      placesApiImage(secrets.places.api_key)
+      // inferLocation(),
+      placesInfo(),
+      placesApiImage(secrets.places.api_key),
     ], table, limit)
   }
 
