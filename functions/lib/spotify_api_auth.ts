@@ -15,7 +15,7 @@ async function getAccessToken (secrets: { client_id: string, client_secret: stri
     },
     auth
   })
-  const token = await oauth2.getToken({})
+  const { token } = await oauth2.getToken({})
   return oauth2.createToken(token)
 }
 
@@ -27,7 +27,6 @@ export class SpotifyApiClientFactory {
       clientSecret: secrets.client_secret,
       accessToken: token.access_token
     }
-    console.debug('SpotifyWebApi', opts)
     return new SpotifyWebApi(opts)
   }
 }
