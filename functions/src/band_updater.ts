@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import SpotifyWebApi from 'spotify-web-api-node'
 
-import { Secrets, SpotifyApiClientFactory } from '../lib/spotify_api_auth'
+import { SpotifyApiClientFactory } from '../lib/spotify_api_auth'
 import { serialDelayedFns } from '../lib/promises'
 import { Artist, DanceEvent } from '../lib/types'
 import { getValues, simpleKeyValue, Store } from '../lib/store'
@@ -40,7 +40,7 @@ export type SpotifyClientConfig = {
 }
 
 export class BandUpdater {
-  static async update(store: Store<Artist>, secrets: Secrets, bands: string[]): Promise<(Artist|null)[]> {
+  static async update(store: Store<Artist>, secrets: SpotifyClientConfig, bands: string[]): Promise<(Artist|null)[]> {
     const client = await SpotifyApiClientFactory.create(secrets)
 
     const results = bands.map(band => (): Promise<Artist | null> => {
@@ -56,7 +56,7 @@ export class BandUpdater {
     return serialDelayedFns(results, 1000, 200)
   }
 
-  static async get(secrets: Secrets, band: string): Promise<Artist | undefined> {
+  static async get(secrets: SpotifyClientConfig, band: string): Promise<Artist | undefined> {
     const remapped = remapArtist(band)
     try {
       const client = await SpotifyApiClientFactory.create(secrets)

@@ -1,21 +1,13 @@
 
 import SpotifyWebApi from 'spotify-web-api-node'
 import { AccessToken, ClientCredentials } from 'simple-oauth2'
-import z from 'zod'
 
 const auth = {
   tokenHost: 'https://accounts.spotify.com',
   tokenPath: '/api/token'
 }
 
-const SecretsSchema = z.object({
-  client_id: z.string(),
-  client_secret: z.string()
-})
-
-export type Secrets = z.infer<typeof SecretsSchema>
-
-async function getAccessToken (secrets: Secrets): Promise<AccessToken> {
+async function getAccessToken (secrets: { client_id: string, client_secret: string}): Promise<AccessToken> {
   const oauth2 = new ClientCredentials({
     client: {
       id: secrets.client_id,
@@ -28,13 +20,14 @@ async function getAccessToken (secrets: Secrets): Promise<AccessToken> {
 }
 
 export class SpotifyApiClientFactory {
-  static async create(_secrets: Secrets): Promise<SpotifyWebApi>  {
-    const secrets = SecretsSchema.parse(_secrets)
-    const resp = await getAccessToken(secrets)
-    return new SpotifyWebApi({
+  static async create(secrets: { client_id: string, client_secret: string}): Promise<SpotifyWebApi>  {
+    const { token } = await getAccessToken(secrets)
+    const opts = {
       clientId: secrets.client_id,
       clientSecret: secrets.client_secret,
-      accessToken: resp.token.access_token
-    })
+      accessToken: token.access_token
+    }
+    console.debug('SpotifyWebApi', opts)
+    return new SpotifyWebApi(opts)
   }
 }

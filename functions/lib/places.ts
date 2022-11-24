@@ -17,7 +17,8 @@ const mapping = {
   'Län': 'region',
   'Kommun': 'county',
   'H': 'website_url',
-  'F': 'facebook_url'
+  'F': 'facebook_url',
+  'S': 'program_url'
 }
 
 export class PlacessParser {

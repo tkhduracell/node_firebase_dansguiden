@@ -7,7 +7,6 @@ import fetch from 'node-fetch'
 
 // Dependencies
 
-import type { Secrets as SpotifySecrets } from '../lib/spotify_api_auth'
 import { simpleKeyValue, getValues, Store } from '../lib/store'
 import { TableFn } from '../lib/database'
 import { Artist } from './../lib/types'
@@ -166,7 +165,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
       console.log('Response ', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
       if (response.ok) {
         const { candidates } = await response.json() as PlacesApiResponse
-        console.log('Response ', query, 'candidates', candidates.length, candidates)
+        console.log('Response ', query, 'candidates', candidates.length)
         if (candidates && candidates.length > 0) {
           const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
           if (first) {
@@ -190,6 +189,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 }
 
 type SpotifyInfo = Artist | Record<string, never>
+type SpotifySecrets = { client_id: string; client_secret: string }
 
 function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<Record<string, SpotifyInfo>> {
   return async (values: DanceEvent[]) => {
