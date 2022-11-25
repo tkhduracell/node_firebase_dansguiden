@@ -41,6 +41,7 @@ export class PlacessParser {
       .map(elm => _.zip(cols, elm).filter(([key, val]) => key && val))
       .map(kvs => kvs.map(([k, v]) => ([mapping[k as keyof typeof mapping] ?? k, v])))
       .map(kvs => Object.fromEntries(kvs))
+      .map(obj => obj.program_url ? {...obj, program_url: `https://www.danslogen.se/${obj.program_url}`} : obj)
 
     return trs
   }
