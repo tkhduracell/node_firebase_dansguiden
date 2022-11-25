@@ -3,7 +3,8 @@ import fetch from 'node-fetch'
 
 export type PlacesApiResponse = {
   candidates: PlaceApiSearchCandidate[]
-  status: "OK"
+  error_message: string,
+  status: 'OK' | 'INVALID_REQUEST',
 }
 
 export type PlaceApiSearchCandidate = {
@@ -11,9 +12,7 @@ export type PlaceApiSearchCandidate = {
   name: string
   photos: PlaceApiPhoto[]
   types: string[],
-  website?: string,
   place_id: string,
-  url: string
 }
 
 export type PlaceApiPhoto = {
@@ -29,21 +28,25 @@ export class PlacesApi {
 
   static async search(apiKey: string, query: string) {
     const response = await fetch(PlacesApi.searchUrl(apiKey, query))
-    console.debug('Places API response', `'${query}'`,
-      'ok:', response.ok,
+    console.debug('Places API response', `'${query}'`, '==>',
+      'ok?:', response.ok,
       'code:', response.status,
       'message', response.statusText,
     )
     if (response.ok) {
-      const { candidates } = await response.json() as PlacesApiResponse
-      return candidates ?? []
+      const { candidates, status, error_message } = await response.json() as PlacesApiResponse
+      if (error_message) {
+        console.error('Places Api returned error', { status, error_message })
+      } else {
+        return candidates ?? []
+      }
     }
     return []
   }
 
   static searchUrl(apiKey: string, query: string) {
     const params = new URLSearchParams()
-    params.append('fields', 'name,url,website,place_id,formatted_address,photos,types')
+    params.append('fields', 'name,place_id,formatted_address,photos,types')
     params.append('key', apiKey)
     params.append('input', query)
     params.append('inputtype', 'textquery')

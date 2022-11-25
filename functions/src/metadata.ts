@@ -128,6 +128,7 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
         out[place] = _.omitBy({
           address: first.formatted_address,
           name: first.name,
+          id: first.place_id,
           photo_small: ref ? PlacesApi.photoUrl(apiKey, ref, '128') : undefined,
           photo_large: ref ? PlacesApi.photoUrl(apiKey, ref, '512') : undefined
         }, _.isUndefined) as PlacesApiInfo
