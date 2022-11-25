@@ -2,7 +2,6 @@
 
 import _ from 'lodash'
 import moment from 'moment'
-import fetch from 'node-fetch'
 
 // Dependencies
 
@@ -12,6 +11,7 @@ import { BatchFn, TableFn } from '../lib/database'
 import { DanceEvent } from '../lib/types'
 import { PlacessParser } from './../lib/places'
 import { BandUpdater } from './band_updater'
+import { PlacesApi } from '../lib/places_api'
 
 export type Counter = {
   in_total: number;
@@ -25,30 +25,11 @@ export type SimpleCounter = {
   in_total: number;
 }
 
-type PlacesApiResponse = {
-  candidates: PlaceApiSearchCandidate[]
-  status: "OK"
-}
-
-type PlaceApiSearchCandidate = {
-  formatted_address: string
-  name: string
-  photos: PlaceApiPhoto[]
-  types: string[]
-}
-
-type PlaceApiPhoto = {
-  height: number
-  html_attributions: string[]
-  photo_reference: string
-  width: number
-}
-
 
 function counter(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Record<string, Partial<Counter>>> {
   return async (values: DanceEvent[]) => {
     const counts = _.countBy(values.map(e => e[key]))
-    return _.merge(_.mapValues(counts, o => ({ count: o })))
+    return _.merge(_.mapValues(counts, o => ({ total: o })))
   }
 }
 
@@ -130,27 +111,6 @@ type PlacesApiInfo = {
 }
 
 function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesApiInfo>> {
-  const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
-
-  function search(query: string) {
-    const params = new URLSearchParams()
-    params.append('fields', 'name,formatted_address,photos,types')
-    params.append('key', apiKey)
-    params.append('input', query)
-    params.append('inputtype', 'textquery')
-    params.append('language', 'sv')
-    return `${BASE_URL}/findplacefromtext/json?${params.toString()}`
-  }
-
-  function photo(ref?: string, size = '512') {
-    const param = new URLSearchParams()
-    param.append('photo_reference', ref ?? '')
-    param.append('maxheight', size)
-    param.append('maxwith', size)
-    param.append('key', apiKey)
-    return `${BASE_URL}/photo?${param.toString()}`
-  }
-
   return async (values: DanceEvent[]) => {
     const places = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
 
@@ -159,28 +119,20 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 
       const query = [place, region, 'Sverige'].join(', ')
 
-      const response = await fetch(search(query))
-      console.debug('Places API response', `'${query}'`,
-        'ok:', response.ok,
-        'code:', response.status,
-        'message', response.statusText,
-      )
-      if (response.ok) {
-        const { candidates } = await response.json() as PlacesApiResponse
-        if (candidates && candidates.length > 0) {
-          const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
-          if (first) {
-            const ref = first.photos?.find(() => true)?.photo_reference
+      const candidates = await PlacesApi.search(apiKey, query)
 
-            out[place] = _.omitBy({
-              address: first.formatted_address,
-              name: first.name,
-              photo_small: ref ? photo(ref, '128') : undefined,
-              photo_large: ref ? photo(ref, '512') : undefined
-            }, _.isUndefined) as PlacesApiInfo
-          }
-        }
+      const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
+      if (first) {
+        const ref = first.photos?.find(() => true)?.photo_reference
+
+        out[place] = _.omitBy({
+          address: first.formatted_address,
+          name: first.name,
+          photo_small: ref ? PlacesApi.photoUrl(apiKey, ref, '128') : undefined,
+          photo_large: ref ? PlacesApi.photoUrl(apiKey, ref, '512') : undefined
+        }, _.isUndefined) as PlacesApiInfo
       }
+
     }
     return out
   }
