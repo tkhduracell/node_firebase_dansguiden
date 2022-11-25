@@ -40,7 +40,7 @@ function queryMock(data: Partial<DanceEvent>[]) {
   return {
     tableFn: () => new QueryMock(shuffle(data) as DanceEvent[]) as unknown as Col,
     batchFn: () => ({
-      update: (ref: Doc, data: any) => console.log(ref, '<=', data),
+      set: (ref: Doc, data: any) => console.log(ref, '<=', data),
       commit: () => Promise.resolve()
     }) as unknown as Batch,
   }
@@ -69,7 +69,7 @@ describe('Metadata', () => {
 
       const dates = await Metadata.dates(tableFn, batchFn)
 
-      expect(dates).toHaveProperty('counts', {'2022-01-01': { count: 1 }})
+      expect(dates).toHaveProperty('counts', {'2022-01-01': { total: 1 }})
     })
   })
 
