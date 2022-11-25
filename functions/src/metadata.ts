@@ -68,13 +68,14 @@ function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Rec
     const in180Days = _.countBy(values.filter(inDays(180)), e => e[key])
     const inTotal = _.countBy(values, e => e[key])
 
-    return _.merge(
+    const out = _.merge(
       _.mapValues(inTotal, o => ({ in_total: o })),
       _.mapValues(in7Days, o => ({ in_7_days: o })),
       _.mapValues(in30Days, o => ({ in_30_days: o })),
       _.mapValues(in90Days, o => ({ in_90_days: o })),
       _.mapValues(in180Days, o => ({ in_180_days: o })),
     )
+    return out
   }
 }
 
@@ -158,12 +159,14 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 
       const query = [place, region, 'Sverige'].join(', ')
 
-      console.log('Looking Google Maps place', query)
       const response = await fetch(search(query))
-      console.log('Response ', query, 'ok:', response.ok, 'code:', response.status, 'message', response.statusText)
+      console.debug('Places API response', `'${query}'`,
+        'ok:', response.ok,
+        'code:', response.status,
+        'message', response.statusText,
+      )
       if (response.ok) {
         const { candidates } = await response.json() as PlacesApiResponse
-        console.log('Response ', query, 'candidates', candidates.length)
         if (candidates && candidates.length > 0) {
           const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
           if (first) {
@@ -218,14 +221,18 @@ type Table = `metadata_${MetadataTypes}`
 
 async function updater<T, U extends Record<string, T>, Data extends Record<string, Promise<U>>>(table: TableFn, batch: BatchFn, tbl: Table, data: Data): Promise<Record<string, U> | undefined> {
   const out: Record<string, U> = {}
+  console.info()
+  console.info('Starting batch writes of', Object.keys(data))
+
   for (const [wrapperKey, valuePromise] of Object.entries(data)) {
     const values = await valuePromise
     const chunks = _.chunk(Object.entries(values), 500)
 
     let idx = 0
-    console.debug('Prepared', chunks.length, 'batches')
+    console.debug(`[${wrapperKey}]`, 'Prepared', chunks.length, 'batches', `(${_.size(values)} changes)`)
+
     for (const chunk of chunks) {
-      console.debug(`Creating batch#${idx}`)
+      console.debug(`[${wrapperKey}]`, `batch#${idx}`, 'Creating')
       const s = batch()
       for (const [key, value] of chunk) {
 
@@ -242,13 +249,15 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
           })
         }
       }
-
-      console.debug(`Committing batch#${idx++}`)
+      console.debug(`[${wrapperKey}]`, `batch#${idx}`, 'Commiting')
       await s.commit()
+      idx += 1
     }
 
+    console.debug(`[${wrapperKey}]`, 'All batches completed!')
     out[wrapperKey] = values
   }
+  console.info('All updates completed!')
 
   return out
 }

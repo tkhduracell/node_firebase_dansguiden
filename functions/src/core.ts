@@ -105,13 +105,13 @@ export type EventQueryParams = { from: string; to: string;[key: string]: string 
 
 export class Events {
 
-  static async enrich(batch: BatchFn, table: TableFn) {
+  static async enrich(table: TableFn, batch: BatchFn) {
     console.log('Starting event enrichment updates')
     await eventsDecorator.enrichment(batch, table)
     console.log('Completed event enrichment update!')
   }
 
-  static async update(batch: BatchFn, table: TableFn): Promise<InternalDanceEvent[]> {
+  static async update(table: TableFn, batch: BatchFn): Promise<InternalDanceEvent[]> {
 
     console.log('Parsing all events from external source')
     const allEvents = await EventsParser.parse()

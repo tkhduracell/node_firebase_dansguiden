@@ -18,6 +18,8 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
   console.log(`Decorating ${_.size(events)} events`)
   const pairChunks = _.chunk(_.toPairs(events), 500)
 
+  console.log(`Preparing ${pairChunks.length} batches`)
+
   const batches = pairChunks.map((chunk, idx) => {
     console.debug(`Creating batch#${idx}`)
     const batcher = batch()
@@ -29,10 +31,11 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
         const band = _.chain(bands).get(bandName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
+          .value()
         const place = _.chain(places).get(placeName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
-
+          .value()
         batcher.update(table('events').doc(id), { metadata: { band, place } })
 
         counters.touched++
