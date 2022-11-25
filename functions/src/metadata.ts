@@ -226,7 +226,7 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
 
   for (const [wrapperKey, valuePromise] of Object.entries(data)) {
     const values = await valuePromise
-    const chunks = _.chunk(Object.entries(values), 500)
+    const chunks = _.chunk(Object.entries(values), 250) // For serverTimestamp() causes 1 more write
 
     let idx = 0
     console.debug(`[${wrapperKey}]`, 'Prepared', chunks.length, 'batches', `(${_.size(values)} changes)`)
@@ -235,19 +235,10 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
       console.debug(`[${wrapperKey}]`, `batch#${idx}`, 'Creating')
       const s = batch()
       for (const [key, value] of chunk) {
-
-        const prev = await table(tbl).doc(key).get()
-        if (prev.exists) {
-          s.update(table(tbl).doc(key), {
-            [wrapperKey]: value,
-            updated_at: firestore.FieldValue.serverTimestamp()
-          })
-        } else {
-          s.create(table(tbl).doc(key), {
-            [wrapperKey]: value,
-            created_at: firestore.FieldValue.serverTimestamp()
-          })
-        }
+        s.set(table(tbl).doc(key), {
+          [wrapperKey]: value,
+          updated_at: firestore.FieldValue.serverTimestamp()
+        }, { merge: true })
       }
       console.debug(`[${wrapperKey}]`, `batch#${idx}`, 'Commiting')
       await s.commit()
