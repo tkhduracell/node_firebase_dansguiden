@@ -61,9 +61,6 @@ function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Rec
 }
 
 type PlacesInfo = {
-  city: string,
-  county: string,
-  region: string,
   website_url?: string,
   facebook_url?: string
 } | Record<string, never>
@@ -74,27 +71,9 @@ function placesInfo(): (values: DanceEvent[]) => Promise<Record<string, PlacesIn
     const groups = _.keyBy(values, 'place')
     return _.mapValues(groups, ({ place }) => {
       if (place in infoByName) {
-        return infoByName[place]
+        return _.omit(infoByName[place], 'region', 'city', 'county')
       }
       return {}
-    })
-  }
-}
-
-export function inferLocation(): (values: DanceEvent[]) => Record<string, PlacesInfo> {
-  return (values: DanceEvent[]) => {
-    const places: Pick<DanceEvent, 'place' | 'city' | 'county' | 'region'>[] = values.map(e => _.pick(e, 'place', 'county', 'city', 'region'))
-    const groups = _.groupBy(places, p => p.place)
-    return _.mapValues(groups, group => {
-
-      const [key,] = _(group)
-        .countBy(g => [g.city, g.county, g.region].join('|'))
-        .entries()
-        .maxBy(([, count]) => count) as [string, number]
-
-      const [city, county, region] = key.split('|')
-
-      return { city, county, region }
     })
   }
 }
