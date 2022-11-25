@@ -42,6 +42,7 @@ const blacklist = [
   'https://open.spotify.com/artist/4AiqdizfguNQoWQ5N6Aaza', // C-Laget
   'https://open.spotify.com/artist/36jTseDCcfNAXsplm6dHiT', // Glads,
   'https://open.spotify.com/artist/0B114ZpJddB3jl8AHu4OKT', // Phix
+  'https://open.spotify.com/artist/2iGJ84wIQmPyqa0NYKAjty', // Christer Eklund
 ].map(linkToId)
 
 const exact = _.mapValues({
