@@ -138,10 +138,10 @@ describe('Metadata', () => {
       })
       expect(bands).toHaveProperty('spotify', {
         "band1": {
-          spotify_id: undefined,
-          spotify_image_large: undefined,
-          spotify_image_small: undefined,
-          spotify_name: undefined,
+          id: undefined,
+          image_large: undefined,
+          image_small: undefined,
+          name: undefined,
         }
       })
     })

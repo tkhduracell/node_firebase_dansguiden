@@ -78,7 +78,13 @@ function histogram(key: keyof DanceEvent): (values: DanceEvent[]) => Promise<Rec
   }
 }
 
-type PlacesInfo = { city: string, county: string, region: string, website_url?: string, facebook_url?: string } | Record<string, never>
+type PlacesInfo = {
+  city: string,
+  county: string,
+  region: string,
+  website_url?: string,
+  facebook_url?: string
+} | Record<string, never>
 function placesInfo(): (values: DanceEvent[]) => Promise<Record<string, PlacesInfo>> {
   return async (values: DanceEvent[]) => {
     const info = await PlacessParser.parse()
@@ -178,10 +184,10 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 }
 
 type SpotifyInfo = {
-  spotify_id?: string,
-  spotify_name?: string,
-  spotify_image_small?: string
-  spotify_image_large?: string
+  id?: string,
+  name?: string,
+  image_small?: string
+  image_large?: string
 }
 
 type SpotifySecrets = { client_id: string; client_secret: string }
@@ -194,10 +200,10 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
     for (const { band } of _.uniqBy(bands, p => p.band)) {
       const { id, name, images } = await BandUpdater.get(secrets, band) ?? {}
       out[band] = _.omitBy({
-        spotify_id: id,
-        spotify_name: name,
-        spotify_image_small: _.minBy(images, i => Math.abs(64 - (i.width ?? Number.MAX_VALUE)) )?.url,
-        spotify_image_large: _.minBy(images, i => Math.abs(640 - (i.width ?? Number.MAX_VALUE)) )?.url
+        id: id,
+        name: name,
+        image_small: _.minBy(images, i => Math.abs(64 - (i.width ?? Number.MAX_VALUE)) )?.url,
+        image_large: _.minBy(images, i => Math.abs(640 - (i.width ?? Number.MAX_VALUE)) )?.url
       }, _.isUndefined)
       await new Promise((res) => setTimeout(res, 500))
     }
@@ -215,7 +221,11 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
   for (const [wrapperKey, valuePromise] of Object.entries(data)) {
     const values = await valuePromise
     const chunks = _.chunk(Object.entries(values), 500)
+
+    let idx = 0
+    console.debug('Prepared', chunks.length, 'batches')
     for (const chunk of chunks) {
+      console.debug(`Creating batch#${idx}`)
       const s = batch()
       for (const [key, value] of chunk) {
 
@@ -232,6 +242,8 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
           })
         }
       }
+
+      console.debug(`Committing batch#${idx++}`)
       await s.commit()
     }
 
