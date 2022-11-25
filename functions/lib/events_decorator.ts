@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { snapshotAsObj } from './utils'
 import { TableFn, BatchFn } from './database'
 
-export async function update (batch: BatchFn, table: TableFn): Promise<object> {
+export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key: string]: DanceEvent }> {
   console.log('Fetched metadata_bands table!')
   const bands = snapshotAsObj<Record<string, any>>(await table('metadata_bands').get())
 

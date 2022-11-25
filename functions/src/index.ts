@@ -77,6 +77,11 @@ export const metadataDates = schedule("every monday 12:00", () => {
   return Metadata.dates(table, batch)
 })
 
+// Event enrichment
+export const eventsEnrichment = schedule("every monday 13:00", () => {
+  return Metadata.dates(table, batch)
+})
+
 // Playstore version
 export const versionsUpdate = schedule("every monday 12:00", () => {
   return Versions.update(table)

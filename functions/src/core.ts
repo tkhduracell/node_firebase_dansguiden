@@ -92,11 +92,6 @@ function batchWriteEvents (batch: BatchFn, tableFn: TableFn, output: InternalDan
       "updated_at": moment().toDate().getTime(),
       "updated_at_pretty": moment().toISOString()
     })
-    //_.forEach(value, (v, k) => {
-    //  if (_.isNil(v) || _.isNull(v) || _.isUndefined(v)) {
-    //    delete (value as {[key: string]: unknown})[k]
-    //  }
-    //})
     return {key, value}
   })
 }
@@ -109,6 +104,12 @@ export type InternalDanceEvent = events.InternalEvent<DanceEvent>
 export type EventQueryParams = { from: string; to: string;[key: string]: string }
 
 export class Events {
+
+  static async enrich(batch: BatchFn, table: TableFn) {
+    console.log('Starting event enrichment updates')
+    await eventsDecorator.enrichment(batch, table)
+    console.log('Completed event enrichment update!')
+  }
 
   static async update(batch: BatchFn, table: TableFn): Promise<InternalDanceEvent[]> {
 
@@ -123,10 +124,6 @@ export class Events {
     console.log('Starting event writes')
     const batchWrite = await batchWriteEvents(batch, table, allEvents)
     console.log(`Completed event writes, wrote ${_.size(batchWrite)} events!`)
-
-    console.log('Starting event metadata updates')
-    await eventsDecorator.update(batch, table)
-    console.log('Completed event metadata update!')
 
     return allEvents
   }
