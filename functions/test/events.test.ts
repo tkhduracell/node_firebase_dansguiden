@@ -12,7 +12,7 @@ describe('EventsParser', () => {
     let subject = [] as InternalDanceEvent[]
     beforeAll(async () => {
       try {
-        subject = await EventsParser.parse([month(moment()).toLocaleLowerCase()])
+        subject = await EventsParser.parse([month(moment().add(1, 'M')).toLocaleLowerCase()])
       } catch (error) {
         fail("Unable to fetch real data, check your internet connection")
       }
@@ -37,7 +37,9 @@ describe('EventsParser', () => {
     })
 
     it('should only have proper weekdays', () => {
-      const output = subject.filter(e => e.type !== 'unknown').map(d => d.data.weekday)
+      const output = subject
+        .filter(e => e.type !== 'unknown')
+        .map(d => d.data.weekday)
       expect(output.length).toBeGreaterThan(0)
 
       const weekdays = Array.from(new Set(output).values())
