@@ -23,15 +23,17 @@ export async function update (batch: BatchFn, table: TableFn): Promise<object> {
     const batcher = batch()
     const counters = { touched: 0, unknowns: 0 }
 
-    _.forEach(chunk, ([id, {place, band}]) => {
-      if (band in bands || place in places) {
+    _.forEach(chunk, ([id, { place: placeName, band: bandName }]) => {
+      if (bandName in bands || placeName in places) {
 
-        batcher.update(table('events').doc(id), {
-          metadata: {
-            band: _.omitBy(bands[band], _.isUndefined),
-            place: _.omitBy(places[place], _.isUndefined),
-          }
-        })
+        const band = _.chain(bands).get(bandName)
+          .omit('updated_at', 'created_at', 'counts')
+          .omitBy(_.isUndefined)
+        const place = _.chain(places).get(placeName)
+          .omit('updated_at', 'created_at', 'counts')
+          .omitBy(_.isUndefined)
+
+        batcher.update(table('events').doc(id), { metadata: { band, place } })
 
         counters.touched++
       } else {
