@@ -85,8 +85,9 @@ function blacklist<T, K>(valFn: (e: T) => K[], ...exclude: K[]): (e: T) => boole
 type PlacesApiInfo = {
   name: string,
   address: string,
-  photo_small: string
-  photo_large: string
+  photo_small: string,
+  photo_large: string,
+  photo_attributions: string[],
 }
 
 function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Record<string, PlacesApiInfo>> {
@@ -102,14 +103,15 @@ function placesApiImage(apiKey: string): (values: DanceEvent[]) => Promise<Recor
 
       const [first] = candidates.filter(blacklist(c => c.types, 'locality'))
       if (first) {
-        const ref = first.photos?.find(() => true)?.photo_reference
+        const photo = first.photos?.find(() => true)
 
         out[place] = _.omitBy({
-          address: first.formatted_address,
           name: first.name,
           id: first.place_id,
-          photo_small: ref ? PlacesApi.photoUrl(apiKey, ref, '128') : undefined,
-          photo_large: ref ? PlacesApi.photoUrl(apiKey, ref, '512') : undefined
+          address: first.formatted_address,
+          photo_small: photo ? PlacesApi.photoUrl(apiKey, photo.photo_reference, '128') : undefined,
+          photo_large: photo ? PlacesApi.photoUrl(apiKey, photo.photo_reference, '512') : undefined,
+          photo_attributions: photo ? photo.html_attributions : undefined
         }, _.isUndefined) as PlacesApiInfo
       }
 

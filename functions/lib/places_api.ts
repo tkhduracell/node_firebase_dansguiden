@@ -17,9 +17,9 @@ export type PlaceApiSearchCandidate = {
 
 export type PlaceApiPhoto = {
   height: number
+  width: number
   html_attributions: string[]
   photo_reference: string
-  width: number
 }
 
 const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
