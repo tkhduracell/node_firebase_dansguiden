@@ -2,8 +2,16 @@
 .modal-body{
 	padding: 0px;
 }
-.details{
+.details {
     margin-left: 30px;
+}
+.appstore {
+  width: 10em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+.playstore {
+  width: 10em;
 }
 
 .jumbotron-header h1{
