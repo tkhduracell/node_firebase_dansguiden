@@ -35,3 +35,4 @@ backups/
 dansguiden-b3a7d-*.json
 
 test.sh
+.DS_Store
