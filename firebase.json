@@ -6,6 +6,7 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "cleanUrls": true,
     "predeploy": [
       "node -e \"if(process.env.CI){process.exit(0)}else{throw Error(\\'Only runs from CI!\\')}\"",
       "npm --prefix \"$RESOURCE_DIR/..\" run build"
@@ -14,10 +15,6 @@
       {
         "source": "/",
         "destination": "index.html"
-      },
-      {
-        "source": "/privacy",
-        "destination": "privacy.html"
       },
       {
         "source": "/api/events",
