@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint --ext=jsx,ts,tsx src test lib debug",
-    "test": "jest",
+    "test": "jest --silent",
     "test:watch": "jest --watch",
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase functions:shell",
