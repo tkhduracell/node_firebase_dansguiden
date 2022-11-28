@@ -1,8 +1,11 @@
+import { BandUpdater } from './../src/band_updater'
+import { PlacessParser } from './../lib/places'
 import { DanceEvent } from './../lib/types'
 import { Metadata } from './../src/metadata'
 import { firestore } from 'firebase-admin'
 import { shuffle } from 'lodash'
 import moment from 'moment'
+import { PlacesApi } from '../lib/places_api'
 
 class QueryMock<T> {
   data: T[]
@@ -59,6 +62,24 @@ type Doc = firestore.DocumentReference
 type Batch = firestore.WriteBatch
 
 describe('Metadata', () => {
+  beforeEach(() => {
+    jest.spyOn(PlacesApi, 'search').mockImplementation(async () => {
+      return [
+        { name: 'place1', types: [], place_id: '123', formatted_address: 'adr1', photos: [
+          { height: 0, width: 0, html_attributions: ['attr1'], photo_reference: 'ref1' }
+        ] }
+      ]
+    })
+    jest.spyOn(PlacessParser, 'parse').mockImplementation(async () => {
+      return [
+        { name: 'place1', city: 'city1', county: 'county1', region: 'region1', facebook_url: 'fb', website_url: 'web' }
+      ]
+    })
+    jest.spyOn(BandUpdater, 'get').mockImplementation(async () => {
+      return undefined
+    })
+  })
+
   const ones = { in_total: 1, in_180_days: 1, in_30_days: 1, in_7_days: 1, in_90_days: 1 }
 
   describe('update:dates', () => {
@@ -108,6 +129,39 @@ describe('Metadata', () => {
           in_total: 5
         }
       })
+    })
+
+    it('should have place info', async () => {
+
+      const { tableFn, batchFn } = queryMock([
+        { place: 'place1', date: moment().format('YYYY-MM-DD') }
+      ])
+
+      const places = await Metadata.places(tableFn, batchFn, emptySecrets)
+
+      expect(places).toHaveProperty('general', { "place1": {
+        name: "place1",
+        facebook_url: "fb",
+        website_url: "web",
+      }})
+    })
+
+    it('should have places_api info', async () => {
+
+      const { tableFn, batchFn } = queryMock([
+        { place: 'place1', date: moment().format('YYYY-MM-DD') }
+      ])
+
+      const places = await Metadata.places(tableFn, batchFn, emptySecrets)
+
+      expect(places).toHaveProperty('places_api', { "place1": {
+        id: "123",
+        name: "place1",
+        address: "adr1",
+        photo_attributions: ["attr1"],
+        photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
+        photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
+      }})
     })
   })
 
