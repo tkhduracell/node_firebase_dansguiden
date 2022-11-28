@@ -1,7 +1,7 @@
-import * as admin from 'firebase-admin'
+import { firestore, initializeApp } from 'firebase-admin'
 
-export type TableFn = (name: string) => admin.firestore.CollectionReference
-export type BatchFn = () => admin.firestore.WriteBatch
+export type TableFn = (name: string) => firestore.CollectionReference
+export type BatchFn = () => firestore.WriteBatch
 
 export type FirestoreFn = {
   table: TableFn;
@@ -11,8 +11,8 @@ export type FirestoreFn = {
 export function database(): FirestoreFn {
   const config = JSON.parse(process.env.FIREBASE_CONFIG || '{}')
 
-  admin.initializeApp({ projectId: config.projectId ?? 'dansguiden-b3a7d' })
-  const db = admin.firestore()
+  initializeApp({ projectId: config.projectId ?? 'dansguiden-b3a7d' })
+  const db = firestore()
   db.settings({ timestampsInSnapshots: true })
 
   return {
