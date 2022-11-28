@@ -26,28 +26,42 @@ export function versionSort(v: { name: string }): string {
     .join('')
 }
 
-async function render(): Promise<void> {
-  console.log("Loading versions and images...")
-  const [versions, images] = await Promise.all([
-    fstore.collection('versions').get(),
-    fstore.collection('images').get()
-  ])
-  console.log(`Found ${_.size(versions)} versions and ${_.size(images)} images`)
+const files = [
+  { name: 'index', data: async () => {
+      console.log("Loading versions and images...")
+      const [versions, images] = await Promise.all([
+        fstore.collection('versions').get(),
+        fstore.collection('images').get()
+      ])
+      console.log(`Found ${_.size(versions)} versions and ${_.size(images)} images`)
+      return {
+        images: snapshotAsObj(images),
+        versions: _.orderBy(snapshotAsObj(versions), versionSort, 'desc')
+      }
+    }
+  },
+  { name: 'privacy', data: async () => ({}) }
+]
 
-  console.log("Rendering pug template...")
+async function render(): Promise<void> {
   const opts = {
     compileDebug: false,
     pretty: true,
-    images: snapshotAsObj(images),
-    versions: _.orderBy(snapshotAsObj(versions), versionSort, 'desc')
   }
-  const file = path.join(__dirname, '../views/index.pug')
-  const html = pug.renderFile(file, opts)
 
-  const outFile = path.join(__dirname, '../public/index.html')
+  console.log("Rendering pug template...")
+  for (const { name,  data: getdata } of files) {
+    const data = await getdata()
 
-  await writeFile(outFile, html, 'utf8')
-  console.log(`File rendered as ${outFile}`)
+    debugger
+
+    const file = path.join(__dirname, `../views/${name}.pug`)
+    const html = pug.renderFile(file, { ...opts, ...data })
+    const outFile = path.join(__dirname, `../public/${name}.html`)
+
+    await writeFile(outFile, html, 'utf8')
+    console.log(`File rendered as ${outFile}`)
+  }
 
   const imageFiles = await glob.promise(path.join(__dirname, '../public/img/image?.png'))
 

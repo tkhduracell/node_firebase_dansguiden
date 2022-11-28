@@ -16,6 +16,10 @@
         "destination": "index.html"
       },
       {
+        "source": "/privacy",
+        "destination": "privacy.html"
+      },
+      {
         "source": "/api/events",
         "function": "eventsFetch"
       },

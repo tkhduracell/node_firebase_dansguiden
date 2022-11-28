@@ -1,0 +1,76 @@
+doctype html
+html
+	head
+		title Dansguiden
+
+		meta(name='viewport', content='width=device-width, initial-scale=1.0')
+		meta(http-equiv='Content-Type', content='text/html; charset=utf-8')
+
+		meta(property='og:url', content='http://www.dansguiden.com/privacy')
+		meta(property='og:type', content='website')
+		meta(property='og:image', content='http://www.dansguiden.com/img/high-res-icon-v2.png')
+		meta(property='og:title', content='Dansguiden - Privacy Policy')
+		meta(property='og:description', content='Nu är den här – din nya evenemangsguide till Sveriges dansbanor. Upptäck, sök och dela evenemang snabbt och supersmidigt')
+
+		meta(name='google-site-verification' content='AmDdRsmWubcWqvFtCkzSwLvnZD2Y1QFd_V1MjZ7ugTo')
+
+		link(rel='shortcut icon', href='/favicon.ico')
+		link(rel='stylesheet', href='css/bootstrap.min.css', media='screen')
+		link(rel='stylesheet', href='css/ekko-lightbox.min.css', media='screen')
+		link(rel='stylesheet', href='css/styles.css')
+
+	body
+		.navbar.navbar-default.navbar-fixed-top
+			.container
+				.navbar-header
+					button.navbar-toggle.hidden(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+						span.icon-bar
+						span.icon-bar
+						span.icon-bar
+					a.navbar-brand(href='/') Dansguiden
+
+		.container.privacy
+			.row
+				.col-sm-12
+					h1 Privacy Policy
+
+					p Our app does not use any tracking technology to gather user information.
+
+					p
+						| We may share information (if possible) with governmental agencies or other companies assisting us in fraud
+						| prevention or investigation. We may do so when: (1) permitted or required by law; or, (2) trying
+						| to protect against or prevent actual or potential fraud or unauthorized transactions; or,
+						| (3) investigating fraud which has already taken place.
+						| The information is not provided to these companies for marketing purposes.
+
+					p
+						| If you have any questions, concerns, or comments about our privacy policy you may
+						| contact us using the information below:
+
+					p By e-mail: buggfille+dansguiden-privacy@gmail.com
+
+					p We reserve the right to make changes to this policy. Any changes to this policy will be posted.
+
+					p Our Tools app "Dansguiden" requires the following permissions:
+
+					h3 Android permissions
+					ul
+						li <code>INTERNET</code> - To access Firebase Cloud Storage
+
+					h3 iOS permissions
+					ul
+						li No special permissions used but internet access
+
+					p="Last updated: " + new Date().toISOString()
+
+		hr
+
+		.container
+			footer
+				p="© Dansguiden " + new Date().getFullYear()
+
+script(src = 'js/jquery.v1.10.2.min.js')
+script(src = 'js/analytics.js')
+script(src = 'js/bootstrap.min.js')
+script(src = 'js/ekko-lightbox.min.js')
+script(src='js/main.js?v=1')
