@@ -1,7 +1,7 @@
 // Libraries
 import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-functions'
 
-import './setup'
+import { errorReporting } from './setup'
 
 import { Events, EventQueryParams } from './core'
 import { Metadata } from './metadata'
@@ -11,6 +11,7 @@ import { database } from '../lib/database'
 import { Versions } from './versions'
 import { Images } from './images'
 import { BandUpdater } from './band_updater'
+
 const { table, batch } = database()
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
@@ -19,7 +20,14 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Part
     .pubsub
     .schedule(schedule)
     .timeZone('Europe/Stockholm')
-    .onRun(async () => await onTrigger())
+    .onRun(async (ctx) => {
+      try {
+        await onTrigger()
+      } catch (err) {
+        errorReporting.report(err, undefined, `Error in function: ${ctx.resource.name}`)
+        console.error(err)
+      }
+    })
 }
 
 function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?: Partial<RuntimeOptions>): HttpsFunction {
@@ -31,6 +39,7 @@ function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?
       const result = await onCalled(req.query as unknown as Record<string, string>)
       res.status(200).send(result)
     } catch (err) {
+      errorReporting.report(err, req)
       res.status(500).send('Internal error: ' + err)
     }
   })
