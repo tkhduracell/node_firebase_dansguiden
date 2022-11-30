@@ -15,7 +15,7 @@ const { table, batch } = database()
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
   return region('europe-west1')
-    .runWith({timeoutSeconds: 540, ...(extra ?? {})}) // Timeout 9 min
+    .runWith({ timeoutSeconds: 540,  memory: '1GB', ...(extra ?? {})}) // Timeout 9 min
     .pubsub
     .schedule(schedule)
     .timeZone('Europe/Stockholm')
