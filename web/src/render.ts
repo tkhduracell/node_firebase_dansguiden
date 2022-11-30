@@ -29,13 +29,9 @@ export function versionSort(v: { name: string }): string {
 const files = [
   { name: 'index', data: async () => {
       console.log("Loading versions and images...")
-      const [versions, images] = await Promise.all([
-        fstore.collection('versions').get(),
-        fstore.collection('images').get()
-      ])
-      console.log(`Found ${_.size(versions)} versions and ${_.size(images)} images`)
+      const versions = await fstore.collection('versions').get()
+      console.log(`Found ${_.size(versions)} versions`)
       return {
-        images: snapshotAsObj(images),
         versions: _.orderBy(snapshotAsObj(versions), versionSort, 'desc')
       }
     }
@@ -49,6 +45,12 @@ async function render(): Promise<void> {
     pretty: true,
   }
 
+  const imageFiles = await glob.promise(path.join(__dirname, '../public/img/image?.png'))
+  const images = imageFiles.map(f => {
+    const src = path.join('img', path.basename(f))
+    return { src, thumb: src.replace(/\.png$/, ".thumb.png") }
+  })
+
   console.log("Rendering pug template...")
   for (const { name,  data: getdata } of files) {
     const data = await getdata()
@@ -56,14 +58,13 @@ async function render(): Promise<void> {
     debugger
 
     const file = path.join(__dirname, `../views/${name}.pug`)
-    const html = pug.renderFile(file, { ...opts, ...data })
+    const html = pug.renderFile(file, { ...opts, ...data, images })
     const outFile = path.join(__dirname, `../public/${name}.html`)
 
     await writeFile(outFile, html, 'utf8')
     console.log(`File rendered as ${outFile}`)
   }
 
-  const imageFiles = await glob.promise(path.join(__dirname, '../public/img/image?.png'))
 
   for (const image of imageFiles) {
     console.log(`Resizing ${image}...`)
