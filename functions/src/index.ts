@@ -45,11 +45,6 @@ function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?
   })
 }
 
-// Update Events
-export const eventsUpdate = schedule("every monday 08:00", () => {
-  return Events.update(table, batch)
-})
-
 // Metadata Bands
 export const bandsUpdate = schedule("every monday 09:00", () => {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = z.object({
@@ -63,7 +58,7 @@ export const bandsUpdate = schedule("every monday 09:00", () => {
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata Places
-export const metadataPlaces = schedule("every monday 10:00", () => {
+export const metadataPlaces = schedule("every monday 09:15", () => {
   const { GCLOUD_PLACES_API_KEY } = z.object({
     GCLOUD_PLACES_API_KEY: z.string()
   }).parse(process.env)
@@ -72,7 +67,7 @@ export const metadataPlaces = schedule("every monday 10:00", () => {
 }, { secrets: ['GCLOUD_PLACES_API_KEY'] })
 
 // Metadata Bands
-export const metadataBands = schedule("every monday 11:00", () => {
+export const metadataBands = schedule("every monday 09:30", () => {
   const {
     SPOTIFY_CLIENT_ID: client_id,
     SPOTIFY_CLIENT_SECRET: client_secret
@@ -85,17 +80,19 @@ export const metadataBands = schedule("every monday 11:00", () => {
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata Dates
-export const metadataDates = schedule("every monday 12:00", () => {
+export const metadataDates = schedule("every monday 09:45", () => {
   return Metadata.dates(table, batch)
 })
 
-// Event enrichment
-export const eventsEnrichment = schedule("every monday 13:00", () => {
-  return Events.enrich(table, batch)
+// Update Events
+export const eventsUpdate = schedule("every monday 10:00", async () => {
+  await Events.update(table, batch)
+  await Events.enrich(table, batch)
+  return null
 })
 
 // Playstore version
-export const versionsUpdate = schedule("every monday 14:00", () => {
+export const versionsUpdate = schedule("every monday 11:00", () => {
   return Versions.update(table)
 })
 
