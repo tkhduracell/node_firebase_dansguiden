@@ -23,7 +23,7 @@
 }
 
 .ekko-lightbox-container img {
-	max-height: 800px;
+	max-height: 80vh;
 	margin-right: auto;
 	margin-left: auto;
 }
@@ -32,6 +32,25 @@
 	height: 250px;
 	margin-top: 70px;
 	margin-right: 40px;
+}
+.images {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.images .image {
+  flex-basis: 180px;
+}
+.versions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center
+}
+.versions .version {
+  flex-basis: 180px;
 }
 .container.privacy {
   margin-top: 5em;

@@ -72,10 +72,11 @@ html
 				.col-sm-12
 					h1 Bilder
 			.row
-				for img in images
-					.col-xs-3
-						a(href=img.src.replace(/\.png$/, ".thumb.png"), data-type="image", data-toggle="lightbox", data-title=img.text, data-remote=img.src)
-							img.img-responsive.thumb(src=img.src.replace(/\.png$/, ".thumb.png"))
+				.images.col-sm-12
+					for img in images
+						.image
+							a(href=img.thumb, data-type="image", data-toggle="lightbox", data-remote=img.src)
+								img.img-responsive.thumb(src=img.thumb)
 
 		hr
 
@@ -84,15 +85,16 @@ html
 				.col-sm-12
 					h1 Nyheter
 			.row
-				for v, index in versions
-					.col-xs-6.col-sm-4.version
-						h2="v. "+ v.name
-						ul
-							for l in v.lines
-								li=l
-						if index == 0
-							p.see-more
-								a.details(href='https://play.google.com/store/apps/details?id=feality.dans', role='button') Läs mer »
+				.col-12.versions
+					for v, index in versions
+						.version
+							h2="v. "+ v.name
+							ul
+								for l in v.lines
+									li=l
+							if index == 0
+								p.see-more
+									a.details(href='https://play.google.com/store/apps/details?id=feality.dans', role='button') Läs mer »
 
 		hr
 
