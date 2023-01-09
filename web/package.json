@@ -18,7 +18,7 @@
     "@typescript-eslint/parser": "^5.43.0",
     "eslint": "^8.27.0",
     "eslint-plugin-promise": "^6.1.1",
-    "firebase-admin": "^8.9.2",
+    "firebase-admin": "^11.4.1",
     "glob": "^7.1.6",
     "glob-promise": "^3.4.0",
     "lodash": "^4.17.21",
