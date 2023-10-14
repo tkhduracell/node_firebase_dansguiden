@@ -11,7 +11,7 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
   console.log('Fetched metadata_places table!')
   const places = snapshotAsObj<Record<string, any>>(await table('metadata_places').get())
 
-  const eventsTable = await table('events').get()
+  const eventsTable = await table('events').where('date', '>=', new Date().getFullYear() + '-00-00').get()
   console.log('Fetched events table!')
   const events = snapshotAsObj<DanceEvent>(eventsTable)
 
