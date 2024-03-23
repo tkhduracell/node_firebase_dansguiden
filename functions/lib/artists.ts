@@ -28,6 +28,7 @@ const blacklist = [
   '0hYTsX1dRl01ss8jizhrJo', // Framed & Keko
   '0kbxBTkWdVjByBeVVzSckZ', // Jive (rulltrappor)
   '5ecCx0PnQGB6odt9F9XD46', // Caspers,
+  'https://open.spotify.com/artist/377JJnVNZmREVqD5qIe18J', // Streaks
   'https://open.spotify.com/artist/4zYFHS8R8wSOhcIBEbwxwA', // Charlies
   'https://open.spotify.com/artist/60rrONrFQipKsTXYazdmQO', // Remix,
   'https://open.spotify.com/artist/3CEF3A8IybbJcwFSUVtAYM', // Strike
