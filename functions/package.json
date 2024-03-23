@@ -29,7 +29,7 @@
     "simple-oauth2": "^5.0.0",
     "source-map-support": "^0.5.21",
     "spotify-web-api-node": "^5.0.2",
-    "zod": "^3.19.1"
+    "zod": "^3.22.4"
   },
   "overrides": {
     "google-gax": "^0.22.1",
