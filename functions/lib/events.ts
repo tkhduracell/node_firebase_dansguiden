@@ -144,7 +144,9 @@ export function pipeline(list: InternalDanceEvent[]): InternalDanceEvent[] {
     .map(onEventMap(e => removeNullValues(e)))
     .map(onEventMap(e => {
       if (e.place?.includes('Viking Rosella') ||
+          e.place?.includes('Birka Gotland') ||
           e.place?.includes('Viking Cinderella') ||
+          e.place?.includes('Viking Glory') ||
           e.place?.includes('Viking Grace')) {
         return { ...e, region: `${e.region} (Båt)`}
       }
