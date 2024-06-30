@@ -14,6 +14,7 @@ type FieldValue = typeof FieldValue
 
 
 async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Artist>, band: string): Promise<Artist> {
+  const oldData = await store.get(band)
   const remapped = remapArtist(band)
   const spotifyArtists = await searchArtist(api, remapped)
 
@@ -23,7 +24,6 @@ async function updateArtistInfoFromSpotify (api: SpotifyWebApi, store: Store<Art
     : 'none seemed applicable'
   console.debug(`Found ${_.size(spotifyArtists)} artist, but ${explain}`)
 
-  const oldData = await store.get(band)
   if (oldData && _.isEqual(mostSimilarArtist || {}, oldData)) {
     return oldData
   } else {

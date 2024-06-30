@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "The webpage for dansguiden",
   "scripts": {
-    "start": "firebase serve --only hosting,function"
+    "start": "firebase serve --only hosting,function",
+    "preinstall": "npx only-allow pnpm"
   },
   "repository": {
     "type": "git",
@@ -16,7 +17,9 @@
   },
   "private": true,
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
-  "dependencies": {},
+  "dependencies": {
+    "jest": "^29.3.1"
+  },
   "devDependencies": {
     "firebase-admin": "^8.1.0",
     "firebase-tools": "^7.12.1"

@@ -22,23 +22,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
-          cache-dependency-path: functions/package-lock.json
+          cache: pnpm
+          cache-dependency-path: functions/pnpm-lock.yaml
 
       - name: Install deps
-        run: npm ci --prefix functions
+        run: pnpm i
 
       - name: Run build (tsc)
-        run: npm run --prefix functions build
+        run:  pnpm run --filter functions build
 
       - name: Run lint (ESLint)
-        run: npm run --prefix functions lint
+        run:  pnpm run --filter functions lint
 
       - name: Run test (Jest)
-        run: npm run --prefix functions test
+        run: pnpm run --filter functions test
 
       - name: Install firebase
-        run: npm i firebase-tools@11.16.1 -g
+        run: npm i -g firebase-tools@11.16.1
 
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v0"
@@ -62,17 +62,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
-          cache-dependency-path: web/package-lock.json
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
 
       - name: Install deps
-        run: npm ci --prefix web
+        run: pnpm i --filter web
 
       - name: Run lint (ESLint)
-        run: npm run --prefix web lint
+        run: pnpm run --filter web lint
 
       - name: Install firebase
-        run: npm i firebase-tools@11.16.1 -g
+        run: npm i -g firebase-tools@11.16.1
 
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v0"

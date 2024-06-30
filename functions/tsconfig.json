@@ -12,6 +12,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "typeRoots": [
+      "../node_modules/@types",
       "node_modules/@types",
       "lib/@types"
     ],
