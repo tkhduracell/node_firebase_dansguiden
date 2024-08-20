@@ -5,7 +5,7 @@ import { promisify } from 'util'
 
 const readFile = promisify(fs.readFile)
 
-import { PlacessParser } from '../lib/places'
+import { PlacessParser } from '../src/lib/danslogen/places'
 
 describe('places.ts', () => {
   describe('read fixture html', () => {

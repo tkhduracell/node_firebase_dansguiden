@@ -1,11 +1,11 @@
-import { BandUpdater } from './../src/band_updater'
-import { PlacessParser } from './../lib/places'
-import { DanceEvent } from './../lib/types'
+import { Bands } from '../src/lib/spotify'
+import { PlacessParser } from '../src/lib/danslogen/places'
+import { DanceEvent } from '../src/lib/types'
 import { Metadata } from './../src/metadata'
 import { firestore } from 'firebase-admin'
 import { shuffle } from 'lodash'
 import moment from 'moment'
-import { PlacesApi } from '../lib/places_api'
+import { PlacesApi } from '../src/lib/google/maps/places_api'
 
 class QueryMock<T> {
   data: T[]
@@ -75,7 +75,7 @@ describe('Metadata', () => {
         { name: 'place1', city: 'city1', county: 'county1', region: 'region1', facebook_url: 'fb', website_url: 'web' }
       ]
     })
-    jest.spyOn(BandUpdater, 'get').mockImplementation(async () => {
+    jest.spyOn(Bands, 'getArtist').mockImplementation(async () => {
       return undefined
     })
   })

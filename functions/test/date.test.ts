@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-import { parseYearDate, fixTime } from '../lib/date'
+import { parseYearDate, fixTime } from '../src/lib/utils/date'
 
 describe('date.ts', () => {
   describe('parseYearDate()', () => {

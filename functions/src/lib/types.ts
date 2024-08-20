@@ -1,16 +1,4 @@
 
-export type Artist = {
-  id: string;
-  name: string;
-  genres: string[];
-  images: ArtistImage[];
-}
-
-export type ArtistImage = {
-  height?: number;
-  width?: number;
-  url: string;
-}
 
 export type DanceEvent = {
   _id?: string;

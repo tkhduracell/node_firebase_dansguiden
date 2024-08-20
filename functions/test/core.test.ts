@@ -1,6 +1,6 @@
 import firebase from 'firebase-admin'
 import chai from 'chai'
-import { Events } from '../src/core'
+import { Events } from '../src/events'
 import { Versions } from '../src/versions'
 
 chai.should()

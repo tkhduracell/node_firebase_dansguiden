@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 
 import { Metadata } from '../src/metadata'
-import { database } from '../lib/database'
+import { database } from '../src/lib/utils/database'
 
 const { table, batch } = database()
 

@@ -3,14 +3,13 @@ import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-fu
 
 import { errorReporting } from './setup'
 
-import { Events, EventQueryParams } from './core'
+import { Events, EventQueryParams } from './events'
 import { Metadata } from './metadata'
 import { z } from 'zod'
 
-import { database } from '../lib/database'
+import { database } from './lib/utils/database'
 import { Versions } from './versions'
 import { Images } from './images'
-import { BandUpdater } from './band_updater'
 
 const { table, batch } = database()
 
@@ -44,18 +43,6 @@ function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?
     }
   })
 }
-
-// Metadata Bands
-export const bandsUpdate = schedule("every monday 09:00", () => {
-  const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET } = z.object({
-    SPOTIFY_CLIENT_ID: z.string(),
-    SPOTIFY_CLIENT_SECRET: z.string()
-  }).parse(process.env)
-  return BandUpdater.run(table, {
-    client_id: SPOTIFY_CLIENT_ID,
-    client_secret: SPOTIFY_CLIENT_SECRET
-  })
-}, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata Places
 export const metadataPlaces = schedule("every monday 09:15", () => {
@@ -96,6 +83,7 @@ export const versionsUpdate = schedule("every monday 11:00", () => {
   return Versions.update(table)
 })
 
+// Debugging
 export const versionFetch = http(() => Versions.fetch(table))
 export const imagesFetch = http(() => Images.fetch(table))
 export const eventsFetch = http(query => Events.fetch(table, query as EventQueryParams))

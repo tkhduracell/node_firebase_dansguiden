@@ -4,6 +4,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint --ext=jsx,ts,tsx src test lib debug",
     "test": "jest --silent",
     "test:watch": "jest --silent --watch",

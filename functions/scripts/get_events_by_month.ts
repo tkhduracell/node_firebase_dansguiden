@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { EventsParser } from '../lib/events'
+import { EventsParser } from '../src/lib/danslogen/events'
 
 EventsParser.parse(['november'])
   .then((res) => {

@@ -2,7 +2,7 @@
 
 import dotenv from 'dotenv'
 import path from 'path'
-import { BandUpdater } from '../src/band_updater'
+import { Bands } from '../src/lib/spotify'
 
 async function run(): Promise<void> {
   const secrets = dotenv.config({ path: path.join(__dirname, '..', '.secrets.local') })
@@ -12,7 +12,7 @@ async function run(): Promise<void> {
   }
 
   const band = 'Junix'
-  const result = await BandUpdater.get(config, band)
+  const result = await Bands.getArtist(config, band)
 
   console.log(`Results for ${band}:`)
   if (result) {

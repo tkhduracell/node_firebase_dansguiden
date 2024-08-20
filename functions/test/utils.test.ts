@@ -1,4 +1,4 @@
-import {removeNullValues} from '../lib/utils'
+import {removeNullValues} from '../src/lib/utils/utils'
 
 describe('fn_helpers', () => {
   it('should return same year when not specified', () => {

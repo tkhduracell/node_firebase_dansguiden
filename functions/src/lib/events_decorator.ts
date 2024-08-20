@@ -1,8 +1,10 @@
 import { DanceEvent } from './types'
 import _ from 'lodash'
 
-import { snapshotAsObj } from './utils'
-import { TableFn, BatchFn } from './database'
+import { snapshotAsObj } from './utils/utils'
+import { TableFn, BatchFn } from './utils/database'
+import { Place } from './danslogen/places'
+import { Artist } from './spotify'
 
 export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key: string]: DanceEvent }> {
   console.log('Fetched metadata_bands table!')
@@ -31,11 +33,11 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
         const band = _.chain(bands).get(bandName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
-          .value()
+          .value() as Artist
         const place = _.chain(places).get(placeName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
-          .value()
+          .value() as Place
         batcher.update(table('events').doc(id), { metadata: { band, place } })
 
         counters.touched++

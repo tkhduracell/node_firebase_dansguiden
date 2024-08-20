@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import SpotifyWebApi from 'spotify-web-api-node'
 
-import { Artist } from '../lib/types'
+import { Artist } from './index'
 
 const linkToId = (s: string) => s.replace(/https:\/\/open.spotify.com\/artist\/(.*)(\?.*)?/gi, '$1').replace(/\?.*/, '')
 
@@ -48,6 +48,7 @@ const blacklist = [
 
 const exact = _.mapValues({
   'Holidays': '6IxjXsaqZ81Fi1HiwRq4LS',
+  'Eloge': '3rOpdjTyTjMpBDQXWClnav',
   'Framed': 'https://open.spotify.com/artist/5vDnmN0QFphRUc5mNfPjtf?si=SYBL_F4-Qe-GNERFUmmLBQ'
 } as Record<string, string>, linkToId)
 

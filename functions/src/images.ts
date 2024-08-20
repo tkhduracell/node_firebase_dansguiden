@@ -1,5 +1,5 @@
-import { TableFn } from "../lib/database"
-import { snapshotAsArray } from "../lib/utils"
+import { TableFn } from "./lib/utils/database"
+import { snapshotAsArray } from "./lib/utils/utils"
 
 type Image = {
   src: string;

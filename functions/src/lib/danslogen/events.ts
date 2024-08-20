@@ -1,12 +1,11 @@
 import _ from 'lodash'
 
-import { parseYearDate, validateWeekDay, validateDate, fixTime } from './date'
-import { DanceEvent } from './types'
+import { parseYearDate, validateWeekDay, validateDate, fixTime } from '../utils/date'
+import { DanceEvent } from '../types'
 
-import { Scraper } from './scraper'
-import { InternalDanceEvent } from '../src/core'
-import { zipAsObj, removeNullValues } from './utils'
-import { serialDelayed } from './promises'
+import { Scraper } from '../utils/scraper'
+import { zipAsObj, removeNullValues } from '../utils/utils'
+import { serialDelayed } from '../utils/promises'
 
 const url = 'http://www.danslogen.se'
 
@@ -24,6 +23,8 @@ const COLUMN_MAP = {
 } as { [key: string]: string }
 
 export const COLUMNS = _.values(COLUMN_MAP)
+
+export type InternalDanceEvent = InternalEvent<DanceEvent>
 
 export function asObject<T>($: cheerio.Root, tr: cheerio.Cheerio, databaseColumns: string[]): T {
   const values = tr.children('td')

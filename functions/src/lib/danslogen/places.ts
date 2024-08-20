@@ -1,6 +1,6 @@
 
 import _ from "lodash"
-import { Scraper } from "./scraper"
+import { Scraper } from "../utils/scraper"
 
 export type Place = {
   name: string

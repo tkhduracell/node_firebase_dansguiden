@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import {database} from '../lib/database'
-import {snapshotAsObj} from '../lib/utils'
+import {database} from '../src/lib/utils/database'
+import {snapshotAsObj} from '../src/lib/utils/utils'
 
 const { table } = database()
 
