@@ -55,7 +55,7 @@ async function batchWriteFn<T, V>(batch: BatchFn, table: firestore.CollectionRef
                 const document = _.merge(value, {
                     _id: key
                 })
-                console.log('Adding change to ' + key)
+                console.log('Adding change to', key, value)
                 const ref = table.doc(key)
                 batcher.set(ref, document, { merge: true })
             }
