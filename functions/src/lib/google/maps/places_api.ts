@@ -1,6 +1,3 @@
-import fetch from 'node-fetch'
-
-
 export type PlacesApiResponse = {
   candidates: PlaceApiSearchCandidate[]
   error_message: string,
@@ -28,11 +25,7 @@ export class PlacesApi {
 
   static async search(apiKey: string, query: string) {
     const response = await fetch(PlacesApi.searchUrl(apiKey, query))
-    console.debug('Places API response', `'${query}'`, '==>',
-      'ok?:', response.ok,
-      'code:', response.status,
-      'message', response.statusText,
-    )
+    
     if (response.ok) {
       const { candidates, status, error_message } = await response.json() as PlacesApiResponse
       if (error_message) {
@@ -40,6 +33,12 @@ export class PlacesApi {
       } else {
         return candidates ?? []
       }
+    } else {
+      console.debug('Places API response', `'${query}'`, '==>',
+        'ok?:', response.ok,
+        'code:', response.status,
+        'message', response.statusText,
+      )
     }
     return []
   }

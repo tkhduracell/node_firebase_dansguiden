@@ -10,9 +10,4 @@
       "changeProcessCWD": true
     }
   ],
-  "jest.jestCommandLine": "npm --prefix functions run test --",
-  "jest.testExplorer": {
-    "enabled": true
-  },
-  "nuxt.isNuxtApp": false,
 }

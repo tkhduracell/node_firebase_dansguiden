@@ -9,7 +9,7 @@ describe('EventsParser Integration Test', () => {
     beforeAll(async () => {
       try {
         subject = await EventsParser.parse([month(moment().add(1, 'M')).toLocaleLowerCase()])
-      } catch (error) {
+      } catch {
         fail("Unable to fetch real data, check your internet connection")
       }
     }, 30000)

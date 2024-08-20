@@ -11,7 +11,7 @@ export class SpotifyApiClientFactory {
         const opts = {
             clientId: secrets.client_id,
             clientSecret: secrets.client_secret,
-            accessToken: token.access_token
+            accessToken: token.access_token as string
         }
         return new SpotifyWebApi(opts)
     }

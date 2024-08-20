@@ -34,7 +34,7 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
                 image_small: _.minBy(images, i => Math.abs(64 - (i.width ?? Number.MAX_VALUE)))?.url,
                 image_large: _.minBy(images, i => Math.abs(640 - (i.width ?? Number.MAX_VALUE)))?.url
             }, _.isUndefined)
-            await new Promise((res) => setTimeout(res, 500))
+            await new Promise((resolve) => setTimeout(resolve, 500))
         }
         return out
     }
@@ -65,7 +65,7 @@ export function overrides(): (values: DanceEvent[]) => Promise<Record<string, Ov
     return async (values: DanceEvent[]) => {
         const out: Record<string, Override> = {}
         for (const event of values) {
-            if (event._id && event.band in overrides) {
+            if (event._id && event.band in overridesMap) {
                 out[event._id] = { ...overridesMap[event.band] }
             }
         }
