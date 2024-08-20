@@ -5,17 +5,13 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint --ext=jsx,ts,tsx src test lib debug",
+    "lint": "eslint --ext=jsx,ts,tsx src test scripts",
     "test": "jest --silent",
     "test:watch": "jest --silent --watch",
     "serve": "npm run build && firebase serve --only functions",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "logs": "firebase functions:log",
-    "script:backup": "ts-node scripts/export.ts",
-    "script:events": "ts-node debug/events.ts",
-    "script:metadata": "ts-node debug/metadata.ts",
-    "script:band_search": "ts-node debug/band_search.ts"
+    "logs": "firebase functions:log"
   },
   "dependencies": {
     "@google-cloud/error-reporting": "^3.0.4",
