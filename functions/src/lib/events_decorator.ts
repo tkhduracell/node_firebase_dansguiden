@@ -5,6 +5,7 @@ import { snapshotAsObj } from './utils/utils'
 import { TableFn, BatchFn } from './utils/database'
 import { Place } from './danslogen/places'
 import { Artist } from './spotify'
+import moment from 'moment'
 
 export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key: string]: DanceEvent }> {
   console.log('Fetched metadata_bands table!')
@@ -13,7 +14,12 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
   console.log('Fetched metadata_places table!')
   const places = snapshotAsObj<Record<string, any>>(await table('metadata_places').get())
 
-  const eventsTable = await table('events').where('date', '>=', new Date().getFullYear() + '-00-00').get()
+  const in3Months = moment().add(3, 'months').format('YYYY-MM-DD')
+  const eventsTable = await table('events')
+    .where('date', '>=', moment().format('YYYY-MM-DD'))
+    .where('date', '<=', in3Months)
+    .get()
+
   console.log('Fetched events table!')
   const events = snapshotAsObj<DanceEvent>(eventsTable)
 
@@ -38,8 +44,12 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
           .value() as Place
-        batcher.update(table('events').doc(id), { metadata: { band, place } })
-
+        batcher.update(table('events').doc(id), { 
+          metadata: { 
+            band, 
+            place
+          } 
+        })
         counters.touched++
       } else {
         counters.unknowns++
