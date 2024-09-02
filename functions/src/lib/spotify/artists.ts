@@ -114,18 +114,6 @@ export function remapArtist (band: string) {
 }
 
 export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFull[]): Artist | undefined {
-
-  console.debug('    -----  Search results ----- ')
-  for (const a of artists.sort((a, b) => compare(a, b, band)).slice(0, 3)) {
-    const selected = isDansbandishOrUnknown(a) && isNotBlacklisted(a) && isSimilar(a.name, band)
-    console.debug(selected ? " -->" : "    ", JSON.stringify({
-      score: score(a, band),
-      name: a.name,
-      link: `https://open.spotify.com/artist/${a.id}`,
-      genres: a.genres.join(',')
-    }))
-  }
-
   return artists.filter(a => isSimilar(a.name, band))
     .filter(isDansbandishOrUnknown)
     .filter(isNotBlacklisted)
@@ -135,7 +123,6 @@ export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFul
 }
 
 export async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
-  console.debug("Spotify API call for artist", artist)
   const result = await api.searchArtists(artist, { limit: 12, market: 'SE' })
   const items = result.body.artists ? result.body.artists.items : []
   return items
