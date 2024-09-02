@@ -1,3 +1,5 @@
+#!./node_modules/.bin/ts-node
+
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
 import { MetadataPlaces } from '../src/metadata_places'
 import { DanceEvent } from '../src/lib/types'
@@ -31,23 +33,23 @@ import { MetadataDates } from '../src/metadata_dates'
     extra: 'extra'
   }
 
+  console.log('\n------------- Places -----------------')
   const place = MetadataPlaces.build([event], places)
-  console.log('------------- Places -----------------')
   for (const [key, value] of Object.entries(place ?? {})) {
     console.log(key, await value)
   }
 
+  console.log('\n-------------- Band --------------')
   const band = MetadataBands.build([event], { 
     client_id: clientIdData.payload?.data?.toString() ?? '',
     client_secret: clientSecretData.payload?.data?.toString() ?? ''
   })
-  console.log('-------------- Band --------------')
   for (const [key, value] of Object.entries(band ?? {})) {
     console.log(key, await value)
   }
 
+  console.log('\n-------------- Date -----------------')
   const date = MetadataDates.build([event])
-  console.log('-------------- Date -----------------')
   for (const [key, value] of Object.entries(date ?? {})) {
     console.log(key, await value)
   }
