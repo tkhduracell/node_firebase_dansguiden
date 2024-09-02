@@ -10,7 +10,7 @@ type SpotifyInfo = {
     image_large?: string
 }
 
-type Override = Pick<SpotifyInfo,'image_large' | 'image_small'>
+type Override = Pick<SpotifyInfo,'image_large' | 'image_small' | 'name'>
 
 export type MetadataBandsRecord = {
     counts: Promise<Record<string, Histogram>>,
@@ -44,8 +44,16 @@ export class MetadataBands {
     static build(events: DanceEvent[], secrets: SpotifySecrets): MetadataBandsRecord {
         return {
             counts: histogram('band')(events),
-            spotify: spotifyApi(secrets)(events),
-            override: overrides()(events) 
+            spotify: Promise.all([
+                spotifyApi(secrets)(events),
+                overrides()(events)
+            ]).then(([artist, o]) => {
+                const out = { ...artist }
+                for (const [k, ] of Object.entries(o)) {
+                    out[k] = { ...artist[k], ...o[k] }
+                }
+                return out
+            })
         }
     }
 }
@@ -66,7 +74,7 @@ export function overrides(): (values: DanceEvent[]) => Promise<Record<string, Ov
         const out: Record<string, Override> = {}
         for (const event of values) {
             if (event._id && event.band in overridesMap) {
-                out[event._id] = { ...overridesMap[event.band] }
+                out[event.band] = { ...overridesMap[event.band] }
             }
         }
         return out
