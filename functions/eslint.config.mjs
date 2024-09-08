@@ -10,6 +10,7 @@ export default tseslint.config(
   pluginPromise.configs['flat/recommended'],
   {
     ignores: [
+      'build',
       'jest.config.js',
       'eslint.config.mjs'
     ],
