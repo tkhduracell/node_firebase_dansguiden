@@ -118,8 +118,17 @@ const overridesMap: Record<string, Override>= {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fekl_fs%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fekl_fs%2Flarge.webp"
+    },
+    "Kenneth & Classe": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2F%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2F%2Flarge.webp"
+    },
+    "Hardys": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Flarge.webp"
     }
-
 }
 
 export function overrides(): (values: DanceEvent[]) => Promise<Record<string, Override>> {
