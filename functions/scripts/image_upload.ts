@@ -35,13 +35,17 @@ import { createInterface } from 'node:readline/promises'
 
     // 3. resize to 100x100
     const resized = await sharp.default(buffer)
-        .resize(100, 100, { fit: 'inside' })
+        .resize(300, 300, { fit: 'cover' })
         .webp()
         .toBuffer()
     
     // 4. upload resized+original to firestore cloud storage /media
     
-    const dir = band.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+    const dir = band.replace(/[^a-z0-9]/gi, '_')
+        .replace(/å/gi, 'a')
+        .replace(/ä/gi, 'a')
+        .replace(/ö/gi, 'o')
+        .toLowerCase()
     const largeFile = admin.storage().bucket().file(`media/${dir}/large.webp`)
     await largeFile.save(Buffer.from(original))
     await largeFile.makePublic()

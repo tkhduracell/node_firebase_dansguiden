@@ -121,13 +121,23 @@ const overridesMap: Record<string, Override>= {
     },
     "Kenneth & Classe": {
         id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2F%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2F%2Flarge.webp"
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkenneth___classe%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkenneth___classe%2Flarge.webp"
     },
     "Hardys": {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Flarge.webp"
+    },
+    "Trippz": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippz%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippz%2Flarge.webp"
+    },
+    "Wåxbos": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Flarge.webp"
     }
 }
 
