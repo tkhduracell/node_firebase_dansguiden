@@ -1,4 +1,4 @@
-import cheerio from 'cheerio'
+import {load} from 'cheerio'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
@@ -12,7 +12,7 @@ describe('places.ts', () => {
 
     it('should have output', async () => {
       const payload = await readFile(path.join(__dirname, 'files', 'places-2022-11-24.html'), { encoding: 'utf-8' })
-      const $ = cheerio.load(payload)
+      const $ = load(payload)
 
       const out = PlacessParser.extractTableRows($)
 

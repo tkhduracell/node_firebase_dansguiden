@@ -1,5 +1,5 @@
 import { fetchLatestVersion, extractContent, Version } from '../src/lib/google/play/versions'
-import cheerio from 'cheerio'
+import {load} from 'cheerio'
 import {promisify} from 'util'
 import fs from 'fs'
 
@@ -35,7 +35,7 @@ const meta = `
 describe('versions', () => {
 
   describe('with fake data', () => {
-    const $ = cheerio.load(`
+    const $ = load(`
     <html>
       <h1>Page</h1>
       <div>
@@ -67,7 +67,7 @@ describe('versions', () => {
     let version = {} as Version
     beforeAll(async () => {
       const html = await readFile('test/files/playstore-2020-02-08.html')
-      version = await extractContent(cheerio.load(html))
+      version = await extractContent(load(html))
     })
 
     it('should return specific version', () => {
