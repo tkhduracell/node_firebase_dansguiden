@@ -44,7 +44,8 @@ const blacklist = [
   '5XZN5RKQkiN6hGofPCnpjK', // Serenad
   '60rrONrFQipKsTXYazdmQO', // Remix,
   '6zNO1D32YLKnbC87DYVVBx', // Junix
-  '7Fhj0K08T75UchC1p8T6g1', // Barons
+  '7Fhj0K08T75UchC1p8T6g1', // Barons,
+  '1sdQQJLlTbhXDn7f47AFkW', // Trippz
 ].map(linkToId)
 
 const promotedCandidates = _.mapValues({
