@@ -1,7 +1,15 @@
 import * as admin from 'firebase-admin'
 
-export type TableFn = (name: string) => admin.firestore.CollectionReference
+export type TableFn = (name: TableName) => admin.firestore.CollectionReference
 export type BatchFn = () => admin.firestore.WriteBatch
+
+export type TableName =
+  'events' |
+  'band_metadata' |
+  'metadata_bands' |
+  'metadata_dates' |
+  'metadata_places' |
+  'versions'
 
 export type FirestoreFn = {
   table: TableFn;
@@ -16,7 +24,7 @@ export function database(): FirestoreFn {
   db.settings({ timestampsInSnapshots: true })
 
   return {
-    table: (name: string) => db.collection((config.collection_prefix || '') + name),
+    table: (name: TableName) => db.collection((config.collection_prefix || '') + name),
     batch: () => db.batch()
   } as FirestoreFn
 }

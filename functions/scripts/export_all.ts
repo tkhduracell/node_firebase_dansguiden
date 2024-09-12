@@ -3,7 +3,7 @@ import moment from 'moment'
 import fs from 'fs'
 import { promisify } from 'util'
 
-import { database } from '../src/lib/utils/database'
+import { database, TableName } from '../src/lib/utils/database'
 import { snapshotAsObj } from '../src/lib/utils/utils'
 import { TableFn } from '../src/lib/utils/database'
 
@@ -15,7 +15,7 @@ const makeDir = promisify(fs.mkdir)
 const ymd = moment().format("YYYY-MM-DD")
 const dir = path.join(__dirname, '../backups', ymd)
 
-const save = (tableName: string): Promise<object> => Dumper.dump(table, dir, tableName)
+const save = (tableName: TableName): Promise<object> => Dumper.dump(table, dir, tableName)
 const writeFile = promisify(fs.writeFile)
 
 run()
@@ -28,7 +28,6 @@ async function run(): Promise<void> {
 
   await save('events')
   await save('versions')
-  await save('images')
   await save('band_metadata')
   await save('metadata_dates')
   await save('metadata_bands')
@@ -36,7 +35,7 @@ async function run(): Promise<void> {
 }
 
 class Dumper {
-  static async dump(table: TableFn, dir: string, tableName: string): Promise<{ [key: string]: object }> {
+  static async dump(table: TableFn, dir: string, tableName: TableName): Promise<{ [key: string]: object }> {
     const snapshot = await table(tableName).get()
 
     const data = { [tableName]: snapshotAsObj<object>(snapshot) }

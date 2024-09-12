@@ -9,7 +9,6 @@ import { z } from 'zod'
 
 import { database } from './lib/utils/database'
 import { Versions } from './versions'
-import { Images } from './images'
 
 const { table, batch } = database()
 
@@ -85,5 +84,4 @@ export const versionsUpdate = schedule("every monday 11:00", () => {
 
 // Debugging
 export const versionFetch = http(() => Versions.fetch(table))
-export const imagesFetch = http(() => Images.fetch(table))
 export const eventsFetch = http(query => Events.fetch(table, query as EventQueryParams))
