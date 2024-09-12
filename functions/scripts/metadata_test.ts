@@ -5,6 +5,8 @@ import { MetadataPlaces } from '../src/metadata_places'
 import { DanceEvent } from '../src/lib/types'
 import { MetadataBands } from '../src/metadata_artists'
 import { MetadataDates } from '../src/metadata_dates'
+import { database } from '../src/lib/utils/database'
+import { createInterface } from 'readline/promises'
 
 (async () => {
   const client = new SecretManagerServiceClient()
@@ -20,18 +22,20 @@ import { MetadataDates } from '../src/metadata_dates'
   
   const places = { api_key: secret.payload?.data?.toString() ?? '' }
   
-  const event: DanceEvent = {
-    _id: '2023_12_09_streaks',
-    band: 'Streaks',
-    city: 'Stockholm',
-    county: 'Stockholm',
-    date: '2022-01-01',
-    place: 'Hallunda Folkets Hus',
-    region: 'Stockholm',
-    time: '20:00',
-    weekday: 'Saturday',
-    extra: 'extra'
+  // prompt for event id
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const eventId = await rl.question('Enter event id: ')
+  if (!eventId) {
+    console.error('Invalid event id')
+    return
   }
+
+  const { table } = database()
+  const doc = await table('events').doc(eventId).get()
+
+  console.log('\n-------------- Event -----------------')
+  console.dir(doc.data(), { depth: 4 })
+  const event = doc.data() as DanceEvent
 
   console.log('\n------------- Places -----------------')
   const place = MetadataPlaces.build([event], places)
@@ -54,5 +58,5 @@ import { MetadataDates } from '../src/metadata_dates'
     console.log(key, await value)
   }
 
-  return null
+  process.exit(0)
 })()
