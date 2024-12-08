@@ -3,7 +3,7 @@
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
 import { MetadataPlaces } from '../src/metadata_places'
 import { DanceEvent } from '../src/lib/types'
-import { MetadataBands } from '../src/metadata_artists'
+import { MetadataBands } from '../src/metadata_bands'
 import { MetadataDates } from '../src/metadata_dates'
 import { database } from '../src/lib/utils/database'
 import { createInterface } from 'readline/promises'

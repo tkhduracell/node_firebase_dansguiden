@@ -12,12 +12,17 @@ type SpotifyInfo = {
 
 type Override = Pick<SpotifyInfo,'image_large' | 'image_small' | 'name' | 'id'>
 
-export type MetadataBandsRecord = {
+export type MetadataBandsRecordBuilder = {
     counts: Promise<Record<string, Histogram>>,
     spotify?: Promise<Record<string, SpotifyInfo>>
     override?: Promise<Record<string, Override>>
 }
 
+export type MetadataBandsRecord = {
+    counts: Histogram,
+    spotify?: SpotifyInfo,
+    override?: Override,
+}
 
 export type SpotifySecrets = { client_id: string; client_secret: string }
 
@@ -41,7 +46,7 @@ function spotifyApi(secrets: SpotifySecrets): (values: DanceEvent[]) => Promise<
 }
 
 export class MetadataBands {
-    static build(events: DanceEvent[], secrets: SpotifySecrets): MetadataBandsRecord {
+    static build(events: DanceEvent[], secrets: SpotifySecrets): MetadataBandsRecordBuilder {
         return {
             counts: histogram('band')(events),
             spotify: Promise.all([

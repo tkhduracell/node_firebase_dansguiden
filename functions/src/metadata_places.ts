@@ -4,10 +4,16 @@ import { PlacessParser } from "./lib/danslogen/places"
 import { PlacesApi } from "./lib/google/maps/places_api"
 import { DanceEvent } from "./lib/types"
 
-export type MetadataPlacesRecord = {
+export type MetadataPlacesRecordBuilder = {
     counts: Promise<Record<string, PlacesApi>>
-    general: Promise<Record<string, PlacesInfo>>
-    places_api: Promise<Record<string, PlacesApiInfo>>
+    general?: Promise<Record<string, PlacesInfo>>
+    places_api?: Promise<Record<string, PlacesApiInfo>>
+}
+
+export type MetadataPlacesRecord = {
+    counts: PlacesApi
+    general?: PlacesInfo
+    places_api?: PlacesApiInfo
 }
 
 type PlacesInfo = {
@@ -75,7 +81,7 @@ function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[]) => Promi
 }
 
 export class MetadataPlaces {
-    static build(events: DanceEvent[], secerts: PlacesSecerts): MetadataPlacesRecord {
+    static build(events: DanceEvent[], secerts: PlacesSecerts): MetadataPlacesRecordBuilder {
         return {
             counts: histogram('place')(events),
             general: placesInfo()(events),

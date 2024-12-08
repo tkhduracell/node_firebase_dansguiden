@@ -8,7 +8,7 @@ import { getValues } from './lib/utils/store'
 import { BatchFn, TableFn } from './lib/utils/database'
 import { DanceEvent } from './lib/types'
 import { MetadataPlaces, PlacesSecerts } from './metadata_places'
-import { MetadataBands, SpotifySecrets } from './metadata_artists'
+import { MetadataBands, SpotifySecrets } from './metadata_bands'
 import { MetadataDates } from './metadata_dates'
 
 type MetadataTypes = 'dates' | 'places' | 'bands'

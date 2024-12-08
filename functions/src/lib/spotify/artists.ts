@@ -46,6 +46,9 @@ const blacklist = [
   '6zNO1D32YLKnbC87DYVVBx', // Junix
   '7Fhj0K08T75UchC1p8T6g1', // Barons,
   '1sdQQJLlTbhXDn7f47AFkW', // Trippz
+  '48SXjM5MvFDSXSyrGkUMMP', // Tobbez
+  '0oV5K4BDmoENgjwB8lvDmT', // Blue Print
+
 ].map(linkToId)
 
 const promotedCandidates = _.mapValues({
@@ -59,22 +62,22 @@ const remapping = {
   'PerHåkans': 'Per-Håkans',
   'PHs': 'Per-Håkans',
   'Larz Kristers': 'Larz-Kristers',
-  'Agneta & Peter' : 'Agneta Olsson',
+  'Agneta & Peter': 'Agneta Olsson',
   'Anne Nørdsti (N)': 'Anne Nørdsti',
   'Tommys (FIN)': 'Tommys'
 } as { [key: string]: string }
 
 const normalize = (str: string): string => str.toLowerCase().replace(/[^\wåäö]+/gi, '')
 
-function isSimilar (lhs: string, rhs: string): boolean {
+function isSimilar(lhs: string, rhs: string): boolean {
   return normalize(lhs) === normalize(rhs)
 }
 
-function removeSuffix (band: string): string {
+function removeSuffix(band: string): string {
   return band.replace(/\W+\([[:upper:]]+\)/gi, '')
 }
 
-function remap (band: string): string {
+function remap(band: string): string {
   return remapping[band] || band
 }
 
@@ -86,7 +89,7 @@ function isDansbandishOrUnknown(a: { genres: string[] }): boolean {
   return _.isEmpty(a.genres) || isDansbandishStrict(a)
 }
 
-function isNotBlacklisted(a: {  id:  string }): boolean {
+function isNotBlacklisted(a: { id: string }): boolean {
   return !blacklist.includes(a.id)
 }
 
@@ -94,9 +97,9 @@ function isWhitelisted(a: { id: string }, target: string): boolean {
   return promotedCandidates[target] === a.id
 }
 
-function score (a: SpotifyApi.ArtistObjectFull, target: string): number {
+function score(a: SpotifyApi.ArtistObjectFull, target: string): number {
   let score = 0
-  if (isWhitelisted(a, target)) score+=10
+  if (isWhitelisted(a, target)) score += 10
   if (isDansbandishOrUnknown(a)) score++
   if (isDansbandishStrict(a)) score++
   if (isNotBlacklisted(a)) score++
@@ -104,11 +107,11 @@ function score (a: SpotifyApi.ArtistObjectFull, target: string): number {
   return score
 }
 
-function compare (a: SpotifyApi.ArtistObjectFull, b: SpotifyApi.ArtistObjectFull, target: string): number {
-  return score(b, target) -  score(a, target)
+function compare(a: SpotifyApi.ArtistObjectFull, b: SpotifyApi.ArtistObjectFull, target: string): number {
+  return score(b, target) - score(a, target)
 }
 
-export function remapArtist (band: string) {
+export function remapArtist(band: string) {
   const out = remap(removeSuffix(band))
   if (out !== band) console.debug(`Remapped artist from ${band} -> ${out}`)
   return out
@@ -123,7 +126,7 @@ export function findArtistInfo(band: string, artists: SpotifyApi.ArtistObjectFul
     .find(() => true)
 }
 
-export async function searchArtist (api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
+export async function searchArtist(api: SpotifyWebApi, artist: string): Promise<SpotifyApi.ArtistObjectFull[]> {
   const result = await api.searchArtists(artist, { limit: 12, market: 'SE' })
   const items = result.body.artists ? result.body.artists.items : []
   return items

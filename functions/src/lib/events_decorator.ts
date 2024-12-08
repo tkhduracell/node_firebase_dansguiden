@@ -1,18 +1,18 @@
-import { DanceEvent } from './types'
 import _ from 'lodash'
+import moment from 'moment'
 
+import { DanceEvent } from './types'
 import { snapshotAsObj } from './utils/utils'
 import { TableFn, BatchFn } from './utils/database'
-import { Place } from './danslogen/places'
-import { Artist } from './spotify'
-import moment from 'moment'
+import { MetadataBandsRecord } from '../metadata_bands'
+import { MetadataPlacesRecord } from '../metadata_places'
 
 export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key: string]: DanceEvent }> {
   console.log('Fetched metadata_bands table!')
-  const bands = snapshotAsObj<Record<string, any>>(await table('metadata_bands').get())
+  const bands = snapshotAsObj<MetadataBandsRecord>(await table('metadata_bands').get())
 
   console.log('Fetched metadata_places table!')
-  const places = snapshotAsObj<Record<string, any>>(await table('metadata_places').get())
+  const places = snapshotAsObj<MetadataPlacesRecord>(await table('metadata_places').get())
 
   const in3Months = moment().add(3, 'months').format('YYYY-MM-DD')
   const eventsTable = await table('events')
@@ -39,13 +39,14 @@ export async function enrichment(batch: BatchFn, table: TableFn): Promise<{ [key
         const band = _.chain(bands).get(bandName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
-          .value() as Artist
+          .value()
         const place = _.chain(places).get(placeName)
           .omit('updated_at', 'created_at', 'counts')
           .omitBy(_.isUndefined)
-          .value() as Place
+          .value()
+        
         batcher.update(table('events').doc(id), { 
-          metadata: { 
+          metadata: {
             band, 
             place
           } 
