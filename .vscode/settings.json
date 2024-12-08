@@ -3,11 +3,12 @@
   "eslint.workingDirectories": [
     {
       "directory": "functions",
-      "changeProcessCWD": true
     },
     {
       "directory": "web",
-      "changeProcessCWD": true
     }
   ],
+  "editor.formatOnSave": true,
+  "typescript.format.enable": true,
+  "eslint.codeActionsOnSave.mode": "problems"
 }
