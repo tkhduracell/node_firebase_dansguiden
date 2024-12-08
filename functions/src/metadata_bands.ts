@@ -10,7 +10,7 @@ type SpotifyInfo = {
     image_large?: string
 }
 
-type Override = Pick<SpotifyInfo,'image_large' | 'image_small' | 'name' | 'id'>
+type Override = Pick<SpotifyInfo, 'image_large' | 'image_small' | 'name' | 'id'>
 
 export type MetadataBandsRecordBuilder = {
     counts: Promise<Record<string, Histogram>>,
@@ -54,7 +54,7 @@ export class MetadataBands {
                 overrides()(events)
             ]).then(([artist, o]) => {
                 const out = { ...artist }
-                for (const [k, ] of Object.entries(o)) {
+                for (const [k,] of Object.entries(o)) {
                     out[k] = { ...artist[k], ...o[k] }
                 }
                 return out
@@ -63,7 +63,7 @@ export class MetadataBands {
     }
 }
 
-const overridesMap: Record<string, Override>= {
+const overridesMap: Record<string, Override> = {
     'Jompaz': {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Fsmall.webp",
@@ -74,11 +74,11 @@ const overridesMap: Record<string, Override>= {
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Flarge.webp"
     },
-    'Strike': { 
+    'Strike': {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstrike%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstrike%2Flarge.webp"
-    }, 
+    },
     'Streaks': {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstreaks%2Fsmall.webp",
@@ -143,6 +143,46 @@ const overridesMap: Record<string, Override>= {
         id: '',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Flarge.webp"
+    },
+    "Ola & Jag": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fola___jag%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fola___jag%2Flarge.webp"
+    },
+    "Remix": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fremix%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fremix%2Flarge.webp"
+    },
+    "Sture Johansson": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fsture_johansson%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fsture_johansson%2Flarge.webp"
+    },
+    "Janne Stefans": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjanne_stefans%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjanne_stefans%2Flarge.webp"
+    },
+    "Charlies": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcharlies%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcharlies%2Flarge.webp"
+    },
+    "Trippix": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippix%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippix%2Flarge.webp"
+    },
+    "C-laget": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fc_laget%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fc_laget%2Flarge.webp"
+    },
+    "Highlights": {
+        id: '',
+        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Fsmall.webp",
+        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Flarge.webp"
     }
 }
 
