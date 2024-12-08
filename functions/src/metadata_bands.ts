@@ -180,7 +180,7 @@ const overridesMap: Record<string, Override> = {
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fc_laget%2Flarge.webp"
     },
     "Highlights": {
-        id: '',
+        id: '2tgdbXtsDz4QkssaFoyOP4',
         image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Fsmall.webp",
         image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Flarge.webp"
     }
