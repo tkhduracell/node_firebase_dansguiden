@@ -9,6 +9,7 @@ import { database } from '../src/lib/utils/database'
 import { createInterface } from 'readline/promises'
 
 (async () => {
+  console.log('Initializing...')
   const client = new SecretManagerServiceClient()
   const [secret] = await client.accessSecretVersion({
     name: 'projects/58654864940/secrets/GCLOUD_PLACES_API_KEY/versions/1'
@@ -19,18 +20,50 @@ import { createInterface } from 'readline/promises'
   const [clientSecretData] = await client.accessSecretVersion({
     name: 'projects/58654864940/secrets/SPOTIFY_CLIENT_SECRET/versions/1'
   })
-  
+
   const places = { api_key: secret.payload?.data?.toString() ?? '' }
-  
+  const artists = {
+    client_id: clientIdData.payload?.data?.toString() ?? '',
+    client_secret: clientSecretData.payload?.data?.toString() ?? ''
+  }
+  const { table } = database()
+
+  console.log()
+
   // prompt for event id
   const rl = createInterface({ input: process.stdin, output: process.stdout })
-  const eventId = await rl.question('Enter event id: ')
-  if (!eventId) {
-    console.error('Invalid event id')
-    return
+
+  let id = null, prevId = null
+  for (; ;) {
+    console.log()
+    id = await rl.question(prevId ? `Enter event id (${prevId}): ` : 'Enter event id: ')
+    if (!id && prevId === null) {
+      console.error('Invalid event id')
+      break
+    }
+
+    if (!id && prevId) {
+      id = prevId
+    } else {
+      prevId = id
+    }
+
+    try {
+      await display(table, id, places, artists)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const { table } = database()
+  process.exit(0)
+})()
+
+async function display(
+  table: ReturnType<typeof database>['table'],
+  eventId: string,
+  places: { api_key: string },
+  artists: { client_id: string, client_secret: string }
+) {
   const doc = await table('events').doc(eventId).get()
 
   console.log('\n-------------- Event -----------------')
@@ -44,10 +77,7 @@ import { createInterface } from 'readline/promises'
   }
 
   console.log('\n-------------- Band --------------')
-  const band = MetadataBands.build([event], { 
-    client_id: clientIdData.payload?.data?.toString() ?? '',
-    client_secret: clientSecretData.payload?.data?.toString() ?? ''
-  })
+  const band = MetadataBands.build([event], artists)
   for (const [key, value] of Object.entries(band ?? {})) {
     console.log(key, await value)
   }
@@ -57,6 +87,4 @@ import { createInterface } from 'readline/promises'
   for (const [key, value] of Object.entries(date ?? {})) {
     console.log(key, await value)
   }
-
-  process.exit(0)
-})()
+}
