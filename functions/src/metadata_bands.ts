@@ -2,7 +2,8 @@ import _ from "lodash"
 import { Histogram, histogram } from "./lib/counter"
 import { DanceEvent } from "./lib/types"
 import { Bands } from "./lib/spotify"
-import { artistsOverrides, Override } from "./overrides"
+import { SpotifyInfoOverrides } from "./overrides"
+import { mergeWith } from "./lib/utils/utils"
 
 export type SpotifyInfo = {
     id?: string,
@@ -14,13 +15,13 @@ export type SpotifyInfo = {
 export type MetadataBandsRecordBuilder = {
     counts: Promise<Record<string, Histogram>>,
     spotify?: Promise<Record<string, SpotifyInfo>>
-    override?: Promise<Record<string, Override>>
+    override?: Promise<Record<string, Partial<SpotifyInfo>>>
 }
 
 export type MetadataBandsRecord = {
     counts: Histogram,
     spotify?: SpotifyInfo,
-    override?: Override,
+    override?: Partial<SpotifyInfo>,
 }
 
 export type SpotifySecrets = { client_id: string; client_secret: string }
@@ -51,23 +52,17 @@ export class MetadataBands {
             spotify: Promise.all([
                 spotifyApi(secrets)(events),
                 overrides()(events)
-            ]).then(([artist, o]) => {
-                const out = { ...artist }
-                for (const [k,] of Object.entries(o)) {
-                    out[k] = { ...artist[k], ...o[k] }
-                }
-                return out
-            })
+            ]).then(mergeWith)
         }
     }
 }
 
-export function overrides(): (values: DanceEvent[]) => Promise<Record<string, Override>> {
+export function overrides(): (values: DanceEvent[]) => Promise<Record<string, SpotifyInfo>> {
     return async (values: DanceEvent[]) => {
-        const out: Record<string, Override> = {}
+        const out: Record<string, Partial<SpotifyInfo>> = {}
         for (const event of values) {
-            if (event._id && event.band in artistsOverrides) {
-                out[event.band] = { ...artistsOverrides[event.band] }
+            if (event._id && event.band in SpotifyInfoOverrides) {
+                out[event.band] = { ...SpotifyInfoOverrides[event.band] }
             }
         }
         return out

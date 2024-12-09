@@ -14,7 +14,7 @@ export function snapshotAsArray<T>(snapshot: firebase.firestore.QuerySnapshot,
   snapshot.forEach(doc => {
     const data = fn(doc.data())
     if (_.isObject(data)) {
-      const extension = includeKey ? {_id: doc.id} : {}
+      const extension = includeKey ? { _id: doc.id } : {}
       output.push(_.merge(data, extension))
     } else if (data) {
       output.push(data)
@@ -36,7 +36,7 @@ export function snapshotAsObj<T>(snapshot: firebase.firestore.QuerySnapshot,
   return output
 }
 
-export function zip<A,B>(a: A[], b: B[]): [A, B][] {
+export function zip<A, B>(a: A[], b: B[]): [A, B][] {
   return a.map((e, i) => {
     return [e, b[i]]
   })
@@ -56,4 +56,15 @@ export function removeNullValues<T extends Record<string, any>>(input: T): WithO
     Object.entries(input)
       .filter(([, v]) => v !== null && v !== undefined)
   ) as WithOutNull<T>
+}
+
+
+export const mergeWith = <DataType extends object, OverrideType extends object>(
+  [data, override]: [Record<string, DataType>, Record<string, OverrideType>]
+) => {
+  const out = { ...data }
+  for (const [k,] of Object.entries(override)) {
+    out[k] = { ...data[k], ...override[k] }
+  }
+  return out
 }
