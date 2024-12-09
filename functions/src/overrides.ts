@@ -1,20 +1,22 @@
 import { mapValues } from "lodash"
 import { SpotifyInfo } from "./metadata_bands"
+import { PlacesApiInfo } from "./metadata_places"
 
-// Generic typ that makes a specific value of a key marked optional...
-type Optional<T, K extends keyof T> = Omit<T, K> & { [P in K]?: T[K] }
+const bucket = 'dansguiden-b3a7d.appspot.com'
 
-export type Override = Optional<Pick<Required<SpotifyInfo>, 'image_large' | 'image_small' | 'id'>, 'id'>
-
-export const artistsOverrides: Record<string, Override> = mapValues({
+export const SpotifyInfoOverrides: Record<string, Partial<SpotifyInfo>> = mapValues({
     'Allstars': { dir: 'media/allstars' },
+    'Bendix': { dir: 'media/bendix' },
     'C-laget': { dir: 'media/c_laget' },
     'Caspers': { dir: 'media/caspers' },
     'Charlies': { dir: 'media/charlies' },
     'Eklöfs': { dir: 'media/ekl_fs' },
+    'Finezze': { dir: 'media/finezze' },
+    'Gideons': { id: '', dir: 'media/gideons' },
     'Glads': { dir: 'media/glads' },
     'Hanes Duo': { dir: 'media/hanes_duo' },
     'Hardys': { dir: 'media/hardys' },
+    'Herrgårds & Berghorn': { id: '', dir: 'media/herrg_rds___berghorn' },
     'Höilands': { dir: 'media/h_ilands' },
     'Janne Stefans': { dir: 'media/janne_stefans' },
     'Jompaz': { dir: 'media/junix' },
@@ -26,6 +28,7 @@ export const artistsOverrides: Record<string, Override> = mapValues({
     'Pär Norlings': { dir: 'media/p_r_norlings' },
     'Remix': { dir: 'media/remix' },
     'Rent Drag': { dir: '/media/rent_drag' },
+    'Rixons': { id: '', dir: 'media/rixons' },
     'Streaks': { dir: 'media/streaks' },
     'Strike': { dir: 'media/strike' },
     'Sture Johansson': { dir: 'media/sture_johansson' },
@@ -38,6 +41,19 @@ export const artistsOverrides: Record<string, Override> = mapValues({
     'Highlights': { id: '2tgdbXtsDz4QkssaFoyOP4', dir: '/media/highlights' }
 } as Record<string, { id?: string, dir: string }>, ({ id, dir }) => ({
     id: id ?? '',
-    image_large: `https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/${dir}/large.webp`,
-    image_small: `https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/${dir}/small.webp`,
+    image_large: `https://storage.googleapis.com/${bucket}/${dir}/large.webp`,
+    image_small: `https://storage.googleapis.com/${bucket}/${dir}/small.webp`,
+}))
+
+
+export const PlaceApiOverrides: Record<string, Partial<PlacesApiInfo>> = mapValues({
+    'Brunnsparken': { dir: 'media/brunnsparken' },
+    'Etelhems bygdegård': { dir: 'media/etelhems_bygdeg_rd' },
+    'Fyren Norrsundet': { dir: 'media/fyren_norrsundet' },
+    'Häreborg': { dir: 'media/h_reborg' },
+    'Medborgarhuset Arvidsjaur': { dir: 'media/medborgarhuset_arvidsjaur' },
+}, ({ dir }) => ({
+    photo_large: `https://storage.googleapis.com/${bucket}/${dir}/large.webp`,
+    photo_small: `https://storage.googleapis.com/${bucket}/${dir}/small.webp`,
+    photo_attributions: []
 }))

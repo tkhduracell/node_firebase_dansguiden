@@ -48,7 +48,7 @@ const blacklist = [
   '1sdQQJLlTbhXDn7f47AFkW', // Trippz
   '48SXjM5MvFDSXSyrGkUMMP', // Tobbez
   '0oV5K4BDmoENgjwB8lvDmT', // Blue Print
-
+  '7yXL9OTImGOVYstbIb9pmS', // Bendix
 ].map(linkToId)
 
 const promotedCandidates = _.mapValues({
