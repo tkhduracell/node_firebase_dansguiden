@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises'
 
     const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-    const band = await rl.question('Name of band: ')
+    const name = await rl.question('Name of entity: ')
 
     const url = await rl.question('Image URL: ')
 
@@ -54,7 +54,7 @@ import { readFile } from 'node:fs/promises'
 
     // 4. upload resized+original to firestore cloud storage /media
 
-    const dirpath = 'media/' + band.replace(/[^a-z0-9]/gi, '_')
+    const dirpath = 'media/' + name.replace(/[^a-z0-9]/gi, '_')
         .replace(/å/gi, 'a')
         .replace(/ä/gi, 'a')
         .replace(/ö/gi, 'o')
@@ -68,8 +68,11 @@ import { readFile } from 'node:fs/promises'
     await smallFile.save(Buffer.from(resized))
     await smallFile.makePublic()
 
+
     console.log(`
-    '${band}': { id: '', dir: '${dirpath}' },
+    functions/src/overrides.ts: 
+
+        '${name}': { dir: '${dirpath}' },
     `)
     process.exit(0)
 })()
