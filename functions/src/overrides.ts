@@ -39,7 +39,7 @@ export const SpotifyInfoOverrides: Record<string, Partial<SpotifyInfo>> = mapVal
     'Trippz': { dir: 'media/trippz' },
     'Wåxbos': { dir: 'media/w_xbos' },
     // With ids
-    'Highlights': { id: '2tgdbXtsDz4QkssaFoyOP4', dir: '/media/highlights' }
+    'Highlights': { id: '2tgdbXtsDz4QkssaFoyOP4', dir: 'media/highlights' }
 } as Record<string, { id?: string, dir: string }>, ({ id, dir }) => ({
     id: id ?? '',
     image_large: `https://storage.googleapis.com/${bucket}/${dir}/large.webp`,
