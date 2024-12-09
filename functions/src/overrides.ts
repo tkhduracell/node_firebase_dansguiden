@@ -32,6 +32,7 @@ export const SpotifyInfoOverrides: Record<string, Partial<SpotifyInfo>> = mapVal
     'Streaks': { dir: 'media/streaks' },
     'Strike': { dir: 'media/strike' },
     'Sture Johansson': { dir: 'media/sture_johansson' },
+    'Tobbez': { dir: 'media/tobbez' },
     'Tomas & Co': { dir: 'media/tomas___co' },
     'Tottes': { dir: 'media/tottes' },
     'Trippix': { dir: 'media/trippix' },
