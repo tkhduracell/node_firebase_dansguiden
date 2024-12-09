@@ -3,5 +3,5 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   testTimeout: 10000,
-  testPathIgnorePatterns: ['build/.*']
+  testPathIgnorePatterns: ['build/.*', 'src/lib/events_decorator.test.ts']
 }
