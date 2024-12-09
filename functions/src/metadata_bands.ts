@@ -2,6 +2,7 @@ import _ from "lodash"
 import { Histogram, histogram } from "./lib/counter"
 import { DanceEvent } from "./lib/types"
 import { Bands } from "./lib/spotify"
+import { mapValues } from 'lodash'
 
 type SpotifyInfo = {
     id?: string,
@@ -63,128 +64,43 @@ export class MetadataBands {
     }
 }
 
-const overridesMap: Record<string, Override> = {
-    'Jompaz': {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Flarge.webp"
-    },
-    'Junix': {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjunix%2Flarge.webp"
-    },
-    'Strike': {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstrike%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstrike%2Flarge.webp"
-    },
-    'Streaks': {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstreaks%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fstreaks%2Flarge.webp"
-    },
-    "Glads": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fglads%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fglads%2Flarge.webp"
-    },
-    "Hanes Duo": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhanes_duo%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhanes_duo%2Flarge.webp"
-    },
-    "Caspers": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcaspers%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcaspers%2Flarge.webp"
-    },
-    "Lövgrens": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fl_vgrens%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fl_vgrens%2Flarge.webp"
-    },
-    "Kjellez": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkjellez%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkjellez%2Flarge.webp"
-    },
-    "Pär Norlings": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fp_r_norlings%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fp_r_norlings%2Flarge.webp"
-    },
-    "Tomas & Co": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftomas___co%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftomas___co%2Flarge.webp"
-    },
-    "Eklöfs": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fekl_fs%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fekl_fs%2Flarge.webp"
-    },
-    "Kenneth & Classe": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkenneth___classe%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fkenneth___classe%2Flarge.webp"
-    },
-    "Hardys": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhardys%2Flarge.webp"
-    },
-    "Trippz": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippz%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippz%2Flarge.webp"
-    },
-    "Wåxbos": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fw_xbos%2Flarge.webp"
-    },
-    "Ola & Jag": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fola___jag%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fola___jag%2Flarge.webp"
-    },
-    "Remix": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fremix%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fremix%2Flarge.webp"
-    },
-    "Sture Johansson": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fsture_johansson%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fsture_johansson%2Flarge.webp"
-    },
-    "Janne Stefans": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjanne_stefans%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fjanne_stefans%2Flarge.webp"
-    },
-    "Charlies": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcharlies%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fcharlies%2Flarge.webp"
-    },
-    "Trippix": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippix%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Ftrippix%2Flarge.webp"
-    },
-    "C-laget": {
-        id: '',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fc_laget%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fc_laget%2Flarge.webp"
-    },
-    "Highlights": {
+const overridesMap: Record<string, Override> = mapValues({
+    'C-laget': { id: '', dir: 'media/c_laget' },
+    'Caspers': { id: '', dir: 'media/caspers' },
+    'Charlies': { id: '', dir: 'media/charlies' },
+    'Eklöfs': { id: '', dir: 'media/ekl_fs' },
+    'Glads': { id: '', dir: 'media/glads' },
+    'Hanes Duo': { id: '', dir: 'media/hanes_duo' },
+    'Hardys': { id: '', dir: 'media/hardys' },
+    'Janne Stefans': { id: '', dir: 'media/janne_stefans' },
+    'Jompaz': { id: '', dir: 'media/junix' },
+    'Junix': { id: '', dir: 'media/junix' },
+    'Kenneth & Classe': { id: '', dir: 'media/kenneth___classe' },
+    'Kjellez': { id: '', dir: 'media/kjellez' },
+    'Lövgrens': { id: '', dir: 'media/l_vgrens' },
+    'Ola & Jag': { id: '', dir: 'media/ola___jag' },
+    'Pär Norlings': { id: '', dir: 'media/p_r_norlings' },
+    'Remix': { id: '', dir: 'media/remix' },
+    'Rent Drag': { id: '', dir: '/media/rent_drag' },
+    'Streaks': { id: '', dir: 'media/streaks' },
+    'Strike': { id: '', dir: 'media/strike' },
+    'Sture Johansson': { id: '', dir: 'media/sture_johansson' },
+    'Tomas & Co': { id: '', dir: 'media/tomas___co' },
+    'Tottes': { id: '', dir: 'media/tottes' },
+    'Trippix': { id: '', dir: 'media/trippix' },
+    'Trippz': { id: '', dir: 'media/trippz' },
+    'Wåxbos': { id: '', dir: 'media/w_xbos' },
+    'Höilands': { id: '', dir: 'media/h_ilands' },
+    // With ids
+    'Highlights': {
         id: '2tgdbXtsDz4QkssaFoyOP4',
-        image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Fsmall.webp",
-        image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media%2Fhighlights%2Flarge.webp"
+        dir: '/media/highlights'
     }
-}
+}, ({ id, dir }) => ({
+    id,
+    image_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/" + dir + '/large.webp',
+    image_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/" + dir + '/small.webp',
+}))
 
 export function overrides(): (values: DanceEvent[]) => Promise<Record<string, Override>> {
     return async (values: DanceEvent[]) => {

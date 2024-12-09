@@ -54,27 +54,22 @@ import { readFile } from 'node:fs/promises'
 
     // 4. upload resized+original to firestore cloud storage /media
 
-    const dir = band.replace(/[^a-z0-9]/gi, '_')
+    const dirpath = 'media/' + band.replace(/[^a-z0-9]/gi, '_')
         .replace(/å/gi, 'a')
         .replace(/ä/gi, 'a')
         .replace(/ö/gi, 'o')
         .toLowerCase()
-    const largeFile = admin.storage().bucket().file(`media/${dir}/large.webp`)
+
+    const largeFile = admin.storage().bucket().file(`${dirpath}/large.webp`)
     await largeFile.save(Buffer.from(original))
     await largeFile.makePublic()
-    const largeFileUrl = largeFile.publicUrl()
 
-    const smallFile = admin.storage().bucket().file(`media/${dir}/small.webp`)
+    const smallFile = admin.storage().bucket().file(`${dirpath}/small.webp`)
     await smallFile.save(Buffer.from(resized))
     await smallFile.makePublic()
-    const smallFileUrl = smallFile.publicUrl()
 
     console.log(`
-    "${band}": {
-        id: '',
-        image_small: "${smallFileUrl}",
-        image_large: "${largeFileUrl}"
-    }
+    '${band}': { id: '', dir: '${dirpath}' },
     `)
     process.exit(0)
 })()
