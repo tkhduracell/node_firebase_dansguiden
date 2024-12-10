@@ -44,8 +44,13 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
 
-      - name: Firebase Deploy (functions)
-        run: npm exec -- firebase deploy --only functions
+      - name: Send deploy message to slack
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          YYYYMMDD=$(date '+%Y-%m-%d %H:%M:%S')
+          MESSAGE=" 💃 Dansguiden functions has been deployed at: `${YYYYMMDD}`"
+          curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${MESSAGE}\"}" ${SLACK_WEBHOOK}
 
   deploy-web:
     runs-on: ubuntu-latest
