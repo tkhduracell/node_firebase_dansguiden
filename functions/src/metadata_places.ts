@@ -52,12 +52,12 @@ export type PlacesApiInfo = {
 
 export type PlacesSecerts = { api_key: string }
 
-function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[]) => Promise<Record<string, PlacesApiInfo>> {
-    return async (values: DanceEvent[]) => {
+function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[], existingKeys: string[]) => Promise<Record<string, PlacesApiInfo>> {
+    return async (values: DanceEvent[], existingKeys: string[]) => {
         const places = values.map(e => pick(e, 'place', 'county', 'city', 'region'))
 
         const out: Record<string, PlacesApiInfo> = {}
-        for (const { place, region } of uniqBy(places, p => p.place)) {
+        for (const { place, region } of uniqBy(places, p => p.place).filter(p => !existingKeys.includes(p.place))) {
 
             const query = [place, region, 'Sverige'].join(', ')
 
@@ -83,12 +83,12 @@ function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[]) => Promi
 }
 
 export class MetadataPlaces {
-    static build(events: DanceEvent[], secerts: PlacesSecerts): MetadataPlacesRecordBuilder {
+    static build(events: DanceEvent[], secerts: PlacesSecerts, existingKeys: string[] = []): MetadataPlacesRecordBuilder {
         return {
             counts: histogram('place')(events),
             general: placesInfo()(events),
             places_api: Promise.all([
-                placesApiImage(secerts)(events),
+                placesApiImage(secerts)(events, existingKeys),
                 overrides()(events)
             ]).then(mergeWith)
         }

@@ -24,17 +24,18 @@ const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
 export class PlacesApi {
 
   static async search(apiKey: string, query: string) {
+    console.log('Searching for', query, 'using Places API')
     const response = await fetch(PlacesApi.searchUrl(apiKey, query))
-    
+
     if (response.ok) {
       const { candidates, status, error_message } = await response.json() as PlacesApiResponse
       if (error_message) {
-        console.error('Places Api returned error', { status, error_message })
+        console.error('Places API returned error', { status, error_message })
       } else {
         return candidates ?? []
       }
     } else {
-      console.debug('Places API response', `'${query}'`, '==>',
+      console.error('Places API response', `'${query}'`, '==>',
         'ok?:', response.ok,
         'code:', response.status,
         'message', response.statusText,

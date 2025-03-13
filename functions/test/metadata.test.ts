@@ -9,14 +9,16 @@ import { PlacesApi } from '../src/lib/google/maps/places_api'
 
 class QueryMock<T> {
   data: T[]
-  constructor(data: T[]) {
+  existingKeys: string[]
+  constructor(data: T[], existingKeys: string[]) {
     this.data = data
+    this.existingKeys = existingKeys
   }
-
-  from(): QueryMock<T> {return this}
-  where(): QueryMock<T> {return this}
-  orderBy(): QueryMock<T> {return this}
-  limit(): QueryMock<T> {return this}
+  listDocuments(): Promise<MockDocuments> { return Promise.resolve(this.existingKeys.map(id => ({ id }))) }
+  from(): QueryMock<T> { return this }
+  where(): QueryMock<T> { return this }
+  orderBy(): QueryMock<T> { return this }
+  limit(): QueryMock<T> { return this }
   get(): MockResult<T> {
     const datas = this.data.map(itm => {
       return { data: () => itm } as MockDoc<T>
@@ -39,9 +41,9 @@ class QueryMock<T> {
   }
 }
 
-function queryMock(data: Partial<DanceEvent>[]) {
+function queryMock(data: Partial<DanceEvent>[], existingKeys: string[] = []) {
   return {
-    tableFn: () => new QueryMock(shuffle(data) as DanceEvent[]) as unknown as Col,
+    tableFn: () => new QueryMock(shuffle(data) as DanceEvent[], existingKeys) as unknown as Col,
     batchFn: () => ({
       set: (ref: Doc, data: any) => console.log(ref, '<=', data),
       commit: () => Promise.resolve()
@@ -52,6 +54,10 @@ function queryMock(data: Partial<DanceEvent>[]) {
 type MockResult<T> = {
   forEach: (fn: (itm: MockDoc<T>) => void) => void;
 }
+
+type MockDocuments = {
+  id: string
+}[]
 
 type MockDoc<T> = {
   data: () => T;
@@ -65,9 +71,11 @@ describe('Metadata', () => {
   beforeEach(() => {
     jest.spyOn(PlacesApi, 'search').mockImplementation(async () => {
       return [
-        { name: 'place1', types: [], place_id: '123', formatted_address: 'adr1', photos: [
-          { height: 0, width: 0, html_attributions: ['attr1'], photo_reference: 'ref1' }
-        ] }
+        {
+          name: 'place1', types: [], place_id: '123', formatted_address: 'adr1', photos: [
+            { height: 0, width: 0, html_attributions: ['attr1'], photo_reference: 'ref1' }
+          ]
+        }
       ]
     })
     jest.spyOn(PlacessParser, 'parse').mockImplementation(async () => {
@@ -90,7 +98,7 @@ describe('Metadata', () => {
 
       const dates = await Metadata.dates(tableFn, batchFn)
 
-      expect(dates).toHaveProperty('counts', {'2022-01-01': { total: 1 }})
+      expect(dates).toHaveProperty('counts', { '2022-01-01': { total: 1 } })
     })
   })
 
@@ -139,11 +147,13 @@ describe('Metadata', () => {
 
       const places = await Metadata.places(tableFn, batchFn, emptySecrets)
 
-      expect(places).toHaveProperty('general', { "place1": {
-        name: "place1",
-        facebook_url: "fb",
-        website_url: "web",
-      }})
+      expect(places).toHaveProperty('general', {
+        "place1": {
+          name: "place1",
+          facebook_url: "fb",
+          website_url: "web",
+        }
+      })
     })
 
     it('should have places_api info', async () => {
@@ -154,14 +164,36 @@ describe('Metadata', () => {
 
       const places = await Metadata.places(tableFn, batchFn, emptySecrets)
 
-      expect(places).toHaveProperty('places_api', { "place1": {
-        id: "123",
-        name: "place1",
-        address: "adr1",
-        photo_attributions: ["attr1"],
-        photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
-        photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
-      }})
+      expect(places).toHaveProperty('places_api', {
+        "place1": {
+          id: "123",
+          name: "place1",
+          address: "adr1",
+          photo_attributions: ["attr1"],
+          photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
+          photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
+        }
+      })
+    })
+
+
+    it('should NOT lookup places if exist', async () => {
+      const { tableFn, batchFn } = queryMock([
+        { place: 'place1', date: moment().format('YYYY-MM-DD') },
+        { place: 'place2', date: moment().format('YYYY-MM-DD') }
+      ], ['place1'])
+
+      const places = await Metadata.places(tableFn, batchFn, emptySecrets)
+      expect(places).toHaveProperty('places_api', {
+        "place2": {
+          id: "123",
+          name: "place1",
+          address: "adr1",
+          photo_attributions: ["attr1"],
+          photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
+          photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
+        }
+      })
     })
   })
 

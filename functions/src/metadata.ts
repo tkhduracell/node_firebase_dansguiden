@@ -21,7 +21,9 @@ export class Metadata {
     const events = await getevents(table, limit)
     console.log(`Updating ${tbl} using ${events.length} events`)
 
-    return updater(table, batch, tbl, MetadataPlaces.build(events, secrets.places))
+    const keys = await table(tbl).listDocuments().then(docs => docs.map(d => d.id))
+
+    return updater(table, batch, tbl, MetadataPlaces.build(events, secrets.places, keys))
   }
 
   static async bands(table: TableFn, batch: BatchFn, secrets: { spotify: SpotifySecrets }, limit?: number): Promise<MetadataBands> {
