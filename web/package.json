@@ -20,7 +20,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.57.0",
     "eslint-plugin-promise": "^6.6.0",
-    "firebase-admin": "^8.13.0",
+    "firebase-admin": "^13.2.0",
     "glob": "^7.2.3",
     "glob-promise": "^3.4.0",
     "lodash": "^4.17.21",
