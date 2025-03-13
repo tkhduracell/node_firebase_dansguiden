@@ -9,19 +9,24 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels: ["dependencies", "root"]
   - package-ecosystem: npm # See documentation for possible values
     directory: "/functions" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels: ["dependencies", "functions"]
   - package-ecosystem: npm # See documentation for possible values
     directory: "/web" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels: ["dependencies", "webapp"]
   - package-ecosystem: github-actions # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels: ["dependencies", "actions"]
   - package-ecosystem: docker # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    labels: ["dependencies", "docker"]
