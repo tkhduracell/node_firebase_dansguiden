@@ -98,10 +98,12 @@ jobs:
       - name: Install deps
         run: npm ci --prefix web
 
-      - name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v2"
+      - name: Setup gcloud Cloud SDK auth
+        uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_KEY }}
+          workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deployer-auth-pool/providers/github-deployer-auth-provider
+          service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+  
 
       - name: Run prerender
         run: npm run --prefix web lint
