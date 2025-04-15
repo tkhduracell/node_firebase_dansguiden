@@ -15,6 +15,10 @@ jobs:
       matrix:
         node-version: [20]
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -44,6 +48,8 @@ jobs:
         with:
           workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deploy-auth-pool/providers/github-deployer-auth-provider
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
   
       - name: Firebase Deploy (hosting)
         run: npm exec -- firebase deploy --only functions
@@ -64,8 +70,8 @@ jobs:
         node-version: [20]
 
     permissions:
-      contents: read
-      id-token: write
+      contents: 'read'
+      id-token: 'write'
 
     steps:
       - uses: actions/checkout@v4
@@ -90,6 +96,8 @@ jobs:
         with:
           workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deploy-auth-pool/providers/github-deployer-auth-provider
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+          create_credentials_file: true
+          export_environment_variables: true
   
       - name: Firebase Deploy (hosting)
         run: npm exec -- firebase deploy --only hosting
