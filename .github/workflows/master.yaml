@@ -51,8 +51,6 @@ jobs:
 
       - name: Setup gcloud Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: dansguiden-b3a7d
 
       - name: Setup gcloud Cloud SDK auth
         run: gcloud auth application-default login --impersonate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
