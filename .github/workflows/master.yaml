@@ -48,6 +48,7 @@ jobs:
         with:
           workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deploy-auth-pool/providers/github-deployer-auth-provider
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+          create_credentials_file: true
 
       - name: Setup gcloud Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
