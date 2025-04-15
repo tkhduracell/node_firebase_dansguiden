@@ -50,10 +50,13 @@ jobs:
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
           create_credentials_file: true
           export_environment_variables: true
-  
+
       - name: Firebase login
-        run: npm exec -- firebase login
-  
+        run: npm exec -- firebase login:list
+
+      - name: Firebase login
+        run: npm exec -- firebase login:use firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+    
       - name: Firebase Deploy (functions)
         run: npm exec -- firebase deploy --only functions
 
