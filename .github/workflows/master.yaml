@@ -51,8 +51,14 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
+      - name: Setup gcloud Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup gcloud Cloud SDK auth
+        run: gcloud auth application-default login --impersonate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+
       - name: Firebase Deploy (functions)
-        run: npm exec -- firebase --account=firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com deploy --only functions --debug
+        run: npm exec -- firebase deploy --only functions --debug
 
       - name: Send deploy message to slack
         env:
@@ -100,5 +106,5 @@ jobs:
           export_environment_variables: true
   
       - name: Firebase Deploy (hosting)
-        run: npm exec -- firebase --account=firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com deploy --only hosting --debug
+        run: npm exec -- firebase deploy --only hosting --debug
 
