@@ -1,0 +1,52 @@
+{
+    "fields": [
+        {
+            "name": "band",
+            "type": "string"
+        },
+        {
+            "name": "city",
+            "type": "string"
+        },
+        {
+            "name": "county",
+            "type": "string"
+        },
+        {
+            "name": "date",
+            "type": "string"
+        },
+        {
+            "name": "place",
+            "type": "string"
+        },
+        {
+            "name": "region",
+            "type": "string"
+        },
+        {
+            "name": "spotify_id",
+            "type": "string"
+        },
+        {
+            "name": "spotify_image",
+            "type": "string"
+        },
+        {
+            "name": "time",
+            "type": "string"
+        },
+        {
+            "name": "updated_at",
+            "type": "number"
+        },
+        {
+            "name": "weekday",
+            "type": "string"
+        },
+        {
+            "name": "extra",
+            "type": "string"
+        }
+    ]
+}
