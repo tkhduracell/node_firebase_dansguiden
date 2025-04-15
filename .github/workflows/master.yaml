@@ -51,7 +51,10 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
   
-      - name: Firebase Deploy (hosting)
+      - name: Firebase login
+        run: npm exec -- firebase login
+  
+      - name: Firebase Deploy (functions)
         run: npm exec -- firebase deploy --only functions
 
       - name: Send deploy message to slack
@@ -99,5 +102,8 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
   
+      - name: Firebase login
+        run: npm exec -- firebase login
+
       - name: Firebase Deploy (hosting)
         run: npm exec -- firebase deploy --only hosting
