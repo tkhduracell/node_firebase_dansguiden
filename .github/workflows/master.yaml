@@ -50,15 +50,15 @@ jobs:
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
           token_format: access_token
           create_credentials_file: true
-          export_environment_variables: false
+          export_environment_variables: true
 
-      - name: Setup gcloud Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      # - name: Setup gcloud Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v2
 
-      - name: Setup gcloud Cloud SDK auth
-        run: |
-          gcloud auth activate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com --key-file=${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-          gcloud auth application-default login --impersonate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+      # - name: Setup gcloud Cloud SDK auth
+      #   run: |
+      #     gcloud auth activate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com --key-file=${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      #     gcloud auth application-default login --impersonate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
 
       - name: Firebase Deploy (functions)
         run: npm exec -- firebase deploy --only functions --debug
