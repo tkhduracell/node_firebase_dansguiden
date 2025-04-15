@@ -52,7 +52,7 @@ jobs:
           export_environment_variables: true
 
       - name: Firebase Deploy (functions)
-        run: npm exec -- firebase deploy --only functions --debug
+        run: npm exec -- firebase --account=firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com deploy --only functions --debug
 
       - name: Send deploy message to slack
         env:
@@ -100,4 +100,5 @@ jobs:
           export_environment_variables: true
   
       - name: Firebase Deploy (hosting)
-        run: npm exec -- firebase deploy --only functions --debug
+        run: npm exec -- firebase --account=firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com deploy --only hosting --debug
+
