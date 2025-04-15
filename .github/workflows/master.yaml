@@ -51,11 +51,7 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
-      - name: Firebase login
-        run: npm exec -- firebase login:add firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com --debug
-    
       - name: Firebase Deploy (functions)
-        continue-on-error: true
         run: npm exec -- firebase deploy --only functions --debug
 
       - name: Send deploy message to slack
@@ -103,8 +99,5 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
   
-      - name: Firebase login
-        run: npm exec -- firebase login
-
       - name: Firebase Deploy (hosting)
-        run: npm exec -- firebase deploy --only hosting
+        run: npm exec -- firebase deploy --only functions --debug
