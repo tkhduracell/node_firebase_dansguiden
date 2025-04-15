@@ -39,13 +39,6 @@ jobs:
       - name: Run test (Jest)
         run: npm run --prefix functions test
 
-      - name: Setup gcloud Cloud SDK auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deployer-auth-pool/providers/github-deployer-auth-provider
-          service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
-  
-
       - name: Send deploy message to slack
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
@@ -60,6 +53,10 @@ jobs:
     strategy:
       matrix:
         node-version: [20]
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
