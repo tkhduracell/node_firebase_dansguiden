@@ -54,7 +54,6 @@ jobs:
 
       - name: Setup gcloud Cloud SDK auth
         run: |
-          gcloud auth list
           gcloud auth activate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com --key-file=${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
           gcloud auth application-default login --impersonate-service-account firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
 
