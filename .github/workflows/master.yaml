@@ -52,13 +52,11 @@ jobs:
           export_environment_variables: true
 
       - name: Firebase login
-        run: npm exec -- firebase projects:list --debug
-
-      - name: Firebase login
-        run: npm exec -- firebase login:use firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
+        run: npm exec -- firebase login:use firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com --debug
     
       - name: Firebase Deploy (functions)
-        run: npm exec -- firebase deploy --only functions
+        continue-on-error: true
+        run: npm exec -- firebase deploy --only functions --debug
 
       - name: Send deploy message to slack
         env:
