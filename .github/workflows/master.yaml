@@ -52,7 +52,7 @@ jobs:
           export_environment_variables: true
 
       - name: Firebase login
-        run: npm exec -- firebase login:list
+        run: npm exec -- firebase projects:list --debug
 
       - name: Firebase login
         run: npm exec -- firebase login:use firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
