@@ -1,5 +1,5 @@
 // Libraries
-import { region, RuntimeOptions, CloudFunction, HttpsFunction} from 'firebase-functions'
+import { region, RuntimeOptions, CloudFunction, HttpsFunction } from 'firebase-functions/v1'
 
 import { errorReporting } from './setup'
 
@@ -14,7 +14,7 @@ const { table, batch } = database()
 
 function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Partial<RuntimeOptions>): CloudFunction<unknown> {
   return region('europe-west1')
-    .runWith({ timeoutSeconds: 540,  memory: '1GB', ...(extra ?? {})}) // Timeout 9 min
+    .runWith({ timeoutSeconds: 540, memory: '1GB', ...(extra ?? {}) }) // Timeout 9 min
     .pubsub
     .schedule(schedule)
     .timeZone('Europe/Stockholm')
@@ -22,7 +22,7 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Part
       try {
         await onTrigger()
       } catch (err) {
-        errorReporting.report(err, undefined, `Error in function: ${ctx.resource.name}`)
+        errorReporting.report(err, undefined, `Error in function: ${ctx.resource?.name}`)
         console.error(err)
       }
     })
@@ -30,17 +30,17 @@ function schedule<T>(schedule: string, onTrigger: () => Promise<T>, extra?: Part
 
 function http<T>(onCalled: (query: Record<string, string>) => Promise<T>, extra?: Partial<RuntimeOptions>): HttpsFunction {
   return region('europe-west1')
-  .runWith(extra ?? {})
-  .https
-  .onRequest(async (req, res) => {
-    try {
-      const result = await onCalled(req.query as unknown as Record<string, string>)
-      res.status(200).send(result)
-    } catch (err) {
-      errorReporting.report(err, req)
-      res.status(500).send('Internal error: ' + err)
-    }
-  })
+    .runWith(extra ?? {})
+    .https
+    .onRequest(async (req, res) => {
+      try {
+        const result = await onCalled(req.query as unknown as Record<string, string>)
+        res.status(200).send(result)
+      } catch (err) {
+        errorReporting.report(err, req)
+        res.status(500).send('Internal error: ' + err)
+      }
+    })
 }
 
 // Metadata Places
@@ -48,8 +48,9 @@ export const metadataPlaces = schedule("every monday 09:15", () => {
   const { GCLOUD_PLACES_API_KEY } = z.object({
     GCLOUD_PLACES_API_KEY: z.string()
   }).parse(process.env)
+
   const places = { api_key: GCLOUD_PLACES_API_KEY }
-  return Metadata.places(table, batch, { places })
+  return Metadata.places(table, batch, { places }, 10)
 }, { secrets: ['GCLOUD_PLACES_API_KEY'] })
 
 // Metadata Bands
@@ -62,7 +63,7 @@ export const metadataBands = schedule("every monday 09:30", () => {
     SPOTIFY_CLIENT_SECRET: z.string()
   }).parse(process.env)
   const spotify = { client_id, client_secret }
-  return Metadata.bands(table, batch,{ spotify })
+  return Metadata.bands(table, batch, { spotify })
 }, { secrets: ['SPOTIFY_CLIENT_ID', 'SPOTIFY_CLIENT_SECRET'] })
 
 // Metadata Dates
