@@ -19,47 +19,55 @@ export type PlaceApiPhoto = {
   photo_reference: string
 }
 
-const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
+import { v1 } from '@googlemaps/places'
+
+const { PlacesClient } = v1
+
+const basicKeys = ['places.displayName', 'places.id', 'places.formattedAddress', 'places.photos', 'places.types', 'places.googleMapsLinks', 'places.googleMapsUri', 'places.location', 'places.primaryType', 'places.types'] as const
+type Key = typeof basicKeys[number]
+
+const fieldMask = (...keys: Key[]) => ({
+  otherArgs: { headers: { 'X-Goog-FieldMask': keys } }
+} as const)
 
 export class PlacesApi {
 
-  static async search(apiKey: string, query: string) {
+  static async search(apiKey: string, query: string): Promise<PlaceApiSearchCandidate[]> {
     console.log('Searching for', query, 'using Places API')
-    const response = await fetch(PlacesApi.searchUrl(apiKey, query))
+    const client = new PlacesClient({ key: apiKey })
 
-    if (response.ok) {
-      const { candidates, status, error_message } = await response.json() as PlacesApiResponse
-      if (error_message) {
-        console.error('Places API returned error', { status, error_message })
-      } else {
-        return candidates ?? []
+    try {
+      const [{ places }] = await client.searchText({ textQuery: query, languageCode: 'sv', regionCode: 'sv', includedType: '' }, fieldMask(...basicKeys))
+
+      const out = places?.map(({ displayName, formattedAddress, photos, id, types }) => ({
+        formatted_address: formattedAddress ?? '',
+        name: displayName?.text ?? '',
+        place_id: id ?? '',
+        photos: photos?.map(({ authorAttributions, name, heightPx, widthPx }) => ({
+          photo_reference: name ?? '',
+          height: heightPx ?? 0,
+          width: widthPx ?? 0,
+          html_attributions: authorAttributions?.map(({ displayName, photoUri, uri }) => `<a href="${uri}">©${displayName}</a>`) ?? []
+        })) ?? [],
+        types: types ?? [],
+      })) ?? []
+
+      return out
+    } catch (err) {
+      console.error('Places API error', err)
+      if (err instanceof Error && 'statusDetails' in err) {
+        console.dir(err.statusDetails, { depth: 10, sorted: true })
       }
-    } else {
-      console.error('Places API response', `'${query}'`, '==>',
-        'ok?:', response.ok,
-        'code:', response.status,
-        'message', response.statusText,
-      )
     }
     return []
   }
 
-  static searchUrl(apiKey: string, query: string) {
-    const params = new URLSearchParams()
-    params.append('fields', 'name,place_id,formatted_address,photos,types')
-    params.append('key', apiKey)
-    params.append('input', query)
-    params.append('inputtype', 'textquery')
-    params.append('language', 'sv')
-    return `${BASE_URL}/findplacefromtext/json?${params.toString()}`
-  }
-
   static photoUrl(apiKey: string, ref?: string, size = '512') {
-    const param = new URLSearchParams()
-    param.append('photo_reference', ref ?? '')
-    param.append('maxheight', size)
-    param.append('maxwith', size)
-    param.append('key', apiKey)
-    return `${BASE_URL}/photo?${param.toString()}`
+    const param = new URLSearchParams({
+      maxHeight: size,
+      maxWidth: size,
+      key: apiKey
+    })
+    return `https://places.googleapis.com/v1/${ref}/media?${param.toString()}`
   }
 }

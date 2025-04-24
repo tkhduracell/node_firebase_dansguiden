@@ -3,7 +3,7 @@ import _ from 'lodash'
 import moment from 'moment'
 
 // Dependencies
-import { firestore } from 'firebase-admin'
+import { FieldValue } from 'firebase-admin/firestore'
 import { getValues } from './lib/utils/store'
 import { BatchFn, TableFn } from './lib/utils/database'
 import { DanceEvent } from './lib/types'
@@ -21,7 +21,7 @@ export class Metadata {
     const events = await getevents(table, limit)
     console.log(`Updating ${tbl} using ${events.length} events`)
 
-    const keys = await table(tbl).listDocuments().then(docs => docs.map(d => d.id))
+    const keys = await table(tbl).listDocuments().then(docs => docs.slice(10).map(d => d.id))
 
     return updater(table, batch, tbl, MetadataPlaces.build(events, secrets.places, keys))
   }
@@ -62,7 +62,7 @@ async function updater<T, U extends Record<string, T>, Data extends Record<strin
       for (const [key, value] of chunk) {
         s.set(table(tbl).doc(key), {
           [wrapperKey]: value,
-          updated_at: firestore.FieldValue.serverTimestamp()
+          updated_at: FieldValue.serverTimestamp()
         }, { merge: true })
       }
       console.debug(`[${wrapperKey}]`, `batch#${idx}`, 'Commiting')
