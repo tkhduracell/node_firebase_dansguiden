@@ -2,10 +2,14 @@ import { Bands } from '../src/lib/spotify'
 import { PlacessParser } from '../src/lib/danslogen/places'
 import { DanceEvent } from '../src/lib/types'
 import { Metadata } from './../src/metadata'
-import { firestore } from 'firebase-admin'
+import { CollectionReference, DocumentReference, WriteBatch } from 'firebase-admin/firestore'
 import { shuffle } from 'lodash'
 import moment from 'moment'
 import { PlacesApi } from '../src/lib/google/maps/places_api'
+
+type Col = CollectionReference
+type Doc = DocumentReference
+type Batch = WriteBatch
 
 class QueryMock<T> {
   data: T[]
@@ -62,10 +66,6 @@ type MockDocuments = {
 type MockDoc<T> = {
   data: () => T;
 }
-
-type Col = firestore.CollectionReference
-type Doc = firestore.DocumentReference
-type Batch = firestore.WriteBatch
 
 describe('Metadata', () => {
   beforeEach(() => {
