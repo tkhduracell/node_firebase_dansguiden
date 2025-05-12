@@ -18,6 +18,6 @@
   "homepage": "https://github.com/tkhduracell/node_firebase_dansguiden",
   "dependencies": {},
   "devDependencies": {
-    "firebase-tools": "^14.2.0"
+    "firebase-tools": "^14.3.1"
   }
 }
