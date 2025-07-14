@@ -55,7 +55,7 @@
     "firestore-jest-mock": "^0.25.0",
     "jest": "^29.7.0",
     "nyc": "^17.0.0",
-    "sharp": "^0.33.5",
+    "sharp": "^0.34.3",
     "spotify-api": "0.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
