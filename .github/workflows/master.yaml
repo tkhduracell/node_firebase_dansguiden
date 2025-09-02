@@ -44,7 +44,7 @@ jobs:
         run: true || npm run --prefix functions test
 
       - name: Setup gcloud Cloud SDK auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deploy-auth-pool/providers/github-deployer-auth-provider
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
@@ -101,7 +101,7 @@ jobs:
         run: npm run --prefix web lint
 
       - name: Setup gcloud Cloud SDK auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: projects/58654864940/locations/global/workloadIdentityPools/github-deploy-auth-pool/providers/github-deployer-auth-provider
           service_account: firebase-adminsdk-gcvdo@dansguiden-b3a7d.iam.gserviceaccount.com
