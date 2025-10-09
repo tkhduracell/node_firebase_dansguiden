@@ -47,7 +47,7 @@ export class PlacesApi {
           photo_reference: name ?? '',
           height: heightPx ?? 0,
           width: widthPx ?? 0,
-          html_attributions: authorAttributions?.map(({ displayName, photoUri, uri }) => `<a href="${uri}">©${displayName}</a>`) ?? []
+          html_attributions: authorAttributions?.map(({ displayName, uri }) => `<a href="${uri}">©${displayName}</a>`) ?? []
         })) ?? [],
         types: types ?? [],
       })) ?? []

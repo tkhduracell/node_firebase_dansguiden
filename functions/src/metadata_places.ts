@@ -73,7 +73,7 @@ function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[], existing
 
 
         const uniqueKeys = uniqBy(places, p => p.place)
-        const withoutOverrides = uniqueKeys.filter(p => p.place in PlaceApiOverrides)
+        const withoutOverrides = uniqueKeys.filter(p => !(p.place in PlaceApiOverrides))
         const newKeys = withoutOverrides.filter(p => !existingKeys.includes(p.place))
 
 
@@ -83,7 +83,7 @@ function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[], existing
             All w/o overrides + existing: ${newKeys.length}
         `.replace(/ {2,}/g, '\t').trim())
 
-        const allTypes = new Set<string>();
+        const allTypes = new Set<string>()
 
         for (const { place, region } of newKeys) {
 
