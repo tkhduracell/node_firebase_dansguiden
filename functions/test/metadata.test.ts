@@ -170,8 +170,8 @@ describe('Metadata', () => {
           name: "place1",
           address: "adr1",
           photo_attributions: ["attr1"],
-          photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
-          photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
+          photo_large: "https://places.googleapis.com/v1/ref1/media?maxHeight=1024&maxWidth=1024&key=",
+          photo_small: "https://places.googleapis.com/v1/ref1/media?maxHeight=256&maxWidth=256&key="
         }
       })
     })
@@ -190,8 +190,8 @@ describe('Metadata', () => {
           name: "place1",
           address: "adr1",
           photo_attributions: ["attr1"],
-          photo_large: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=512&maxwith=512&key=",
-          photo_small: "https://maps.googleapis.com/maps/api/place/photo?photo_reference=ref1&maxheight=128&maxwith=128&key="
+          photo_large: "https://places.googleapis.com/v1/ref1/media?maxHeight=1024&maxWidth=1024&key=",
+          photo_small: "https://places.googleapis.com/v1/ref1/media?maxHeight=256&maxWidth=256&key="
         }
       })
     })
