@@ -178,12 +178,10 @@ describe('Metadata', () => {
 
 
     it('should NOT lookup places if exist', async () => {
-      // Note: metadata.ts uses .slice(10) on listDocuments, so we need 10+ dummy keys
-      const dummyKeys = Array.from({ length: 10 }, (_, i) => `dummy${i}`)
       const { tableFn, batchFn } = queryMock([
         { place: 'place1', date: moment().format('YYYY-MM-DD') },
         { place: 'place2', date: moment().format('YYYY-MM-DD') }
-      ], [...dummyKeys, 'place1'])
+      ], ['place1'])
 
       const places = await Metadata.places(tableFn, batchFn, emptySecrets)
       expect(places).toHaveProperty('places_api', {

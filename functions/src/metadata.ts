@@ -21,7 +21,7 @@ export class Metadata {
     const events = await getevents(table, limit)
     console.log(`Updating ${tbl} using ${events.length} events`)
 
-    const keys = await table(tbl).listDocuments().then(docs => docs.slice(10).map(d => d.id))
+    const keys = await table(tbl).listDocuments().then(docs => docs.map(d => d.id))
 
     return updater(table, batch, tbl, MetadataPlaces.build(events, secrets.places, keys))
   }
