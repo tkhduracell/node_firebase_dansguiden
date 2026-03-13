@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "gcp-firestore": {
+      "type": "http",
+      "url": "https://firestore.googleapis.com/mcp"
+    },
+    "gcp-logging": {
+      "type": "http",
+      "url": "https://logging.googleapis.com/mcp"
+    },
+    "gcp-monitoring": {
+      "type": "http",
+      "url": "https://monitoring.googleapis.com/mcp"
+    }
+  }
+}
