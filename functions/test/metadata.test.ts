@@ -6,6 +6,7 @@ import { CollectionReference, DocumentReference, WriteBatch } from 'firebase-adm
 import { shuffle } from 'lodash'
 import moment from 'moment'
 import { PlacesApi } from '../src/lib/google/maps/places_api'
+import { PhotoCache } from '../src/lib/google/maps/photo_cache'
 
 type Col = CollectionReference
 type Doc = DocumentReference
@@ -85,6 +86,9 @@ describe('Metadata', () => {
     })
     jest.spyOn(Bands, 'getArtist').mockImplementation(async () => {
       return undefined
+    })
+    jest.spyOn(PhotoCache, 'cache').mockImplementation(async (_apiKey, _ref, placeId, size) => {
+      return `https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media/places-api/${placeId}/${size}.jpg`
     })
   })
 
@@ -170,8 +174,8 @@ describe('Metadata', () => {
           name: "place1",
           address: "adr1",
           photo_attributions: ["attr1"],
-          photo_large: "https://places.googleapis.com/v1/ref1/media?maxHeight=1024&maxWidth=1024&key=",
-          photo_small: "https://places.googleapis.com/v1/ref1/media?maxHeight=256&maxWidth=256&key="
+          photo_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media/places-api/123/1024.jpg",
+          photo_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media/places-api/123/256.jpg"
         }
       })
     })
@@ -190,8 +194,8 @@ describe('Metadata', () => {
           name: "place1",
           address: "adr1",
           photo_attributions: ["attr1"],
-          photo_large: "https://places.googleapis.com/v1/ref1/media?maxHeight=1024&maxWidth=1024&key=",
-          photo_small: "https://places.googleapis.com/v1/ref1/media?maxHeight=256&maxWidth=256&key="
+          photo_large: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media/places-api/123/1024.jpg",
+          photo_small: "https://storage.googleapis.com/dansguiden-b3a7d.appspot.com/media/places-api/123/256.jpg"
         }
       })
     })

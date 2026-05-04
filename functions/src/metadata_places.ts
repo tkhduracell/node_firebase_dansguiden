@@ -2,6 +2,7 @@ import { keyBy, omit, mapValues, pick, uniqBy, isUndefined, omitBy } from "lodas
 import { histogram } from "./lib/counter"
 import { PlacessParser } from "./lib/danslogen/places"
 import { PlacesApi } from "./lib/google/maps/places_api"
+import { PhotoCache } from "./lib/google/maps/photo_cache"
 import { DanceEvent } from "./lib/types"
 import { mergeWith } from "./lib/utils/utils"
 import { PlaceApiOverrides } from "./overrides"
@@ -97,12 +98,27 @@ function placesApiImage(secrets: PlacesSecerts): (values: DanceEvent[], existing
             if (first) {
                 const photo = first.photos?.find(() => true)
 
+                let photo_small: string | undefined
+                let photo_large: string | undefined
+                if (photo) {
+                    // Photos are cached to Cloud Storage so the public app does
+                    // not hit the Places API (which throttles + leaks the API
+                    // key). On failure we fall through to no photo and let the
+                    // client render its initials-avatar fallback.
+                    try {
+                        photo_small = await PhotoCache.cache(secrets.api_key, photo.photo_reference, first.place_id, '256')
+                        photo_large = await PhotoCache.cache(secrets.api_key, photo.photo_reference, first.place_id, '1024')
+                    } catch (err) {
+                        console.warn(`PhotoCache failed for ${place} (${first.place_id})`, err)
+                    }
+                }
+
                 const result = omitBy({
                     id: first.place_id,
                     name: first.name,
                     address: first.formatted_address,
-                    photo_small: photo ? PlacesApi.photoUrl(secrets.api_key, photo.photo_reference, '256') : undefined,
-                    photo_large: photo ? PlacesApi.photoUrl(secrets.api_key, photo.photo_reference, '1024') : undefined,
+                    photo_small,
+                    photo_large,
                     photo_attributions: photo ? photo.html_attributions : undefined
                 }, isUndefined) as PlacesApiInfo
 
